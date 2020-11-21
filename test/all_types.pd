@@ -1,0 +1,154 @@
+@doc "import_doc"
+import sys = system;
+@doc "import_doc"
+import compiler.test.sub;
+
+@doc "const_doc"
+public const b bool = true;
+@doc "const_doc"
+const c char = 'a'; // alias u32 //TO-DO
+
+var sbyte_v sbyte = 1; // alias i8
+var short_v short = 0; // alias i16
+var int_v int; // alias i32
+var long_v long; // alias i64
+var int8_v i8;
+var int16_v i16;
+var int32_v i32;
+var int64_v i64;
+
+var byte_v byte; // alias u8
+var ushort_v ushort; // alias u16
+var uint_v uint; // alias u32
+var ulong_v ulong; // alias u64
+var uint8_v u8;
+var uint16_v u16;
+var uint32_v u32;
+var uint64_v u64;
+
+var float_v float; // alias f32
+var double_v double; // alias f64
+var f32_v f32;
+var f64_v f64;
+
+var string_v string = "hello world\n";
+var string_v_raw string = `hello \n
+    world\n`;
+
+@doc "print varable to console"
+public function print<T>(t T)
+{
+    @emit `std::cout << t;`
+}
+
+@custom(b = true, c = 'c', i = 1, f = 3.14, s = "some string")
+public function print_line<T>(t T)
+{
+    @emit `std::cout << t << std::endl;`
+}
+
+@doc "add_function"
+function add(a int, b int) int
+{
+    return a + b;
+}
+
+@doc "enum_doc"
+enum color
+{
+    red,
+    green = 10,
+    blue
+}
+
+@doc "interface_doc"
+public interface must_do
+{
+    var value int;
+    function print() void; // void can be ommited
+}
+
+@doc "class_doc"
+public class empty
+{
+    var value int;
+
+    public function empty()
+    {
+    }
+
+    public function ~empty()
+    {
+    }
+}
+
+/*
+public class base_class
+{
+    var value int = 1;
+
+    // private constructor
+    function new(value int)
+    {
+        this.value = value;
+        print("constructor with 1 param")
+    }
+
+    // also constructor
+    function new()
+    {
+        this.value = 10;
+        print("constructor with no param")
+    }
+
+    function destroy()
+    {
+        print("destructor")
+    }
+}
+
+public class derive_class : base_class, must_do
+{
+    public function new()
+    {
+        base.new();
+    }
+
+    public function new(value : int)
+    {
+        base.new(value);
+    }
+
+    // all function will be virtual, can be override
+    public function print()
+    {
+        base.print();
+    }
+}
+
+
+public class generic<K, V>
+{
+    var k_ K;
+    var v_ V;
+
+    public function new(k K, v V)
+    {
+        k_ = k;
+        v_ = v;
+    }
+}
+
+public class derive_generic : generic<int, int>
+{
+
+}
+*/
+
+@doc "programe_entry"
+public function main() int
+{
+    print(string_v);
+    print_line(add(1, 1));
+    return 0;
+}
