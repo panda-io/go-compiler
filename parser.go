@@ -8,9 +8,7 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
-	"sort"
 )
 
 //TO-DO too many errors
@@ -74,55 +72,23 @@ func ParseDir(fset *FileSet, path string, filter func(os.FileInfo) bool, mode Mo
 // The parser structure holds the parser's internal state.
 type Parser struct {
 	file    *File
-	errors  ErrorList
 	scanner *Scanner
 
-	allowEmit bool
-	document  *Metadata // last lead comment
-	meta      *Metadata
-	emits     []*Metadata
+	cpp []*Metadata
 
 	// Next token
 	pos int    // token position
 	tok Token  // one token look-ahead
 	lit string // token literal
 
-	// Error recovery
-	// (used to limit the number of calls to parser.advance
-	// w/o making scanning progress - avoids potential endless
-	// loops across multiple parser functions during error recovery)
-	syncPos int // last synchronization position
-	syncCnt int // number of parser.advance calls without progress
-
 	// Non-syntactic parser control
-	exprLev int  // < 0: in control clause, >= 0: in expression
+	exprLev int  // < 0: in control clause, >= 0: in expression // TO-DO refactor later
 	inRhs   bool // if set, the parser is parsing a rhs expression
-	class   *ClassDecl
-
-	// Ordinary identifier scopes
-	pkgScope   *Scope   // namespaceScope.Outer == nil
-	topScope   *Scope   // top-most scope; may be pkgScope
-	unresolved []*Ident // unresolved identifiers
-	badDecl    []*BadDecl
-
-	// If in a function
-	inFunction bool
 }
 
 func (p *Parser) doParse(src []byte, scanComments bool, flags []string) (f *ProgramFile, err error) {
-	defer func() {
-		if f == nil {
-			f = &ProgramFile{
-				Scope: NewScope(nil),
-			}
-		}
-
-		p.errors.Sort()
-		err = p.errors.Err()
-	}()
-
 	// parse source
-	eh := func(pos Position, msg string) { p.errors.Add(pos, msg) }
+	eh := func(pos Position, msg string) { p.error(p.pos, msg) }
 	p.scanner = NewScanner(p.file, src, eh, scanComments, flags)
 	p.next()
 
@@ -130,114 +96,17 @@ func (p *Parser) doParse(src []byte, scanComments bool, flags []string) (f *Prog
 	return
 }
 
-// ----------------------------------------------------------------------------
-// Scoping support
-
-func (p *Parser) openScope() {
-	p.topScope = NewScope(p.topScope)
-}
-
-func (p *Parser) closeScope() {
-	p.topScope = p.topScope.Outer
-}
-
-func (p *Parser) declare(decl interface{}, scope *Scope, kind ObjKind, idents ...*Ident) {
-	for _, ident := range idents {
-		assert(ident.Obj == nil, "identifier already declared or resolved")
-		obj := NewObject(kind, ident.Name)
-		// remember the corresponding declaration for redeclaration
-		// errors and global variable resolution/typechecking phase
-		obj.Decl = decl
-		ident.Obj = obj
-		if ident.Name != "_" {
-			if alt := scope.Insert(obj); alt != nil {
-				prevDecl := ""
-				if pos := alt.Pos(); pos > 0 {
-					prevDecl = fmt.Sprintf("\n\tprevious declaration at %s", p.file.Position(pos))
-				}
-				p.error(ident.Pos(), fmt.Sprintf("%s redeclared in this block%s", ident.Name, prevDecl))
-			}
-		}
-	}
-}
-
-// The unresolved object is a sentinel to mark identifiers that have been added
-// to the list of unresolved identifiers. The sentinel is only used for verifying
-// internal consistency.
-var unresolved = new(Object)
-
-// If x is an identifier, tryResolve attempts to resolve x by looking up
-// the object it denotes. If no object is found and collectUnresolved is
-// set, x is marked as unresolved and collected in the list of unresolved
-// identifiers.
-//
-func (p *Parser) resolve(x Expr, collectUnresolved bool) {
-	// nothing to do if x is not an identifier or the blank identifier
-	ident, _ := x.(*Ident)
-	if ident == nil {
-		return
-	}
-	assert(ident.Obj == nil, "identifier already declared or resolved")
-	// try to resolve the identifier
-	for s := p.topScope; s != nil; s = s.Outer {
-		if obj := s.Find(ident.Name); obj != nil {
-			ident.Obj = obj
-			return
-		}
-	}
-	// all local scopes are known, so any unresolved identifier
-	// must be found either in the file scope, package scope,
-	// collect them so that they can be resolved later
-	if collectUnresolved {
-		ident.Obj = unresolved
-		p.unresolved = append(p.unresolved, ident)
-	}
-}
-
-// Advance to the next non-comment  In the process, collect
-// any comment groups encountered, and remember the last lead and
-// line comments.
-//
-// A lead comment is a comment group that starts and ends in a
-// line without any other tokens and that is followed by a non-comment
-// token on the line immediately after the comment group.
-//
-// A line comment is a comment group that follows a non-comment
-// token on the same line, and that has no tokens after it on the line
-// where it ends.
 func (p *Parser) next() {
-	prev := p.pos
 	p.pos, p.tok, p.lit = p.scanner.Scan()
-	fmt.Println(p.tok.String(), p.lit)
+
+	//TO-DO remove meta here, to the position call this // process like modifier
 	for p.tok == META {
-		// invalid: if the meta is on same line as the previous token
-		if p.file.Line(p.pos) == p.file.Line(prev) && p.pos != 0 {
-			p.error(p.pos, "meta data must start from newline.")
-			p.parseMetadata() // skip meta
-		} else {
-			metaData := p.parseMetadata()
-			for _, v := range metaData {
-				if v.Name == MetaDoc {
-					if p.document != nil {
-						p.error(p.pos, "duplicate document here.")
-					}
-					if p.inFunction {
-						p.error(p.pos, "document cannot be write inside function.")
-					}
-					p.document = v
-				} else if v.Name == MetaEmit {
-					if p.allowEmit == false {
-						p.error(p.pos, "emit code is not allowed here.") //TO-DO
-					}
-					p.emits = append(p.emits, v)
-				} else if v.Name == MetaGeneric {
-					if p.meta != nil {
-						p.error(p.pos, "duplicate metadata here.")
-					}
-					p.meta = v
-				} else {
-					//TO-DO unknow meta
-				}
+		metaData := p.parseMetadata()
+		for _, v := range metaData {
+			if v.Name == MetaCpp {
+				p.cpp = append(p.cpp, v)
+			} else {
+				//TO-DO unknow meta //ignore doc currently
 			}
 		}
 	}
@@ -245,19 +114,12 @@ func (p *Parser) next() {
 
 func (p *Parser) error(pos int, msg string) {
 	errPos := p.file.Position(pos)
-	// If AllErrors is not set, discard errors reported on the same line
-	// as the last recorded error and stop parsing if there are more than
-	// 10 errors.
-	n := len(p.errors)
-	if n > 0 && p.errors[n-1].Pos.Line == errPos.Line {
-		fmt.Println("spurious error")
-		return // discard - likely a spurious error
-	}
-	p.errors.Add(errPos, msg)
 	fmt.Println("file:", errPos.FileName)
 	fmt.Println("line:", errPos.Line)
 	fmt.Println("column:", errPos.Column)
 	fmt.Println("error:", msg)
+
+	panic("pare file error")
 }
 
 func (p *Parser) errorExpected(pos int, msg string) {
@@ -284,42 +146,6 @@ func (p *Parser) expect(tok Token) int {
 	}
 	p.next() // make progress
 	return pos
-}
-
-func assert(cond bool, msg string) {
-	if !cond {
-		panic("go/parser internal error: " + msg)
-	}
-}
-
-// advance consumes tokens until the current token p.tok
-// is in the 'to' set, or EOF. For error recovery.
-func (p *Parser) advance(to map[Token]bool) {
-	for ; p.tok != EOF; p.next() {
-		if to[p.tok] {
-			// Return only if parser made some progress since last
-			// sync or if it has not reached 10 advance calls without
-			// progress. Otherwise consume at least one token to
-			// avoid an endless parser loop (it is possible that
-			// both parseOperand and parseStmt call advance and
-			// correctly do not advance, thus the need for the
-			// invocation limit p.syncCnt).
-			if p.pos == p.syncPos && p.syncCnt < 10 {
-				p.syncCnt++
-				return
-			}
-			if p.pos > p.syncPos {
-				p.syncPos = p.pos
-				p.syncCnt = 0
-				return
-			}
-			// Reaching here indicates a parser bug, likely an
-			// incorrect token list in this function, but it only
-			// leads to skipping of possibly correct code if a
-			// previous error is present, and thus is preferred
-			// over a non-terminating parse.
-		}
-	}
 }
 
 var stmtStart = map[Token]bool{
@@ -355,12 +181,6 @@ var exprEnd = map[Token]bool{
 	RightBracket: true,
 }
 
-func (p *Parser) getDocument() *Metadata {
-	doc := p.document
-	p.document = nil
-	return doc
-}
-
 // ----------------------------------------------------------------------------
 // Identifiers
 
@@ -386,24 +206,24 @@ func (p *Parser) parseModifier() *Modifier {
 		m.Static = true
 		p.next()
 	}
-	if p.tok == Weak {
-		m.Weak = true
+	if p.tok == Async {
+		m.Async = true
 		p.next()
 	}
 	return m
 }
 
-func (p *Parser) parseGeneric(resolve bool) *GenericLit {
+func (p *Parser) parseGeneric() *GenericLit {
 	if p.tok == Less {
 		g := &GenericLit{
 			Start: p.pos,
 		}
 		p.next()
-		g.Types = append(g.Types, p.tryType(resolve))
+		g.Types = append(g.Types, p.tryType())
 
 		for p.tok == Comma {
 			p.next()
-			g.Types = append(g.Types, p.tryType(resolve))
+			g.Types = append(g.Types, p.tryType())
 		}
 		p.expect(Greater)
 		return g
@@ -419,13 +239,6 @@ func (p *Parser) parseMetadata() []*Metadata {
 	var meta []*Metadata
 	for p.tok == META {
 		p.next()
-		// emit
-		if p.tok == STRING {
-			m := &Metadata{Start: p.pos}
-			m.Text = p.lit
-			p.next()
-			continue
-		}
 
 		if p.tok != IDENT {
 			p.expect(IDENT)
@@ -434,40 +247,42 @@ func (p *Parser) parseMetadata() []*Metadata {
 		m.Name = p.lit
 		p.next()
 
-		if p.tok == STRING {
-			m.Text = p.lit
+		if p.tok == LeftParen {
 			p.next()
-		} else if p.tok == LeftParen {
-			m.Values = make(map[string]*BasicLit)
-			p.next()
-			for {
-				if p.tok == IDENT {
-					name := p.lit
-					p.next()
+			if p.tok == STRING {
+				m.Text = p.lit
+				p.next()
+			} else {
+				m.Values = make(map[string]*BasicLit)
+				for {
+					if p.tok == IDENT {
+						name := p.lit
+						p.next()
 
-					p.expect(Assign)
-					switch p.tok {
-					case INT, FLOAT, CHAR, STRING, True, False:
-						//TO-DO check if duplicated
-						m.Values[name] = &BasicLit{
-							Start: p.pos,
-							Kind:  p.tok,
-							Value: p.lit,
+						p.expect(Assign)
+						switch p.tok {
+						case INT, FLOAT, CHAR, STRING, True, False:
+							//TO-DO check if duplicated
+							m.Values[name] = &BasicLit{
+								Start: p.pos,
+								Kind:  p.tok,
+								Value: p.lit,
+							}
+						default:
+							p.errorExpected(p.pos, "basic literal (bool, char, int, float, string)")
 						}
-					default:
-						p.errorExpected(p.pos, "basic literal (bool, char, int, float, string)")
-					}
-					p.next()
+						p.next()
 
-					if p.tok == RightParen {
-						break
+						if p.tok == RightParen {
+							break
+						}
+						p.expect(Comma)
+					} else {
+						p.expect(IDENT)
 					}
-					p.expect(Comma)
-				} else {
-					p.expect(IDENT)
 				}
 			}
-			p.next()
+			p.expect(RightParen)
 		}
 		meta = append(meta, m)
 	}
@@ -478,12 +293,11 @@ func (p *Parser) parseMetadata() []*Metadata {
 // Types
 
 func (p *Parser) parseType() Expr {
-	typ := p.tryType(true)
+	typ := p.tryType()
 
 	if typ == nil {
 		pos := p.pos
 		p.errorExpected(pos, "type")
-		p.advance(exprEnd)
 		return &BadExpr{Start: pos}
 	}
 
@@ -497,7 +311,6 @@ func (p *Parser) parseTypeName() Expr {
 	if p.tok == Dot {
 		// ident is a package name
 		p.next()
-		p.resolve(ident, true)
 		sel := p.parseIdent()
 		return &SelectorExpr{Expr: ident, Selector: sel}
 	}
@@ -509,16 +322,14 @@ func (p *Parser) tryVarType(isParam bool) Expr {
 	if isParam && p.tok == Ellipsis {
 		pos := p.pos
 		p.next()
-		typ := p.tryType(false) // don't use parseType so we can provide better error message
-		if typ != nil {
-			p.resolve(typ, true)
-		} else {
+		typ := p.tryType() // don't use parseType so we can provide better error message
+		if typ == nil {
 			p.error(pos, "'...' parameter is missing type")
 			typ = &BadExpr{Start: pos}
 		}
 		return &EllipsisLit{Start: pos, Expr: typ}
 	}
-	return p.tryType(false)
+	return p.tryType()
 }
 
 // If the result is an identifier, it is not resolved.
@@ -533,7 +344,7 @@ func (p *Parser) parseVarType(isParam bool) Expr {
 	return typ
 }
 
-func (p *Parser) parseParameterList(scope *Scope) (params []*Field) {
+func (p *Parser) parseParameterList() (params []*Field) {
 	for p.tok != RightParen {
 		field := &Field{}
 		typ := p.parseVarType(true)
@@ -555,31 +366,28 @@ func (p *Parser) parseParameterList(scope *Scope) (params []*Field) {
 			field.Default = p.parseExpr(false)
 		}
 		params = append(params, field)
-		p.declare(field, scope, VarObj, field.Name)
-		p.resolve(field.Type, true)
 		if p.tok != RightParen {
 			p.expect(Comma)
 		}
 	}
 	//TP-DO ...
-	//TO-DO ref
 	//TO-DO check default
 	return
 }
 
-func (p *Parser) parseParameters(scope *Scope) *FieldList {
+func (p *Parser) parseParameters() *FieldList {
 	var params []*Field
 	start := p.expect(LeftParen)
 	if p.tok != RightParen {
-		params = p.parseParameterList(scope)
+		params = p.parseParameterList()
 	}
 	p.expect(RightParen)
 
 	return &FieldList{Start: start, Fields: params}
 }
 
-func (p *Parser) parseResult(scope *Scope) *Field {
-	typ := p.tryType(true)
+func (p *Parser) parseResult() *Field {
+	typ := p.tryType()
 	if typ != nil {
 		return &Field{Type: typ}
 	}
@@ -587,7 +395,7 @@ func (p *Parser) parseResult(scope *Scope) *Field {
 }
 
 // If the result is an identifier, it is not resolved.
-func (p *Parser) tryType(resolve bool) Expr {
+func (p *Parser) tryType() Expr {
 	if p.tok.IsScalar() {
 		scalar := &Scalar{
 			Start: p.pos,
@@ -598,9 +406,6 @@ func (p *Parser) tryType(resolve bool) Expr {
 
 	} else if p.tok == IDENT {
 		typ := p.parseTypeName()
-		if resolve {
-			p.resolve(typ, true)
-		}
 		return typ
 	}
 	return nil
@@ -608,17 +413,16 @@ func (p *Parser) tryType(resolve bool) Expr {
 
 // ----------------------------------------------------------------------------
 // Blocks
-
 func (p *Parser) parseStmtList() (list []Stmt) {
 	for {
-		if len(p.emits) > 0 {
-			for _, e := range p.emits {
+		if len(p.cpp) > 0 {
+			for _, e := range p.cpp {
 				list = append(list, &EmitStmt{
 					Start:   e.Pos(),
 					Content: e.Text,
 				})
 			}
-			p.emits = p.emits[:0]
+			p.cpp = p.cpp[:0]
 		}
 		if p.tok == RightBrace || p.tok == EOF {
 			return
@@ -628,23 +432,16 @@ func (p *Parser) parseStmtList() (list []Stmt) {
 	return
 }
 
-func (p *Parser) parseBody(scope *Scope) *BlockStmt {
-	p.allowEmit = true
+func (p *Parser) parseBody() *BlockStmt {
 	start := p.expect(LeftBrace)
-	p.topScope = scope // open function scope
 	list := p.parseStmtList()
-	p.closeScope()
 	p.expect(RightBrace)
-	p.allowEmit = false
 	return &BlockStmt{Start: start, Stmts: list}
 }
 
 func (p *Parser) parseBlockStmt() *BlockStmt {
 	start := p.expect(LeftBrace)
-	p.openScope()
 	list := p.parseStmtList()
-	p.closeScope()
-
 	return &BlockStmt{Start: start, Stmts: list}
 }
 
@@ -659,9 +456,6 @@ func (p *Parser) parseOperand(lhs bool) Expr {
 	switch p.tok {
 	case IDENT:
 		x := p.parseIdent()
-		if !lhs {
-			p.resolve(x, true)
-		}
 		return x
 
 	case INT, FLOAT, CHAR, STRING, True, False, Void, Null:
@@ -679,17 +473,18 @@ func (p *Parser) parseOperand(lhs bool) Expr {
 		return &ParenExpr{Start: start, Expr: x}
 	}
 
-	if typ := p.tryType(false); typ != nil {
+	if typ := p.tryType(); typ != nil {
 		// could be type for composite literal or conversion
 		_, isIdent := typ.(*Ident)
-		assert(!isIdent, "type cannot be identifier")
+		if isIdent {
+			p.error(p.pos, "type cannot be identifier")
+		}
 		return typ
 	}
 
 	// we have an error
 	pos := p.pos
 	p.errorExpected(pos, "operand")
-	p.advance(stmtStart)
 	return &BadExpr{Start: pos}
 }
 
@@ -737,14 +532,6 @@ func (p *Parser) parseValue(lhs bool) Expr {
 		return p.parseLiteralValue(nil)
 	}
 	x := p.parseExpr(lhs)
-	if lhs {
-		if p.tok == Colon {
-			p.resolve(x, false)
-		} else {
-			// not a key
-			p.resolve(x, true)
-		}
-	}
 	return x
 }
 
@@ -812,9 +599,6 @@ func (p *Parser) parsePrimaryExpr(lhs bool) Expr {
 		switch p.tok {
 		case Dot:
 			p.next()
-			if lhs {
-				p.resolve(x, true)
-			}
 			switch p.tok {
 			case IDENT:
 				x = p.parseSelector(x)
@@ -826,20 +610,11 @@ func (p *Parser) parsePrimaryExpr(lhs bool) Expr {
 				x = &SelectorExpr{Expr: x, Selector: sel}
 			}
 		case LeftBracket:
-			if lhs {
-				p.resolve(x, true)
-			}
 			x = p.parseIndex(x)
 		case LeftParen:
-			if lhs {
-				p.resolve(x, true)
-			}
 			x = p.parseCall(x)
 		case LeftBrace:
 			if isLiteralType(x) && (p.exprLev >= 0 || !isTypeName(x)) {
-				if lhs {
-					p.resolve(x, true)
-				}
 				x = p.parseLiteralValue(x)
 			} else {
 				return x
@@ -849,7 +624,6 @@ func (p *Parser) parsePrimaryExpr(lhs bool) Expr {
 		}
 		lhs = false // no need to try to resolve again
 	}
-
 	return x
 }
 
@@ -887,7 +661,6 @@ func (p *Parser) parseBinaryExpr(lhs bool, prec1 int) Expr {
 		}
 		p.expect(op)
 		if lhs {
-			p.resolve(x, true)
 			lhs = false
 		}
 		y := p.parseBinaryExpr(false, oprec+1)
@@ -1001,8 +774,6 @@ func (p *Parser) makeExpr(s Stmt, want string) Expr {
 
 func (p *Parser) parseIfStmt() *IfStmt {
 	pos := p.expect(If)
-	p.openScope()
-	defer p.closeScope()
 
 	cond := p.parseExpr(true)
 	body := p.parseBlockStmt()
@@ -1038,17 +809,13 @@ func (p *Parser) parseCaseClause() *CaseClause {
 	}
 
 	p.expect(Colon)
-	p.openScope()
 	body := p.parseStmtList()
-	p.closeScope()
 
 	return &CaseClause{Start: pos, Expr: expr, Body: body}
 }
 
 func (p *Parser) parseSwitchStmt() Stmt {
 	pos := p.expect(Switch)
-	p.openScope()
-	defer p.closeScope()
 
 	tag := p.parseSimpleStmt()
 	bodyStart := p.expect(LeftBrace)
@@ -1064,8 +831,6 @@ func (p *Parser) parseSwitchStmt() Stmt {
 
 func (p *Parser) parseForStmt() Stmt {
 	pos := p.expect(For)
-	p.openScope()
-	defer p.closeScope()
 
 	var s1, s2, s3 Stmt
 	//var isRange bool
@@ -1136,7 +901,6 @@ func (p *Parser) parseStmt() (s Stmt) {
 		// no statement found
 		pos := p.pos
 		p.errorExpected(pos, "statement")
-		p.advance(stmtStart)
 		s = &BadStmt{Start: pos}
 	}
 
@@ -1152,18 +916,11 @@ func (p *Parser) parseNamespaceDecl() *NamespaceDecl {
 	}
 
 	p.expect(Namespace)
-	// The namespace clause is not a declaration;
-	// the namespace name does not appear in any scope.
-	doc := p.getDocument()
+
 	path := p.parseIdentOrSelector(nil)
 	p.expect(Semi)
 
-	if p.errors.Len() != 0 {
-		return nil
-	}
-
 	spec := &NamespaceDecl{
-		Doc:  doc,
 		Path: path,
 	}
 
@@ -1175,10 +932,7 @@ func (p *Parser) parseImportDecl() []*ImportDecl {
 	for p.tok == Import {
 		p.expect(Import)
 
-		doc := p.getDocument()
-		var importDecl = &ImportDecl{
-			Doc: doc,
-		}
+		var importDecl = &ImportDecl{}
 		importDecl.Path = p.parseIdent()
 
 		if p.tok == Assign {
@@ -1197,20 +951,15 @@ func (p *Parser) parseImportDecl() []*ImportDecl {
 }
 
 func (p *Parser) parseValueDecl(m *Modifier) *ValueDecl {
-	doc := p.getDocument()
-	keyword := p.tok
 	p.next()
 	name := p.parseIdent()
-	typ := p.tryType(true)
+	typ := p.tryType()
 
 	decl := &ValueDecl{
-		Doc:      doc,
 		Modifier: m,
 		Name:     name,
 		Type:     typ,
 	}
-
-	// TO-DO assert static can not used outside class
 
 	pos := p.pos
 	// always permit optional initialization for more tolerant parsing
@@ -1225,24 +974,14 @@ func (p *Parser) parseValueDecl(m *Modifier) *ValueDecl {
 		//TO-DO if type is nil, parse type from value
 
 	}
-
-	kind := ConstObj
-	if keyword == Var {
-		kind = VarObj
-	}
-	p.declare(decl, p.topScope, kind, decl.Name)
-
 	return decl
 }
 
 func (p *Parser) parseEnumDecl(m *Modifier) *EnumDecl {
-	doc := p.getDocument()
-
 	p.next()
 	name := p.parseIdent()
 
 	decl := &EnumDecl{
-		Doc:      doc,
 		Modifier: m,
 		Name:     name,
 	}
@@ -1267,8 +1006,10 @@ func (p *Parser) parseEnumDecl(m *Modifier) *EnumDecl {
 			}
 			p.next()
 		}
-		p.expect(Semi)
 		list = append(list, member)
+		if p.tok != RightBrace {
+			p.expect(Comma)
+		}
 	}
 	p.expect(RightBrace)
 	decl.List = list
@@ -1277,13 +1018,10 @@ func (p *Parser) parseEnumDecl(m *Modifier) *EnumDecl {
 }
 
 func (p *Parser) parseInterfaceDecl(m *Modifier) *InterfaceDecl {
-	doc := p.getDocument()
-
 	p.next()
 	name := p.parseIdent()
 
 	decl := &InterfaceDecl{
-		Doc:      doc,
 		Modifier: m,
 		Name:     name,
 	}
@@ -1293,15 +1031,26 @@ func (p *Parser) parseInterfaceDecl(m *Modifier) *InterfaceDecl {
 	p.expect(LeftBrace)
 	var list []*FuncDecl
 	for p.tok != RightBrace {
-		member := p.parseFuncDecl(nil, true, true)
-		if member.Name.Name == name.Name {
-			p.error(member.Name.Pos(), "interface has no contructor")
+		switch p.tok {
+		case Const, Var:
+			decl.Values = append(decl.Values, p.parseValueDecl(nil))
+
+		case Function:
+			f := p.parseFuncDecl(m, true, true)
+			if f.Name.Name == name.Name {
+				p.error(f.Name.Pos(), "interface has no contructor")
+			}
+			if f.Name.Name[0] == '~' {
+				p.error(f.Name.Pos(), "interface has no destructor")
+			}
+			p.expect(Semi)
+			decl.Functions = append(decl.Functions, f)
+		default:
+			pos := p.pos
+			p.errorExpected(pos, "declaration")
+			//p.advance(sync)
+			//TO-DO advance wrong part
 		}
-		if member.Name.Name[0] == '~' {
-			p.error(member.Name.Pos(), "interface has no destructor")
-		}
-		p.expect(Semi)
-		list = append(list, member)
 	}
 	p.expect(RightBrace)
 	decl.Functions = list
@@ -1310,13 +1059,10 @@ func (p *Parser) parseInterfaceDecl(m *Modifier) *InterfaceDecl {
 }
 
 func (p *Parser) parseClassDecl(m *Modifier) *ClassDecl {
-	doc := p.getDocument()
-
 	p.next()
 	name := p.parseIdent()
 
 	decl := &ClassDecl{
-		Doc:      doc,
 		Modifier: m,
 		Name:     name,
 	}
@@ -1365,12 +1111,7 @@ func (p *Parser) parseClassDecl(m *Modifier) *ClassDecl {
 }
 
 func (p *Parser) parseFuncDecl(m *Modifier, onlyDeclare bool, isMember bool) *FuncDecl {
-	// onlyDeclare for interface
-	doc := p.getDocument()
-	if !onlyDeclare {
-		p.expect(Function)
-	}
-	scope := NewScope(p.topScope) // function scope
+	p.expect(Function)
 
 	//Tilde
 	tilde := false
@@ -1383,12 +1124,11 @@ func (p *Parser) parseFuncDecl(m *Modifier, onlyDeclare bool, isMember bool) *Fu
 		//TO-DO check in class
 		ident.Name = "~" + ident.Name
 	}
-	generic := p.parseGeneric(false)
-	params := p.parseParameters(scope)
-	result := p.parseResult(scope)
+	generic := p.parseGeneric()
+	params := p.parseParameters()
+	result := p.parseResult()
 
 	decl := &FuncDecl{
-		Doc:      doc,
 		Modifier: m,
 		Name:     ident,
 		Params:   params,
@@ -1403,11 +1143,8 @@ func (p *Parser) parseFuncDecl(m *Modifier, onlyDeclare bool, isMember bool) *Fu
 	}
 
 	if p.tok == LeftBrace {
-		decl.Body = p.parseBody(scope)
+		decl.Body = p.parseBody()
 	}
-
-	//TO-DO check later
-	p.declare(decl, p.pkgScope, FunctionObj, ident)
 
 	return decl
 }
@@ -1433,7 +1170,6 @@ func (p *Parser) parseDecl(sync map[Token]bool) Decl {
 	default:
 		pos := p.pos
 		p.errorExpected(pos, "declaration")
-		p.advance(sync)
 		return &BadDecl{Start: pos}
 	}
 }
@@ -1445,12 +1181,6 @@ func (p *Parser) parseFile() *ProgramFile {
 	program := &ProgramFile{}
 
 	program.Namespace = p.parseNamespaceDecl()
-	if p.errors.Len() != 0 {
-		return nil
-	}
-
-	p.openScope()
-	p.pkgScope = p.topScope
 
 	// import
 	program.Imports = p.parseImportDecl()
@@ -1470,123 +1200,9 @@ func (p *Parser) parseFile() *ProgramFile {
 		case *FuncDecl:
 			program.Functions = append(program.Functions, v)
 		case *BadDecl:
-			p.badDecl = append(p.badDecl, v)
+			fmt.Println("bad decl", v.Pos())
 		}
 	}
-
-	p.closeScope()
-	assert(p.topScope == nil, "unbalanced scopes")
-	/*
-		// resolve global identifiers within the same file
-		i := 0
-		for _, ident := range p.unresolved {
-			// i <= index for current ident
-			assert(ident.Obj == unresolved, "object already resolved")
-			ident.Obj = p.pkgScope.Lookup(ident.Name) // also removes unresolved sentinel
-			if ident.Obj == nil {
-				p.unresolved[i] = ident
-				i++
-			}
-		}*/
 
 	return program
-	//Scope:      p.pkgScope,
-	//Unresolved: p.unresolved[0:i],
-}
-
-// In an ErrorList, an error is represented by an *Error.
-// The position Pos, if valid, points to the beginning of
-// the offending token, and the error condition is described
-// by Msg.
-//
-type Error struct {
-	Pos Position
-	Msg string
-}
-
-// Error implements the error interface.
-func (e Error) Error() string {
-	if e.Pos.FileName != "" || e.Pos.IsValid() {
-		// don't print "<unknown position>"
-		// TODO(gri) reconsider the semantics of Position.IsValid
-		return e.Pos.String() + ": " + e.Msg
-	}
-	return e.Msg
-}
-
-// ErrorList is a list of *Errors.
-// The zero value for an ErrorList is an empty ErrorList ready to use.
-//
-type ErrorList []*Error
-
-// Add adds an Error with given position and error message to an ErrorList.
-func (p *ErrorList) Add(pos Position, msg string) {
-	fmt.Println("Add error:", msg)
-	*p = append(*p, &Error{pos, msg})
-}
-
-// Reset resets an ErrorList to no errors.
-func (p *ErrorList) Reset() { *p = (*p)[0:0] }
-
-// ErrorList implements the sort Interface.
-func (p ErrorList) Len() int      { return len(p) }
-func (p ErrorList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p ErrorList) Less(i, j int) bool {
-	e := &p[i].Pos
-	f := &p[j].Pos
-	// Note that it is not sufficient to simply compare file offsets because
-	// the offsets do not reflect modified line information (through //line
-	// comments).
-	if e.FileName != f.FileName {
-		return e.FileName < f.FileName
-	}
-	if e.Line != f.Line {
-		return e.Line < f.Line
-	}
-	if e.Column != f.Column {
-		return e.Column < f.Column
-	}
-	return p[i].Msg < p[j].Msg
-}
-
-// Sort sorts an ErrorList. *Error entries are sorted by position,
-// other errors are sorted by error message, and before any *Error
-// entry.
-//
-func (p ErrorList) Sort() {
-	sort.Sort(p)
-}
-
-// An ErrorList implements the error interface.
-func (p ErrorList) Error() string {
-	switch len(p) {
-	case 0:
-		return "no errors"
-	case 1:
-		return p[0].Error()
-	}
-	return fmt.Sprintf("%s (and %d more errors)", p[0], len(p)-1)
-}
-
-// Err returns an error equivalent to this error list.
-// If the list is empty, Err returns nil.
-func (p ErrorList) Err() error {
-	if len(p) == 0 {
-		return nil
-	}
-	return p
-}
-
-// PrintError is a utility function that prints a list of errors to w,
-// one error per line, if the err parameter is an ErrorList. Otherwise
-// it prints the err string.
-//
-func PrintError(w io.Writer, err error) {
-	if list, ok := err.(ErrorList); ok {
-		for _, e := range list {
-			fmt.Fprintf(w, "%s\n", e)
-		}
-	} else if err != nil {
-		fmt.Fprintf(w, "%s\n", err)
-	}
 }

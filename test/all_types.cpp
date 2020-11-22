@@ -22,8 +22,6 @@ enum class color
 class must_do
 {
 public:
-    virtual void print() = 0;
-
 };
 
 class empty;

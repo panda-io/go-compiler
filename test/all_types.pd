@@ -1,11 +1,7 @@
-@doc "import_doc"
 import sys = system;
-@doc "import_doc"
 import compiler.test.sub;
 
-@doc "const_doc"
 public const b bool = true;
-@doc "const_doc"
 const c char = 'a'; // alias u32 //TO-DO
 
 var sbyte_v sbyte = 1; // alias i8
@@ -35,25 +31,23 @@ var string_v string = "hello world\n";
 var string_v_raw string = `hello \n
     world\n`;
 
-@doc "print varable to console"
 public function print<T>(t T)
 {
-    @emit `std::cout << t;`
+    @cpp(`std::cout << t;`)
 }
 
 @custom(b = true, c = 'c', i = 1, f = 3.14, s = "some string")
 public function print_line<T>(t T)
 {
-    @emit `std::cout << t << std::endl;`
+    @cpp(`std::cout << t << std::endl;`)
 }
 
-@doc "add_function"
+@doc("add_function")
 function add(a int, b int) int
 {
     return a + b;
 }
 
-@doc "enum_doc"
 enum color
 {
     red,
@@ -61,14 +55,12 @@ enum color
     blue
 }
 
-@doc "interface_doc"
 public interface must_do
 {
     var value int;
     function print() void; // void can be ommited
 }
 
-@doc "class_doc"
 public class empty
 {
     var value int;
@@ -145,7 +137,6 @@ public class derive_generic : generic<int, int>
 }
 */
 
-@doc "programe_entry"
 public function main() int
 {
     print(string_v);

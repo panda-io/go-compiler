@@ -7,9 +7,7 @@ import (
 )
 
 const (
-	MetaGeneric = "meta" // custom meta
-	MetaDoc     = "doc"
-	MetaEmit    = "emit"
+	MetaCpp = "cpp"
 
 	/*
 		MetaSerialilzer = "serializer"
@@ -79,7 +77,7 @@ type Modifier struct {
 	Start  int
 	Public bool
 	Static bool
-	Weak   bool
+	Async  bool
 }
 
 func (modifier *Modifier) Pos() int { return modifier.Start }
@@ -879,6 +877,7 @@ type InterfaceDecl struct {
 	Modifier  *Modifier
 	Name      *Ident // type name
 	Generic   *GenericLit
+	Values    []*ValueDecl
 	Functions []*FuncDecl // position of '=', if any
 }
 
@@ -960,7 +959,6 @@ func (f *FuncDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {
 // ----------------------------------------------------------------------------
 // Files and packages
 type ProgramFile struct {
-	Scope      *Scope         // package scope (this file only)
 	Namespace  *NamespaceDecl // position of "namespace" keyword
 	Imports    []*ImportDecl  // imports in this file
 	Values     []*ValueDecl
@@ -1132,8 +1130,6 @@ func (obj *Object) Pos() int {
 		if ident, isIdent := d.Left.(*Ident); isIdent && ident.Name == name {
 			return ident.Pos()
 		}
-	case *Scope:
-		// predeclared object - nothing to do for now
 	}
 	return 0
 }

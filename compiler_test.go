@@ -17,10 +17,6 @@ func TestAllTypes(t *testing.T) {
 		t.Error("parse [import system] failed")
 	}
 
-	if p.Imports[0].Doc.Text != `"import_doc"` {
-		t.Error("parse [import system] failed")
-	}
-
 	if p.Imports[0].Path.(*Ident).Name != "system" {
 		t.Error("parse [import system] failed")
 	}
@@ -44,32 +40,28 @@ func TestAllTypes(t *testing.T) {
 	if v, ok := p.Values[0].Value.(*BasicLit); !ok || v.Value != "true" {
 		t.Error("parse [public const b bool = true] failed")
 	}
-
-	if p.Values[0].Doc.Text != `"const_doc"` {
-		t.Error("parse doc for [public const b bool = true] failed")
-	}
 }
 
 func TestNameSpace(t *testing.T) {
-	s := "@doc `namespace_doc`\nnamespace test;\n"
+	s := "namespace test;\n"
 
 	p, err := ParseString(s, true, nil)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if p.Namespace.Path.(*Ident).Name != "test" || p.Namespace.Doc.Text != "`namespace_doc`" {
+	if p.Namespace.Path.(*Ident).Name != "test" {
 		t.Error("parse [namespace test] failed")
 	}
 
-	s = "@doc `namespace_doc`\nnamespace test.sub;\n"
+	s = "namespace test.sub;\n"
 
 	p, err = ParseString(s, true, nil)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if p.Namespace.Path.(*SelectorExpr).Selector.Name != "sub" || p.Namespace.Doc.Text != "`namespace_doc`" {
+	if p.Namespace.Path.(*SelectorExpr).Selector.Name != "sub" {
 		t.Error("parse [namespace test.sub] failed")
 	}
 

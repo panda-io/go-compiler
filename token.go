@@ -22,6 +22,7 @@ const (
 
 	// keywords
 	keyword_begin
+	Async
 	Await
 	Base
 	Break
@@ -52,7 +53,7 @@ const (
 	True
 	Try
 	Var
-	Weak
+	Yield
 	keyword_end
 
 	// scalars
@@ -139,6 +140,7 @@ const (
 
 var (
 	tokens = [...]string{
+		Async:     "async",
 		Await:     "await",
 		Base:      "base",
 		Break:     "break",
@@ -169,7 +171,6 @@ var (
 		True:      "true",
 		Try:       "try",
 		Var:       "var",
-		Weak:      "weak",
 
 		Bool:    "bool",
 		Char:    "char",
