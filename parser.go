@@ -13,13 +13,13 @@ import (
 
 //TO-DO too many errors
 
-func ParseString(content string, scanComments bool, flags []string) (*ProgramFile, error) {
+func ParseString(content string, scanComments bool, flags []string) (*Program, error) {
 	var p Parser
 	p.file = NewFile("source")
 	return p.doParse([]byte(content), scanComments, flags)
 }
 
-func ParseFile(fileName string, scanComments bool, flags []string) (*ProgramFile, error) {
+func ParseFile(fileName string, scanComments bool, flags []string) (*Program, error) {
 	// get source
 	text, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -86,7 +86,7 @@ type Parser struct {
 	inRhs   bool // if set, the parser is parsing a rhs expression
 }
 
-func (p *Parser) doParse(src []byte, scanComments bool, flags []string) (f *ProgramFile, err error) {
+func (p *Parser) doParse(src []byte, scanComments bool, flags []string) (f *Program, err error) {
 	// parse source
 	eh := func(pos Position, msg string) { p.error(p.pos, msg) }
 	p.scanner = NewScanner(p.file, src, eh, scanComments, flags)
@@ -1029,14 +1029,15 @@ func (p *Parser) parseInterfaceDecl(m *Modifier) *InterfaceDecl {
 	//TO-DO generic
 
 	p.expect(LeftBrace)
-	var list []*FuncDecl
 	for p.tok != RightBrace {
 		switch p.tok {
 		case Const, Var:
 			decl.Values = append(decl.Values, p.parseValueDecl(nil))
 
 		case Function:
-			f := p.parseFuncDecl(m, true, true)
+			f := p.parseFuncDecl(m, true)
+			f.IsMember = true
+			f.InterfaceMember = true
 			if f.Name.Name == name.Name {
 				p.error(f.Name.Pos(), "interface has no contructor")
 			}
@@ -1053,7 +1054,6 @@ func (p *Parser) parseInterfaceDecl(m *Modifier) *InterfaceDecl {
 		}
 	}
 	p.expect(RightBrace)
-	decl.Functions = list
 	//TO-DO check later call.delare ?
 	return decl
 }
@@ -1085,7 +1085,9 @@ func (p *Parser) parseClassDecl(m *Modifier) *ClassDecl {
 			decl.Values = append(decl.Values, p.parseValueDecl(m))
 
 		case Function:
-			f := p.parseFuncDecl(m, false, true)
+			f := p.parseFuncDecl(m, false)
+			f.IsMember = true
+			f.ClassName = name.Name
 			if f.Name.Name == name.Name {
 				f.IsConstructor = true
 			}
@@ -1110,7 +1112,7 @@ func (p *Parser) parseClassDecl(m *Modifier) *ClassDecl {
 	return decl
 }
 
-func (p *Parser) parseFuncDecl(m *Modifier, onlyDeclare bool, isMember bool) *FuncDecl {
+func (p *Parser) parseFuncDecl(m *Modifier, onlyDeclare bool) *FuncDecl {
 	p.expect(Function)
 
 	//Tilde
@@ -1134,7 +1136,6 @@ func (p *Parser) parseFuncDecl(m *Modifier, onlyDeclare bool, isMember bool) *Fu
 		Params:   params,
 		Result:   result,
 		Generic:  generic,
-		IsMember: isMember,
 	}
 
 	if onlyDeclare {
@@ -1165,7 +1166,7 @@ func (p *Parser) parseDecl(sync map[Token]bool) Decl {
 		return p.parseClassDecl(m)
 
 	case Function:
-		return p.parseFuncDecl(m, false, false)
+		return p.parseFuncDecl(m, false)
 
 	default:
 		pos := p.pos
@@ -1177,8 +1178,8 @@ func (p *Parser) parseDecl(sync map[Token]bool) Decl {
 // ----------------------------------------------------------------------------
 // Source files
 
-func (p *Parser) parseFile() *ProgramFile {
-	program := &ProgramFile{}
+func (p *Parser) parseFile() *Program {
+	program := &Program{}
 
 	program.Namespace = p.parseNamespaceDecl()
 

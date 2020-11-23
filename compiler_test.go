@@ -80,7 +80,7 @@ func TestGenerate(t *testing.T) {
 	}
 
 	buff := bytes.NewBuffer(nil)
-	p.Print(buff, true)
+	p.Print(buff)
 
 	ioutil.WriteFile("./test/all_types.cpp", buff.Bytes(), 0644)
 

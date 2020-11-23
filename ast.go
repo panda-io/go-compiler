@@ -2,22 +2,11 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"strconv"
 )
 
 const (
 	MetaCpp = "cpp"
-
-	/*
-		MetaSerialilzer = "serializer"
-		MetaRef         = "ref"
-		MetaCall        = "call"
-		MetaReturn      = "return"
-		MetaInclude     = "include"
-		MetaMacro       = "macro"
-	*/
-
 	TabSize = 4
 )
 
@@ -52,7 +41,6 @@ type Stmt interface {
 
 type Decl interface {
 	Node
-	Print(buffer *bytes.Buffer, indent int, onlyDeclare bool)
 	declNode()
 }
 
@@ -163,9 +151,8 @@ func (x *Scalar) Print(buffer *bytes.Buffer) {
 }
 
 type Ident struct {
-	Start int     // identifier position
-	Name  string  // identifier name
-	Obj   *Object // denoted object; or nil
+	Start int    // identifier position
+	Name  string // identifier name
 }
 
 func (x *Ident) Pos() int { return x.Start }
@@ -465,7 +452,7 @@ func (s *DeclStmt) Pos() int { return s.Decl.Pos() }
 func (*DeclStmt) stmtNode() {}
 
 func (s *DeclStmt) Print(buffer *bytes.Buffer, indent int) {
-	s.Decl.Print(buffer, indent, false)
+	s.Decl.Print(buffer, indent)
 }
 
 // An EmptyStmt node represents an empty statement.
@@ -783,8 +770,6 @@ func (s *ImportDecl) Pos() int {
 }
 func (*ImportDecl) declNode() {}
 
-func (*ImportDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {}
-
 type ValueDecl struct {
 	Doc      *Metadata // associated documentation; or nil
 	Modifier *Modifier
@@ -798,7 +783,7 @@ func (s *ValueDecl) Pos() int { return s.Name.Pos() }
 
 func (*ValueDecl) declNode() {}
 
-func (v *ValueDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {
+func (v *ValueDecl) Print(buffer *bytes.Buffer, indent int) {
 	WriteIndent(buffer, indent)
 	v.Type.Print(buffer)
 	buffer.WriteString(" ")
@@ -824,28 +809,32 @@ func (c *ClassDecl) Pos() int { return c.Name.Pos() }
 
 func (*ClassDecl) declNode() {}
 
-func (c *ClassDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {
+func (c *ClassDecl) PrintDeclaration(buffer *bytes.Buffer, indent int) {
 	WriteIndent(buffer, indent)
 	buffer.WriteString("class ")
 	c.Name.Print(buffer)
 	//TO-DO inheritance
-	if onlyDeclare {
-		buffer.WriteString(";\n")
-		return
-	}
+
 	buffer.WriteString("\n")
 	WriteIndent(buffer, indent)
 	buffer.WriteString("{\n")
 	buffer.WriteString("public:\n")
 	for _, v := range c.Values {
-		v.Print(buffer, indent+TabSize, false)
+		v.Print(buffer, indent+TabSize)
 		buffer.WriteString("\n")
 	}
 	for _, f := range c.Functions {
-		f.Print(buffer, indent+TabSize, false)
+		f.PrintDeclaration(buffer, indent+TabSize)
 		buffer.WriteString("\n")
 	}
 	buffer.WriteString("};\n")
+}
+
+func (c *ClassDecl) PrintImplementation(buffer *bytes.Buffer, indent int) {
+	for _, f := range c.Functions {
+		f.PrintImplementation(buffer, indent)
+		buffer.WriteString("\n")
+	}
 }
 
 type EnumDecl struct {
@@ -859,7 +848,7 @@ func (e *EnumDecl) Pos() int { return e.Name.Pos() }
 
 func (*EnumDecl) declNode() {}
 
-func (e *EnumDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {
+func (e *EnumDecl) Print(buffer *bytes.Buffer, indent int) {
 	WriteIndent(buffer, indent)
 	buffer.WriteString("enum class ")
 	e.Name.Print(buffer)
@@ -885,7 +874,7 @@ func (c *InterfaceDecl) Pos() int { return c.Name.Pos() }
 
 func (*InterfaceDecl) declNode() {}
 
-func (i *InterfaceDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {
+func (i *InterfaceDecl) Print(buffer *bytes.Buffer, indent int) {
 	WriteIndent(buffer, indent)
 	buffer.WriteString("class ")
 	i.Name.Print(buffer)
@@ -893,8 +882,13 @@ func (i *InterfaceDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool
 	WriteIndent(buffer, indent)
 	buffer.WriteString("{\n")
 	buffer.WriteString("public:\n")
+	for _, v := range i.Values {
+		//TO-DO no init
+		v.Print(buffer, indent+TabSize)
+		buffer.WriteString("\n")
+	}
 	for _, f := range i.Functions {
-		f.Print(buffer, indent+TabSize, true)
+		f.PrintDeclaration(buffer, indent+TabSize)
 		buffer.WriteString("\n")
 	}
 	buffer.WriteString("};\n")
@@ -902,23 +896,26 @@ func (i *InterfaceDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool
 
 // A FuncDecl node represents a function declaration.
 type FuncDecl struct {
-	Doc           *Metadata // associated documentation; or nil
-	Modifier      *Modifier
-	Name          *Ident     // function/method name
-	Params        *FieldList // (incoming) parameters; non-nil
-	Result        *Field     // (outgoing) results; or nil
-	Body          *BlockStmt // function body; or nil for external (non-Go) function
-	Generic       *GenericLit
-	IsMember      bool
-	IsConstructor bool
-	IsDestructor  bool
+	Doc      *Metadata // associated documentation; or nil
+	Modifier *Modifier
+	Name     *Ident     // function/method name
+	Params   *FieldList // (incoming) parameters; non-nil
+	Result   *Field     // (outgoing) results; or nil
+	Body     *BlockStmt // function body; or nil for external (non-Go) function
+	Generic  *GenericLit
+	//TO-DO refactor to a class related sub info
+	IsMember        bool
+	InterfaceMember bool
+	ClassName       string
+	IsConstructor   bool
+	IsDestructor    bool
 }
 
 func (d *FuncDecl) Pos() int { return d.Name.Pos() }
 
 func (*FuncDecl) declNode() {}
 
-func (f *FuncDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {
+func (f *FuncDecl) PrintDeclaration(buffer *bytes.Buffer, indent int) {
 	//TO-DO indent
 	if f.Generic != nil {
 		WriteIndent(buffer, indent)
@@ -937,28 +934,64 @@ func (f *FuncDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {
 	if f.IsMember && !f.IsConstructor {
 		buffer.WriteString("virtual ")
 	}
-	if !(f.IsMember && (f.IsDestructor || f.IsConstructor)) {
-		f.Result.Type.Print(buffer)
-		buffer.WriteString(" ")
+	if !(f.IsDestructor || f.IsConstructor) {
+		if f.Result == nil {
+			buffer.WriteString("void ")
+		} else {
+			f.Result.Type.Print(buffer)
+			buffer.WriteString(" ")
+		}
 	}
 	f.Name.Print(buffer)
 	buffer.WriteString("(")
 	f.Params.Print(buffer)
 	buffer.WriteString(")")
-	if onlyDeclare {
-		if f.IsMember {
-			buffer.WriteString(" = 0")
-		}
-		buffer.WriteString(";\n")
-	} else {
-		buffer.WriteString("\n")
-		f.Body.Print(buffer, indent)
+
+	if f.InterfaceMember {
+		buffer.WriteString(" = 0")
 	}
+	buffer.WriteString(";\n")
+}
+
+func (f *FuncDecl) PrintImplementation(buffer *bytes.Buffer, indent int) {
+	//TO-DO indent
+	if f.Generic != nil {
+		WriteIndent(buffer, indent)
+		//template <class T, int N>
+		buffer.WriteString("template <")
+		for i, t := range f.Generic.Types {
+			if i > 0 {
+				buffer.WriteString(", ")
+			}
+			buffer.WriteString("class ")
+			t.Print(buffer)
+		}
+		buffer.WriteString(">\n")
+	}
+	WriteIndent(buffer, indent)
+	if !(f.IsDestructor || f.IsConstructor) {
+		if f.Result == nil {
+			buffer.WriteString("void ")
+		} else {
+			f.Result.Type.Print(buffer)
+			buffer.WriteString(" ")
+		}
+	}
+	if f.ClassName != "" {
+		buffer.WriteString(f.ClassName + "::")
+	}
+	f.Name.Print(buffer)
+	buffer.WriteString("(")
+	f.Params.Print(buffer)
+	buffer.WriteString(")")
+
+	buffer.WriteString("\n")
+	f.Body.Print(buffer, indent)
 }
 
 // ----------------------------------------------------------------------------
 // Files and packages
-type ProgramFile struct {
+type Program struct {
 	Namespace  *NamespaceDecl // position of "namespace" keyword
 	Imports    []*ImportDecl  // imports in this file
 	Values     []*ValueDecl
@@ -966,195 +999,140 @@ type ProgramFile struct {
 	Classes    []*ClassDecl
 	Enums      []*EnumDecl
 	Interfaces []*InterfaceDecl
-	EndPos     int
-	Unresolved []*Ident // unresolved identifiers in this file
+	Entry      *FuncDecl //to-do
 
-	//TO-DO add other program file as children
-	//one namespace has one program file // use tree to store
+	PackageName string
+	Children    map[string]*Program
 }
 
-func (f *ProgramFile) Pos() int { return f.Namespace.Pos() }
-
-func (f *ProgramFile) End() int {
-	return f.EndPos
-}
-func (f *ProgramFile) Print(buffer *bytes.Buffer, header bool) {
-	if header {
-		buffer.WriteString("#include <cinttypes>\n")
-		buffer.WriteString("#include <iostream>\n")
-		buffer.WriteString("#include <string>\n\n")
+func (p *Program) FindPackage(path Expr) *Program {
+	if path == nil {
+		// root
+		return nil
 	}
-
-	for _, v := range f.Functions {
-		v.Print(buffer, 0, true)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range f.Enums {
-		v.Print(buffer, 0, true)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range f.Interfaces {
-		v.Print(buffer, 0, true)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range f.Classes {
-		v.Print(buffer, 0, true)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range f.Values {
-		v.Print(buffer, 0, false)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range f.Functions {
-		v.Print(buffer, 0, false)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range f.Classes {
-		v.Print(buffer, 0, false)
-		buffer.WriteString("\n")
-	}
-}
-
-// A Package node represents a set of source files
-// collectively building a Go package.
-//
-type ProgramPackage struct {
-	Name    string                  // package name
-	Scope   *Scope                  // package scope across all files
-	Imports map[string]*Object      // map of package id -> package object
-	Files   map[string]*ProgramFile // Go source files by filename
-}
-
-func (p *ProgramPackage) Pos() int { return 0 }
-
-// A Scope maintains the set of named language entities declared
-// in the scope and a link to the immediately surrounding (outer)
-// scope.
-//
-type Scope struct {
-	Outer   *Scope
-	Objects map[string]*Object
-}
-
-// NewScope creates a new scope nested in the outer scope.
-func NewScope(outer *Scope) *Scope {
-	const n = 4 // initial scope capacity
-	return &Scope{outer, make(map[string]*Object, n)}
-}
-
-// Find returns the object with the given name if it is
-// found in scope s, otherwise it returns nil. Outer scopes
-// are ignored.
-//
-func (s *Scope) Find(name string) *Object {
-	return s.Objects[name]
-}
-
-// Insert attempts to insert a named object obj into the scope s.
-// If the scope already contains an object alt with the same name,
-// Insert leaves the scope unchanged and returns alt. Otherwise
-// it inserts obj and returns nil.
-//
-func (s *Scope) Insert(obj *Object) (alt *Object) {
-	if alt = s.Objects[obj.Name]; alt == nil {
-		s.Objects[obj.Name] = obj
-	}
-	return
-}
-
-// Debugging support
-func (s *Scope) String() string {
-	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "scope %p {", s)
-	if s != nil && len(s.Objects) > 0 {
-		fmt.Fprintln(&buf)
-		for _, obj := range s.Objects {
-			fmt.Fprintf(&buf, "\t%s %s\n", obj.Kind, obj.Name)
+	for {
+		if selector, ok := path.(*SelectorExpr); ok {
+			if sub, ok := p.Children[selector.Selector.Name]; ok {
+				return sub.FindPackage(selector.Expr)
+			}
+			sub := &Program{}
+			sub.PackageName = selector.Selector.Name
+			p.Children[selector.Selector.Name] = sub
+			return sub.FindPackage(selector.Expr)
+		} else if ident, ok := path.(*Ident); ok {
+			if sub, ok := p.Children[ident.Name]; ok {
+				return sub
+			}
+			sub := &Program{}
+			sub.PackageName = ident.Name
+			p.Children[ident.Name] = sub
+			return sub
 		}
+		return nil
 	}
-	fmt.Fprintf(&buf, "}\n")
-	return buf.String()
 }
 
-// ----------------------------------------------------------------------------
-// Objects
+func (p *Program) Print(buffer *bytes.Buffer) {
+	buffer.WriteString("#include <cinttypes>\n")
+	buffer.WriteString("#include <iostream>\n")
+	buffer.WriteString("#include <string>\n\n")
 
-// An Object describes a named language entity such as a package,
-// constant, type, variable, function (incl. methods), or label.
-//
-type Object struct {
-	Kind ObjKind
-	Name string      // declared name
-	Decl interface{} // corresponding Field, XxxSpec, FuncDecl, AssignStmt, Scope; or nil
-	Type interface{} // placeholder for type information; may be nil
+	p.PrintForwardDeclaration(buffer)
+	buffer.WriteString("\n")
+	p.PrintDeclaration(buffer)
+	buffer.WriteString("\n")
+	p.PrintImplementation(buffer)
+
+	//to-do print main at the last
 }
 
-// NewObj creates a new object of a given kind and name.
-func NewObject(kind ObjKind, name string) *Object {
-	return &Object{Kind: kind, Name: name}
-}
-
-// Pos computes the source position of the declaration of an object name.
-// The result may be an invalid position if it cannot be computed
-// (obj.Decl may be nil or not correct).
-func (obj *Object) Pos() int {
-	name := obj.Name
-	switch d := obj.Decl.(type) {
-	case *Field:
-		if d.Name.Name == name {
-			return d.Pos()
-		}
-	case *NamespaceDecl:
-		return d.Pos()
-	case *ImportDecl:
-		if d.Name != nil && d.Name.Name == name {
-			return d.Pos()
-		}
-		return d.Path.Pos()
-	case *ValueDecl:
-		if d.Name.Name == name {
-			return d.Name.Pos()
-		}
-	//TO-DO class enum interface
-	case *FuncDecl:
-		if d.Name.Name == name {
-			return d.Name.Pos()
-		}
-	case *AssignStmt:
-		if ident, isIdent := d.Left.(*Ident); isIdent && ident.Name == name {
-			return ident.Pos()
-		}
+func (p *Program) PrintForwardDeclaration(buffer *bytes.Buffer) {
+	if p.PackageName != "" {
+		buffer.WriteString("namespace " + p.PackageName + "\n{\n")
 	}
-	return 0
+
+	for _, v := range p.Children {
+		v.PrintForwardDeclaration(buffer)
+	}
+
+	for _, v := range p.Enums {
+		buffer.WriteString("enum class " + v.Name.Name + ";\n\n")
+	}
+
+	for _, v := range p.Interfaces {
+		buffer.WriteString("class " + v.Name.Name + ";\n\n")
+	}
+
+	for _, v := range p.Classes {
+		buffer.WriteString("class " + v.Name.Name + ";\n\n")
+	}
+
+	if p.PackageName != "" {
+		buffer.WriteString("\n}\n")
+	}
 }
 
-// ObjKind describes what an object represents.
-type ObjKind int
+func (p *Program) PrintDeclaration(buffer *bytes.Buffer) {
+	if p.PackageName != "" {
+		buffer.WriteString("namespace " + p.PackageName + "\n{\n")
+	}
 
-// The list of possible Object kinds.
-const (
-	Bad          ObjKind = iota // for error handling
-	ConstObj                    // constant
-	VarObj                      // variable
-	ClassObj                    // class
-	InterfaceObj                //interface
-	EnumObj                     // enum
-	FunctionObj                 // function or method
-)
+	for _, v := range p.Children {
+		v.PrintDeclaration(buffer)
+	}
 
-var objKindStrings = [...]string{
-	Bad:         "bad",
-	ConstObj:    "const",
-	VarObj:      "var",
-	ClassObj:    "class",
-	EnumObj:     "enum",
-	FunctionObj: "function",
+	//to-do sort class declaration by inheiritance
+	// get max inheiritance level, then print by level. (later check level and save it)
+	for _, v := range p.Functions {
+		v.PrintDeclaration(buffer, 0)
+		buffer.WriteString("\n")
+	}
+
+	for _, v := range p.Enums {
+		v.Print(buffer, 0)
+		buffer.WriteString("\n")
+	}
+
+	for _, v := range p.Interfaces {
+		v.Print(buffer, 0)
+		buffer.WriteString("\n")
+	}
+
+	for _, v := range p.Classes {
+		v.PrintDeclaration(buffer, 0)
+		buffer.WriteString("\n")
+	}
+
+	if p.PackageName != "" {
+		buffer.WriteString("\n}\n")
+	}
 }
 
-func (kind ObjKind) String() string { return objKindStrings[kind] }
+func (p *Program) PrintImplementation(buffer *bytes.Buffer) {
+	if p.PackageName != "" {
+		buffer.WriteString("namespace " + p.PackageName + "\n{\n")
+	}
+
+	for _, v := range p.Children {
+		v.PrintImplementation(buffer)
+	}
+
+	for _, v := range p.Values {
+		v.Print(buffer, 0)
+		buffer.WriteString("\n")
+	}
+
+	for _, v := range p.Functions {
+		v.PrintImplementation(buffer, 0)
+		buffer.WriteString("\n")
+	}
+
+	for _, v := range p.Classes {
+		v.PrintImplementation(buffer, 0)
+		buffer.WriteString("\n")
+	}
+
+	if p.PackageName != "" {
+		buffer.WriteString("\n}\n")
+	}
+}

@@ -2,6 +2,13 @@
 #include <iostream>
 #include <string>
 
+enum class color;
+
+class must_do;
+
+class empty;
+
+
 template <class T>
 void print(T t);
 
@@ -22,9 +29,23 @@ enum class color
 class must_do
 {
 public:
+    int32_t value;
+
+    virtual void print() = 0;
+
 };
 
-class empty;
+class empty
+{
+public:
+    int32_t value;
+
+    empty();
+
+    virtual ~empty();
+
+};
+
 
 bool b = true;
 
@@ -98,18 +119,12 @@ int32_t main()
     return 0;
 }
 
-class empty
+empty::empty()
 {
-public:
-    int32_t value;
+}
 
-    empty()
-    {
-    }
+empty::~empty()
+{
+}
 
-    virtual ~empty()
-    {
-    }
-
-};
 
