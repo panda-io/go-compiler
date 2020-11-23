@@ -19,3 +19,5 @@ program has 1 scope info (tree)
 #声明，如果没有设置初始值，则自动赋值
 
 #静态变量赋值
+
+#store file info as metadata

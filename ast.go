@@ -992,8 +992,7 @@ func (f *FuncDecl) PrintImplementation(buffer *bytes.Buffer, indent int) {
 // ----------------------------------------------------------------------------
 // Files and packages
 type Program struct {
-	Namespace  *NamespaceDecl // position of "namespace" keyword
-	Imports    []*ImportDecl  // imports in this file
+	Imports    []*ImportDecl // imports in this file
 	Values     []*ValueDecl
 	Functions  []*FuncDecl
 	Classes    []*ClassDecl
@@ -1010,26 +1009,30 @@ func (p *Program) FindPackage(path Expr) *Program {
 		// root
 		return nil
 	}
+
+	var packages []*Ident
 	for {
 		if selector, ok := path.(*SelectorExpr); ok {
-			if sub, ok := p.Children[selector.Selector.Name]; ok {
-				return sub.FindPackage(selector.Expr)
-			}
-			sub := &Program{}
-			sub.PackageName = selector.Selector.Name
-			p.Children[selector.Selector.Name] = sub
-			return sub.FindPackage(selector.Expr)
+			packages = append(packages, selector.Selector)
+			path = selector.Expr
 		} else if ident, ok := path.(*Ident); ok {
-			if sub, ok := p.Children[ident.Name]; ok {
-				return sub
-			}
-			sub := &Program{}
-			sub.PackageName = ident.Name
-			p.Children[ident.Name] = sub
-			return sub
+			packages = append(packages, ident)
+			break
 		}
-		return nil
 	}
+
+	current := p
+	for i := len(packages) - 1; i >= 0; i-- {
+		name := packages[i].Name
+		if _, ok := current.Children[name]; !ok {
+			current.Children[name] = &Program{
+				PackageName: name,
+				Children:    make(map[string]*Program),
+			}
+		}
+		current = current.Children[name]
+	}
+	return current
 }
 
 func (p *Program) Print(buffer *bytes.Buffer) {

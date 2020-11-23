@@ -9,70 +9,28 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 //TO-DO too many errors
 
-func ParseString(content string, scanComments bool, flags []string) (*Program, error) {
-	var p Parser
-	p.file = NewFile("source")
-	return p.doParse([]byte(content), scanComments, flags)
+func NewParser(scanComments bool, flags []string) *Parser {
+	return &Parser{
+		scanComments: scanComments,
+		flags:        flags,
+		root: &Program{
+			Children: make(map[string]*Program),
+		},
+	}
 }
-
-func ParseFile(fileName string, scanComments bool, flags []string) (*Program, error) {
-	// get source
-	text, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	var p Parser
-	p.file = NewFile(fileName)
-	return p.doParse(text, scanComments, flags)
-}
-
-/*
-return fileset or package
-func ParseDir(fset *FileSet, path string, filter func(os.FileInfo) bool, mode Mode) (pkgs map[string]*Package, first error) {
-	fd, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-
-	list, err := fd.Readdir(-1)
-	if err != nil {
-		return nil, err
-	}
-
-	pkgs = make(map[string]*Package)
-	for _, d := range list {
-		if strings.HasSuffix(d.Name(), ".go") && (filter == nil || filter(d)) {
-			filename := filepath.Join(path, d.Name())
-			if src, err := ParseFile(fset, filename, nil, mode); err == nil {
-				name := src.Name.Name
-				pkg, found := pkgs[name]
-				if !found {
-					pkg = &Package{
-						Name:  name,
-						Files: make(map[string]*File),
-					}
-					pkgs[name] = pkg
-				}
-				pkg.Files[filename] = src
-			} else if first == nil {
-				first = err
-			}
-		}
-	}
-
-	return
-}*/
 
 // The parser structure holds the parser's internal state.
 type Parser struct {
-	file    *File
-	scanner *Scanner
+	scanComments bool
+	flags        []string
+	scanner      *Scanner
 
 	cpp []*Metadata
 
@@ -84,16 +42,51 @@ type Parser struct {
 	// Non-syntactic parser control
 	exprLev int  // < 0: in control clause, >= 0: in expression // TO-DO refactor later
 	inRhs   bool // if set, the parser is parsing a rhs expression
+
+	root *Program
 }
 
-func (p *Parser) doParse(src []byte, scanComments bool, flags []string) (f *Program, err error) {
-	// parse source
-	eh := func(pos Position, msg string) { p.error(p.pos, msg) }
-	p.scanner = NewScanner(p.file, src, eh, scanComments, flags)
-	p.next()
+func (p *Parser) ParseString(content string) {
+	file := NewFile("source")
+	p.parse(file, []byte(content), p.scanComments, p.flags)
+}
 
-	f = p.parseFile()
-	return
+func (p *Parser) ParseFile(fileName string) {
+	// get source
+	text, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		panic(err)
+	}
+
+	file := NewFile(fileName)
+	p.parse(file, text, p.scanComments, p.flags)
+}
+
+func (p *Parser) ParseFolder(folder string) {
+	fd, err := os.Open(folder)
+	if err != nil {
+		panic(err)
+	}
+
+	list, err := fd.Readdir(-1)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, d := range list {
+		if d.IsDir() {
+			p.ParseFolder(filepath.Join(folder, d.Name()))
+		} else {
+			if strings.HasSuffix(d.Name(), ".pd") {
+				filename := filepath.Join(folder, d.Name())
+				p.ParseFile(filename)
+			}
+		}
+	}
+}
+
+func (p *Parser) GetProgram() *Program {
+	return p.root
 }
 
 func (p *Parser) next() {
@@ -113,7 +106,7 @@ func (p *Parser) next() {
 }
 
 func (p *Parser) error(pos int, msg string) {
-	errPos := p.file.Position(pos)
+	errPos := p.scanner.file.Position(pos)
 	fmt.Println("file:", errPos.FileName)
 	fmt.Println("line:", errPos.Line)
 	fmt.Println("column:", errPos.Column)
@@ -1177,14 +1170,20 @@ func (p *Parser) parseDecl(sync map[Token]bool) Decl {
 
 // ----------------------------------------------------------------------------
 // Source files
+func (p *Parser) parse(file *File, src []byte, scanComments bool, flags []string) {
 
-func (p *Parser) parseFile() *Program {
-	program := &Program{}
+	eh := func(pos Position, msg string) { p.error(p.pos, msg) }
+	p.scanner = NewScanner(file, src, eh, scanComments, flags)
+	p.next()
 
-	program.Namespace = p.parseNamespaceDecl()
+	program := p.root
+	namespace := p.parseNamespaceDecl()
+	if namespace.Path != nil {
+		program = p.root.FindPackage(namespace.Path)
+	}
 
 	// import
-	program.Imports = p.parseImportDecl()
+	program.Imports = append(program.Imports, p.parseImportDecl()...)
 
 	// rest of namespace body
 	for p.tok != EOF {
@@ -1204,6 +1203,4 @@ func (p *Parser) parseFile() *Program {
 			fmt.Println("bad decl", v.Pos())
 		}
 	}
-
-	return program
 }

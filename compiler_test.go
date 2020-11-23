@@ -8,10 +8,9 @@ import (
 )
 
 func TestAllTypes(t *testing.T) {
-	p, err := ParseFile("./test/all_types.pd", true, nil)
-	if err != nil {
-		t.Error(err)
-	}
+	parser := NewParser(true, nil)
+	parser.ParseFile("./test/all_types.pd")
+	p := parser.GetProgram()
 
 	if p.Imports[0].Name.Name != "sys" {
 		t.Error("parse [import system] failed")
@@ -45,27 +44,20 @@ func TestAllTypes(t *testing.T) {
 func TestNameSpace(t *testing.T) {
 	s := "namespace test;\n"
 
-	p, err := ParseString(s, true, nil)
-	if err != nil {
-		t.Error(err)
-	}
+	parser := NewParser(true, nil)
+	parser.ParseString(s)
+	p := parser.GetProgram()
 
-	if p.Namespace.Path.(*Ident).Name != "test" {
+	if p.Children["test"] == nil {
 		t.Error("parse [namespace test] failed")
 	}
 
-	s = "namespace test.sub;\n"
+	s = "namespace test.sub.final;\n"
+	parser = NewParser(true, nil)
+	parser.ParseString(s)
+	p = parser.GetProgram()
 
-	p, err = ParseString(s, true, nil)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if p.Namespace.Path.(*SelectorExpr).Selector.Name != "sub" {
-		t.Error("parse [namespace test.sub] failed")
-	}
-
-	if p.Namespace.Path.(*SelectorExpr).Expr.(*Ident).Name != "test" {
+	if p.Children["test"].Children["sub"] == nil {
 		t.Error("parse [namespace test.sub] failed")
 	}
 }
@@ -73,11 +65,9 @@ func TestNameSpace(t *testing.T) {
 //Test some errors
 
 func TestGenerate(t *testing.T) {
-	b, _ := ioutil.ReadFile("./test/all_types.pd")
-	p, err := ParseString(string(b), true, nil)
-	if err != nil {
-		t.Error(err)
-	}
+	parser := NewParser(true, nil)
+	parser.ParseFile("./test/all_types.pd")
+	p := parser.GetProgram()
 
 	buff := bytes.NewBuffer(nil)
 	p.Print(buff)
@@ -85,7 +75,7 @@ func TestGenerate(t *testing.T) {
 	ioutil.WriteFile("./test/all_types.cpp", buff.Bytes(), 0644)
 
 	cmd := exec.Command("g++", "-o", "test/all_types", "test/all_types.cpp")
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		t.Error("compile failed:", err)
 	}
