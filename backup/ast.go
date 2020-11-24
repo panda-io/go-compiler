@@ -992,16 +992,35 @@ func (f *FuncDecl) PrintImplementation(buffer *bytes.Buffer, indent int) {
 // ----------------------------------------------------------------------------
 // Files and packages
 type Program struct {
-	Imports    []*ImportDecl // imports in this file
+	Imports    []*ImportDecl // imports in this file // belong to parser
 	Values     []*ValueDecl
 	Functions  []*FuncDecl
 	Classes    []*ClassDecl
 	Enums      []*EnumDecl
 	Interfaces []*InterfaceDecl
 	Entry      *FuncDecl //to-do
+	Includes   []string
 
+	Parent      *Program
 	PackageName string
 	Children    map[string]*Program
+}
+
+func (p *Program) AddInclude(include string) {
+	if p.Parent != nil {
+		p.Parent.AddInclude(include)
+	} else {
+		found := false
+		for _, v := range p.Includes {
+			if v == include {
+				found = true
+				break
+			}
+		}
+		if !found {
+			p.Includes = append(p.Includes, include)
+		}
+	}
 }
 
 func (p *Program) FindPackage(path Expr) *Program {
@@ -1026,6 +1045,7 @@ func (p *Program) FindPackage(path Expr) *Program {
 		name := packages[i].Name
 		if _, ok := current.Children[name]; !ok {
 			current.Children[name] = &Program{
+				Parent:      current,
 				PackageName: name,
 				Children:    make(map[string]*Program),
 			}

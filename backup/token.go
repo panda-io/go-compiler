@@ -11,17 +11,17 @@ const (
 	EOF
 
 	// literals
-	literal_begin
+	literalBegin
 	IDENT
 	INT
 	FLOAT
 	CHAR
 	STRING
 	META
-	literal_end
+	literalEnd
 
 	// keywords
-	keyword_begin
+	keywordBegin
 	Async
 	Await
 	Base
@@ -54,10 +54,10 @@ const (
 	Try
 	Var
 	Yield
-	keyword_end
+	keywordEnd
 
 	// scalars
-	scalar_begin
+	scalarBegin
 	Bool
 	Char //16 bit unicode char
 	Int8
@@ -82,10 +82,10 @@ const (
 	Double
 	String
 	Void
-	scalar_end
+	scalarEnd
 
 	// operators
-	operator_begin
+	operatorBegin
 	LeftParen
 	RightParen
 	LeftBracket
@@ -135,7 +135,7 @@ const (
 	Semi
 	Dot
 	Ellipsis
-	operator_end
+	operatorEnd
 )
 
 var (
@@ -354,16 +354,16 @@ var (
 func init() {
 	allTokens = make(map[string]Token)
 
-	for i := keyword_begin + 1; i < keyword_end; i++ {
+	for i := keywordBegin + 1; i < keywordEnd; i++ {
 		allTokens[tokens[i]] = i
 	}
 
-	for i := scalar_begin + 1; i < scalar_end; i++ {
+	for i := scalarBegin + 1; i < scalarEnd; i++ {
 		allTokens[tokens[i]] = i
 	}
 
 	operatorRoot = NewOperatorNode()
-	for i := operator_begin + 1; i < operator_end; i++ {
+	for i := operatorBegin + 1; i < operatorEnd; i++ {
 		allTokens[tokens[i]] = i
 		operatorRoot.Insert(tokens[i])
 	}
@@ -376,19 +376,19 @@ func (token Token) String() string {
 	return ""
 }
 func (token Token) IsLiteral() bool {
-	return literal_begin < token && token < literal_end
+	return literalBegin < token && token < literalEnd
 }
 
 func (token Token) IsOperator() bool {
-	return operator_begin < token && token < operator_end
+	return operatorBegin < token && token < operatorEnd
 }
 
 func (token Token) IsKeyword() bool {
-	return keyword_begin < token && token < keyword_end
+	return keywordBegin < token && token < keywordEnd
 }
 
 func (token Token) IsScalar() bool {
-	return scalar_begin < token && token < scalar_end
+	return scalarBegin < token && token < scalarEnd
 }
 
 func (token Token) Print(buffer *bytes.Buffer) {

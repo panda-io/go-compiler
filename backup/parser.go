@@ -871,7 +871,6 @@ func (p *Parser) parseStmt() (s Stmt) {
 		IDENT, INT, FLOAT, CHAR, STRING,
 		LeftParen, LeftBracket,
 		Plus, Minus, Star, And, Caret, Not: // unary operators
-		fmt.Println("token:", p.tok.String(), "literal:", p.lit)
 		s = p.parseSimpleStmt()
 		p.expect(Semi)
 	case Return:
