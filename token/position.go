@@ -20,9 +20,9 @@ func (p Position) String() string {
 // File store info of source file
 type File struct {
 	Name  string
+	Size  int
+	Base  int
 	lines []int
-	size  int
-	base  int
 }
 
 // AddLine add line to soure file
@@ -72,9 +72,9 @@ func (s *FileSet) AddFile(filename string, size int) *File {
 	}
 	f := &File{
 		Name:  filename,
+		Size:  size,
+		Base:  s.base,
 		lines: []int{0},
-		size:  size,
-		base:  s.base,
 	}
 	s.base += size + 1
 	s.files = append(s.files, f)
@@ -84,7 +84,7 @@ func (s *FileSet) AddFile(filename string, size int) *File {
 // File returns the file that contains the position (global position)
 func (s *FileSet) File(position int) *File {
 	for _, f := range s.files {
-		if position <= f.base+f.size {
+		if position <= f.Base+f.Size {
 			return f
 		}
 	}
@@ -94,7 +94,7 @@ func (s *FileSet) File(position int) *File {
 // Position converts global position to a local positon in file
 func (s *FileSet) Position(position int) *Position {
 	if f := s.File(position); f != nil {
-		return f.Position(position - f.base)
+		return f.Position(position - f.Base)
 	}
 	return nil
 }

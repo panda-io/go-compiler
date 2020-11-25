@@ -51,6 +51,7 @@ func NewScanner(handler ErrorHandler, flags []string) *Scanner {
 	s := &Scanner{
 		errorHandler: handler,
 	}
+	s.flags = make(map[string]bool)
 	for _, flag := range flags {
 		s.flags[flag] = true
 	}
@@ -354,12 +355,12 @@ func (s *Scanner) scanOperators() (t token.Token, literal string) {
 	return
 }
 
-func (s *Scanner) scanPreprossesor() (position int, t token.Token, literal string) {
+func (s *Scanner) scanPreprossesor() (int, token.Token, string) {
 	//#if #else #elif #end
 	if !s.isLetter(s.char) {
 		s.error(s.offset, "unexpected identifier")
 	}
-	literal = s.scanIdentifier()
+	literal := s.scanIdentifier()
 	if literal == preprocessorIf {
 		s.preprocessorLevel++
 		s.preprocessorStatus = append(s.preprocessorStatus, &preprocessor{
@@ -398,7 +399,7 @@ func (s *Scanner) scanPreprossesor() (position int, t token.Token, literal strin
 			s.error(s.offset, "unexpected #end")
 		}
 		s.preprocessorLevel--
-		s.preprocessorStatus = s.preprocessorStatus[:len(s.preprocessorStatus)-1]
+		s.preprocessorStatus = s.preprocessorStatus[:s.preprocessorLevel]
 	} else {
 		s.error(s.offset, "unexpected preprocessor: "+literal)
 	}
@@ -441,6 +442,8 @@ func (s *Scanner) skipPreprossesor() {
 		if s.char == eof {
 			s.error(s.offset, "preprocessor not terminated, expecting #end")
 		}
+		offset := s.offset
+		readOffset := s.readOffset
 		s.next()
 		if s.isLetter(s.char) {
 			literal := s.scanIdentifier()
@@ -452,27 +455,36 @@ func (s *Scanner) skipPreprossesor() {
 					satisfied:    false,
 				})
 			} else if literal == preprocessorElseIf {
+				if s.preprocessorLevel == level {
+					s.offset = offset
+					s.readOffset = readOffset
+					s.char = '#'
+					break
+				}
 				if s.preprocessorStatus[s.preprocessorLevel-1].currentBlock == preprocessorElse {
 					s.error(s.offset, "unexpected #elif")
 				}
 				s.preprocessorStatus[s.preprocessorLevel-1].currentBlock = preprocessorElseIf
+			} else if literal == preprocessorElse {
 				if s.preprocessorLevel == level {
+					s.offset = offset
+					s.readOffset = readOffset
+					s.char = '#'
 					break
 				}
-			} else if literal == preprocessorElse {
 				if s.preprocessorStatus[s.preprocessorLevel-1].currentBlock == preprocessorElse {
 					s.error(s.offset, "unexpected #else")
 				}
 				s.preprocessorStatus[s.preprocessorLevel-1].currentBlock = preprocessorElse
-				if s.preprocessorLevel == level {
-					break
-				}
 			} else if literal == preprocessorEnd {
-				s.preprocessorLevel--
-				s.preprocessorStatus = s.preprocessorStatus[:len(s.preprocessorStatus)-1]
-				if s.preprocessorLevel == level-1 {
+				if s.preprocessorLevel == level {
+					s.offset = offset
+					s.readOffset = readOffset
+					s.char = '#'
 					break
 				}
+				s.preprocessorLevel--
+				s.preprocessorStatus = s.preprocessorStatus[:s.preprocessorLevel]
 			} else {
 				s.error(s.offset, "unexpected preprocessor: "+literal)
 			}
@@ -510,7 +522,7 @@ func (s *Scanner) Scan() (position int, t token.Token, literal string) {
 		s.next()
 	}
 
-	position = s.offset
+	position = s.offset + s.file.Base
 
 	t = token.ILLEGAL
 	if s.isLetter(s.char) {
