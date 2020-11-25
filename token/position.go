@@ -13,9 +13,6 @@ type Position struct {
 // String return the location of current position
 func (p Position) String() string {
 	path := p.file.Name
-	if path == "" {
-		path = "<input>"
-	}
 	line, column := p.file.location(p.offset)
 	return fmt.Sprintf("%s:%d:%d", path, line, column)
 }

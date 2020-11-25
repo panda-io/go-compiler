@@ -1,4 +1,4 @@
-package compiler
+package scanner
 
 import (
 	"fmt"
@@ -435,7 +435,7 @@ func (s *Scanner) scanPreprossesorExpression() bool {
 func (s *Scanner) skipPreprossesor() {
 	level := s.preprocessorLevel
 	for {
-		for s.char != eof || s.char != '#' {
+		for s.char != eof && s.char != '#' {
 			s.next()
 		}
 		if s.char == eof {
