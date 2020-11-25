@@ -216,7 +216,7 @@ func (s *Scanner) scanNumber() (token.Token, string) {
 	return t, string(s.src[offset:s.offset])
 }
 
-func (s *Scanner) scanEscape(quote rune) bool {
+func (s *Scanner) scanEscape(quote rune) {
 	offset := s.offset
 
 	var n int
@@ -224,7 +224,7 @@ func (s *Scanner) scanEscape(quote rune) bool {
 	switch s.char {
 	case 'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', quote:
 		s.next()
-		return true
+		return
 	case '0', '1', '2', '3', '4', '5', '6', '7':
 		n, base, max = 3, 8, 255
 	case 'x':
@@ -242,7 +242,6 @@ func (s *Scanner) scanEscape(quote rune) bool {
 			m = "escape sequence not terminated"
 		}
 		s.error(offset, m)
-		return false
 	}
 
 	var x uint32
@@ -251,7 +250,6 @@ func (s *Scanner) scanEscape(quote rune) bool {
 		if d >= base {
 			msg := fmt.Sprintf("illegal character %#U in escape sequence", s.char)
 			s.error(s.offset, msg)
-			return false
 		}
 		x = x*base + d
 		s.next()
@@ -260,10 +258,7 @@ func (s *Scanner) scanEscape(quote rune) bool {
 
 	if x > max || 0xD800 <= x && x < 0xE000 {
 		s.error(offset, "escape sequence is invalid Unicode code point")
-		return false
 	}
-
-	return true
 }
 
 func (s *Scanner) scanString() string {
@@ -295,9 +290,7 @@ func (s *Scanner) scanChar() string {
 	}
 	s.next()
 	if char == '\\' {
-		if !s.scanEscape('\'') {
-			s.error(offset, "illegal rune literal")
-		}
+		s.scanEscape('\'')
 	}
 	if s.char != '\'' {
 		s.error(offset, "illegal rune literal")
@@ -313,7 +306,6 @@ func (s *Scanner) scanRawString() string {
 		char := s.char
 		if char < 0 {
 			s.error(s.offset, "raw string literal not terminated")
-			break
 		}
 		s.next()
 		if char == '`' {

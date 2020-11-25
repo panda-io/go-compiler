@@ -2,7 +2,7 @@ import sys = system;
 import compiler.test.sub;
 
 public const b bool = true;
-const c char = 'a'; // alias u32 //TO-DO
+const c char = 'a'; // alias utf-code u32
 
 var sbyte_v sbyte = 1; // alias i8
 var short_v short = 0; // alias i16
