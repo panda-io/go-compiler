@@ -250,9 +250,6 @@ func (s *Scanner) scanEscape(quote rune) bool {
 		d := uint32(s.digitVal(s.char))
 		if d >= base {
 			msg := fmt.Sprintf("illegal character %#U in escape sequence", s.char)
-			if s.char < 0 {
-				msg = "escape sequence not terminated"
-			}
 			s.error(s.offset, msg)
 			return false
 		}
@@ -276,7 +273,6 @@ func (s *Scanner) scanString() string {
 		char := s.char
 		if char == '\n' || char < 0 {
 			s.error(s.offset, "string literal not terminated")
-			break
 		}
 		s.next()
 		if char == '"' {
@@ -293,42 +289,26 @@ func (s *Scanner) scanString() string {
 func (s *Scanner) scanChar() string {
 	offset := s.offset - 1
 
-	valid := true
-	n := 0
-	for {
-		char := s.char
-		if char == '\n' || char < 0 {
-			if valid {
-				s.error(offset, "rune literal not terminated")
-				valid = false
-			}
-			break
-		}
-		s.next()
-		if char == '\'' {
-			break
-		}
-		n++
-		if char == '\\' {
-			switch s.char {
-			case 'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'':
-				s.next()
-			default:
-				s.error(offset, "illegal char literal")
-				valid = false
-			}
+	char := s.char
+	if char == '\n' || char < 0 {
+		s.error(offset, "char literal not terminated")
+	}
+	s.next()
+	if char == '\\' {
+		if !s.scanEscape('\'') {
+			s.error(offset, "illegal rune literal")
 		}
 	}
-
-	if valid && n != 1 {
-		s.error(offset, "illegal char literal")
+	if s.char != '\'' {
+		s.error(offset, "illegal rune literal")
 	}
-
+	s.next()
 	return string(s.src[offset:s.offset])
 }
 
 func (s *Scanner) scanRawString() string {
 	offset := s.offset - 1
+
 	for {
 		char := s.char
 		if char < 0 {
@@ -340,6 +320,7 @@ func (s *Scanner) scanRawString() string {
 			break
 		}
 	}
+
 	return string(s.src[offset:s.offset])
 }
 

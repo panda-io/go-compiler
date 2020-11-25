@@ -93,12 +93,12 @@ const (
 
 	Plus
 	Minus
-	Star
+	Mul
 	Div
 	Mod
 	Caret
-	And
-	Or
+	BitAnd
+	BitOr
 	Tilde
 	Not
 	Assign
@@ -122,8 +122,8 @@ const (
 	NotEqual
 	LessEqual
 	GreaterEqual
-	AndAnd
-	OrOr
+	And
+	Or
 	PlusPlus
 	MinusMinus
 
@@ -204,12 +204,12 @@ var (
 		RightBrace:       "}",
 		Plus:             "+",
 		Minus:            "-",
-		Star:             "*",
+		Mul:              "*",
 		Div:              "/",
 		Mod:              "%",
 		Caret:            "^",
-		And:              "&",
-		Or:               "|",
+		BitAnd:           "&",
+		BitOr:            "|",
 		Tilde:            "~",
 		Not:              "!",
 		Assign:           "=",
@@ -231,8 +231,8 @@ var (
 		NotEqual:         "!=",
 		LessEqual:        "<=",
 		GreaterEqual:     ">=",
-		AndAnd:           "&&",
-		OrOr:             "||",
+		And:              "&&",
+		Or:               "||",
 		PlusPlus:         "++",
 		MinusMinus:       "--",
 		Comma:            ",",
@@ -344,15 +344,15 @@ func (t Token) CppType() string {
 // Precedence returns the operator precedence of the binary operator op
 func (t Token) Precedence() int {
 	switch t {
-	case OrOr:
+	case Or:
 		return 1
-	case AndAnd:
+	case And:
 		return 2
 	case Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, Question:
 		return 3
-	case Plus, Minus, Or, Caret:
+	case Plus, Minus, BitOr, Caret:
 		return 4
-	case Star, Div, Mod, LeftShift, RightShift, And:
+	case Mul, Div, Mod, LeftShift, RightShift, BitAnd:
 		return 5
 	}
 	return 0

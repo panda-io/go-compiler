@@ -82,3 +82,5 @@ file has import scope
 #静态变量赋值
 
 #store file info into program
+
+#char represent utf-8 code
