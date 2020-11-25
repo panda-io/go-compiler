@@ -22,7 +22,7 @@ func assertEqual(t *testing.T, a interface{}, b interface{}) {
 }
 
 func handleError(p *token.Position, message string) {
-	fmt.Println(p.String())
+	fmt.Println("error:", p.String())
 	panic(message)
 }
 
@@ -31,7 +31,7 @@ func TestBasic(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`identifier 100 100.0 "string" 'c' @ ++ .5 .`))
+	s.ScanFile(f, []byte(`identifier 100 100.0 "string" 'c' @ ++ .5 .;/=.`))
 	_, tok, literal := s.Scan()
 	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "identifier")
@@ -56,6 +56,15 @@ func TestBasic(t *testing.T) {
 	_, tok, literal = s.Scan()
 	assertEqual(t, tok, token.FLOAT)
 	assertEqual(t, literal, ".5")
+	_, tok, literal = s.Scan()
+	assertEqual(t, tok, token.Dot)
+	assertEqual(t, literal, ".")
+	_, tok, literal = s.Scan()
+	assertEqual(t, tok, token.Semi)
+	assertEqual(t, literal, ";")
+	_, tok, literal = s.Scan()
+	assertEqual(t, tok, token.DivAssign)
+	assertEqual(t, literal, "/=")
 	_, tok, literal = s.Scan()
 	assertEqual(t, tok, token.Dot)
 	assertEqual(t, literal, ".")
@@ -125,6 +134,16 @@ func TestPreprocessor(t *testing.T) {
 	windows
 	#end
 
+	#if directx
+	directx
+	#elif vulkan
+	vulkan
+	#elif opengl
+	opengl
+	#else
+	none
+	#end
+
 	end
 	`
 	s.ScanFile(f, []byte(src))
@@ -139,10 +158,13 @@ func TestPreprocessor(t *testing.T) {
 	assertEqual(t, literal, "windows")
 	_, tok, literal = s.Scan()
 	assertEqual(t, tok, token.IDENT)
+	assertEqual(t, literal, "opengl")
+	_, tok, literal = s.Scan()
+	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "end")
 }
 
-func TestEscape(t *testing.T) {
+func TestStringEscape(t *testing.T) {
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
@@ -167,7 +189,7 @@ func TestCharEscape(t *testing.T) {
 	assertEqual(t, literal, `'\x1b'`)
 }
 
-func TestUnicade(t *testing.T) {
+func TestUnicode(t *testing.T) {
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
@@ -194,7 +216,37 @@ func TestNullChar(t *testing.T) {
 	s.Scan()
 }
 
-func TestInvalidUTF8Char(t *testing.T) {
+func TestInvalidChar1(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid char did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte(`'\abc'`))
+	s.Scan()
+}
+
+func TestInvalidChar2(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid char did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte(`'\xxx'`))
+	s.Scan()
+}
+
+func TestInvalidUnicode1(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("invalid utf-8 did not panic")
@@ -209,7 +261,22 @@ func TestInvalidUTF8Char(t *testing.T) {
 	s.Scan()
 }
 
-func TestInvalidBom(t *testing.T) {
+func TestInvalidUnicode2(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid uft escape did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte(`"\U00FFFFFF"`))
+	s.Scan()
+}
+
+func TestInvalidUnicode3(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("invalid utf bom did not panic")
@@ -227,22 +294,7 @@ func TestInvalidBom(t *testing.T) {
 	s.Scan()
 }
 
-func TestUnterminated(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("unterminated comment did not panic")
-		}
-	}()
-
-	fs := &token.FileSet{}
-	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
-
-	s.ScanFile(f, []byte("/* comment"))
-	s.Scan()
-}
-
-func TestInvalidNumber(t *testing.T) {
+func TestInvalidNumber1(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("invalid number did not panic")
@@ -257,7 +309,7 @@ func TestInvalidNumber(t *testing.T) {
 	s.Scan()
 }
 
-func TestInvalidHexNumber(t *testing.T) {
+func TestInvalidNumber2(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("invalid hex did not panic")
@@ -272,7 +324,7 @@ func TestInvalidHexNumber(t *testing.T) {
 	s.Scan()
 }
 
-func TestInvalidRadixPoint(t *testing.T) {
+func TestInvalidNumber3(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("invalid radix point did not panic")
@@ -287,7 +339,7 @@ func TestInvalidRadixPoint(t *testing.T) {
 	s.Scan()
 }
 
-func TestInvalidFloat(t *testing.T) {
+func TestInvalidNumber4(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("invalid float did not panic")
@@ -302,22 +354,7 @@ func TestInvalidFloat(t *testing.T) {
 	s.Scan()
 }
 
-func TestInvalidEscape(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("invalid number did not panic")
-		}
-	}()
-
-	fs := &token.FileSet{}
-	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
-
-	s.ScanFile(f, []byte(`"\`))
-	s.Scan()
-}
-
-func TestInvalidNumberEscape(t *testing.T) {
+func TestInvalidNumber5(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("invalid number did not panic")
@@ -332,10 +369,10 @@ func TestInvalidNumberEscape(t *testing.T) {
 	s.Scan()
 }
 
-func TestInvalidUtf8Escape(t *testing.T) {
+func TestInvalidString(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf("invalid uft escape did not panic")
+			t.Errorf("invalid number did not panic")
 		}
 	}()
 
@@ -343,7 +380,22 @@ func TestInvalidUtf8Escape(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`"\U00FFFFFF"`))
+	s.ScanFile(f, []byte(`"\`))
+	s.Scan()
+}
+
+func TestUnterminatedComment(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("unterminated comment did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("/* comment"))
 	s.Scan()
 }
 
@@ -374,13 +426,14 @@ func TestUnterminatedChar(t *testing.T) {
 	s := NewScanner(handleError, nil)
 
 	s.ScanFile(f, []byte(`'`))
-	s.Scan()
+	s.
+		Scan()
 }
 
-func TestInvalidCharLength(t *testing.T) {
+func TestUnterminatedRawString(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf("invalid char did not panic")
+			t.Errorf("unterminated string did not panic")
 		}
 	}()
 
@@ -388,14 +441,29 @@ func TestInvalidCharLength(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`'\abc'`))
+	s.ScanFile(f, []byte("`abc"))
 	s.Scan()
 }
 
-func TestInvalidChar(t *testing.T) {
+func TestInvalidPreprocessor0(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf("invalid char did not panic")
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, []string{"flag"})
+
+	s.ScanFile(f, []byte("#if flag\n"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor1(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
 		}
 	}()
 
@@ -403,6 +471,186 @@ func TestInvalidChar(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`'\xxx'`))
+	s.ScanFile(f, []byte("#100\n#end\n"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor2(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#other\n#end\n"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor3(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if flag\n#else\n#elif other_flag\n#end"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor4(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if flag1 flag2\n#end"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor5(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if flag\n#else\n#else\n#end"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor6(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#end"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor7(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if 100\n#end"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor8(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if flag\n"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor9(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if flag\n #if other_flag\n #else\n #else\n #end\n #end\n"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor10(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if flag\n #if other_flag\n #else\n #elif\n #end\n #end\n"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor11(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if flag\n#ifn other_flag\n#end\n#end\n"))
+	s.Scan()
+}
+
+func TestInvalidPreprocessor12(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid preprocessor did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("#if flag\n#100\n#end\n#end\n"))
+	s.Scan()
+}
+
+func TestInvalidToken(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("invalid token did not panic")
+		}
+	}()
+
+	fs := &token.FileSet{}
+	f := fs.AddFile("file.pd", 100)
+	s := NewScanner(handleError, nil)
+
+	s.ScanFile(f, []byte("你好"))
 	s.Scan()
 }
