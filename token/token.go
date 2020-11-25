@@ -287,6 +287,15 @@ func init() {
 	for i := operatorBegin + 1; i < operatorEnd; i++ {
 		tokens[tokenStrings[i]] = i
 	}
+
+	operatorRoot = &operatorNode{
+		children: make(map[byte]*operatorNode),
+		token:    ILLEGAL,
+	}
+
+	for i := operatorBegin + 1; i < operatorEnd; i++ {
+		operatorRoot.insert(tokenStrings[i])
+	}
 }
 
 // ReadToken read literal to token, or identifier
