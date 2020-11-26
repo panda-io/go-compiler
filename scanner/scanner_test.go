@@ -31,7 +31,7 @@ func TestBasic(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`identifier 100 100.0 "string" 'c' @ ++ .5 .;/=.`))
+	s.SetFile(f, []byte(`identifier 100 100.0 "string" 'c' @ ++ .5 .;/=.`))
 	_, tok, literal := s.Scan()
 	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "identifier")
@@ -69,12 +69,12 @@ func TestBasic(t *testing.T) {
 	assertEqual(t, tok, token.Dot)
 	assertEqual(t, literal, ".")
 
-	s.ScanFile(f, []byte("`raw string`"))
+	s.SetFile(f, []byte("`raw string`"))
 	_, tok, literal = s.Scan()
 	assertEqual(t, tok, token.STRING)
 	assertEqual(t, literal, "`raw string`")
 
-	s.ScanFile(f, []byte("/* block comment *///comment\nnewline"))
+	s.SetFile(f, []byte("/* block comment *///comment\nnewline"))
 	_, tok, literal = s.Scan()
 	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "newline")
@@ -85,7 +85,7 @@ func TestNumber(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("0xabcd 0o1234 0b1010 0"))
+	s.SetFile(f, []byte("0xabcd 0o1234 0b1010 0"))
 	_, tok, literal := s.Scan()
 	assertEqual(t, tok, token.INT)
 	assertEqual(t, literal, "0xabcd")
@@ -146,7 +146,7 @@ func TestPreprocessor(t *testing.T) {
 
 	end
 	`
-	s.ScanFile(f, []byte(src))
+	s.SetFile(f, []byte(src))
 	_, tok, literal := s.Scan()
 	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "windows")
@@ -169,7 +169,7 @@ func TestStringEscape(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`"hello\n\r\x1b\123\u1234\U0001FFFF"`))
+	s.SetFile(f, []byte(`"hello\n\r\x1b\123\u1234\U0001FFFF"`))
 	_, tok, literal := s.Scan()
 	assertEqual(t, tok, token.STRING)
 	assertEqual(t, literal, `"hello\n\r\x1b\123\u1234\U0001FFFF"`)
@@ -180,7 +180,7 @@ func TestCharEscape(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`'c' '\x1b' '\123' '\U0001FFFF'`))
+	s.SetFile(f, []byte(`'c' '\x1b' '\123' '\U0001FFFF'`))
 	_, tok, literal := s.Scan()
 	assertEqual(t, tok, token.CHAR)
 	assertEqual(t, literal, `'c'`)
@@ -194,7 +194,7 @@ func TestUnicode(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("\uFEFFhello\n"))
+	s.SetFile(f, []byte("\uFEFFhello\n"))
 	_, tok, literal := s.Scan()
 	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "hello")
@@ -212,7 +212,7 @@ func TestNullChar(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte{0})
+	s.SetFile(f, []byte{0})
 	s.Scan()
 }
 
@@ -227,7 +227,7 @@ func TestInvalidChar1(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`'\abc'`))
+	s.SetFile(f, []byte(`'\abc'`))
 	s.Scan()
 }
 
@@ -242,7 +242,7 @@ func TestInvalidChar2(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`'\xxx'`))
+	s.SetFile(f, []byte(`'\xxx'`))
 	s.Scan()
 }
 
@@ -257,7 +257,7 @@ func TestInvalidUnicode1(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("\x80\uFEFF"))
+	s.SetFile(f, []byte("\x80\uFEFF"))
 	s.Scan()
 }
 
@@ -272,7 +272,7 @@ func TestInvalidUnicode2(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`"\U00FFFFFF"`))
+	s.SetFile(f, []byte(`"\U00FFFFFF"`))
 	s.Scan()
 }
 
@@ -287,7 +287,7 @@ func TestInvalidUnicode3(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("abc\uFEFF"))
+	s.SetFile(f, []byte("abc\uFEFF"))
 	_, tok, literal := s.Scan()
 	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "abc")
@@ -305,7 +305,7 @@ func TestInvalidNumber1(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("00"))
+	s.SetFile(f, []byte("00"))
 	s.Scan()
 }
 
@@ -320,7 +320,7 @@ func TestInvalidNumber2(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("0x"))
+	s.SetFile(f, []byte("0x"))
 	s.Scan()
 }
 
@@ -335,7 +335,7 @@ func TestInvalidNumber3(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("0xabc.0"))
+	s.SetFile(f, []byte("0xabc.0"))
 	s.Scan()
 }
 
@@ -350,7 +350,7 @@ func TestInvalidNumber4(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("100."))
+	s.SetFile(f, []byte("100."))
 	s.Scan()
 }
 
@@ -365,7 +365,7 @@ func TestInvalidNumber5(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`"\0FF"`))
+	s.SetFile(f, []byte(`"\0FF"`))
 	s.Scan()
 }
 
@@ -380,7 +380,7 @@ func TestInvalidString(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`"\`))
+	s.SetFile(f, []byte(`"\`))
 	s.Scan()
 }
 
@@ -395,7 +395,7 @@ func TestUnterminatedComment(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("/* comment"))
+	s.SetFile(f, []byte("/* comment"))
 	s.Scan()
 }
 
@@ -410,7 +410,7 @@ func TestUnterminatedString(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`"abc`))
+	s.SetFile(f, []byte(`"abc`))
 	s.Scan()
 }
 
@@ -425,7 +425,7 @@ func TestUnterminatedChar(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte(`'`))
+	s.SetFile(f, []byte(`'`))
 	s.
 		Scan()
 }
@@ -441,7 +441,7 @@ func TestUnterminatedRawString(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("`abc"))
+	s.SetFile(f, []byte("`abc"))
 	s.Scan()
 }
 
@@ -456,7 +456,7 @@ func TestInvalidPreprocessor0(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, []string{"flag"})
 
-	s.ScanFile(f, []byte("#if flag\n"))
+	s.SetFile(f, []byte("#if flag\n"))
 	s.Scan()
 }
 
@@ -471,7 +471,7 @@ func TestInvalidPreprocessor1(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#100\n#end\n"))
+	s.SetFile(f, []byte("#100\n#end\n"))
 	s.Scan()
 }
 
@@ -486,7 +486,7 @@ func TestInvalidPreprocessor2(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#other\n#end\n"))
+	s.SetFile(f, []byte("#other\n#end\n"))
 	s.Scan()
 }
 
@@ -501,7 +501,7 @@ func TestInvalidPreprocessor3(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if flag\n#else\n#elif other_flag\n#end"))
+	s.SetFile(f, []byte("#if flag\n#else\n#elif other_flag\n#end"))
 	s.Scan()
 }
 
@@ -516,7 +516,7 @@ func TestInvalidPreprocessor4(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if flag1 flag2\n#end"))
+	s.SetFile(f, []byte("#if flag1 flag2\n#end"))
 	s.Scan()
 }
 
@@ -531,7 +531,7 @@ func TestInvalidPreprocessor5(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if flag\n#else\n#else\n#end"))
+	s.SetFile(f, []byte("#if flag\n#else\n#else\n#end"))
 	s.Scan()
 }
 
@@ -546,7 +546,7 @@ func TestInvalidPreprocessor6(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#end"))
+	s.SetFile(f, []byte("#end"))
 	s.Scan()
 }
 
@@ -561,7 +561,7 @@ func TestInvalidPreprocessor7(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if 100\n#end"))
+	s.SetFile(f, []byte("#if 100\n#end"))
 	s.Scan()
 }
 
@@ -576,7 +576,7 @@ func TestInvalidPreprocessor8(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if flag\n"))
+	s.SetFile(f, []byte("#if flag\n"))
 	s.Scan()
 }
 
@@ -591,7 +591,7 @@ func TestInvalidPreprocessor9(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if flag\n #if other_flag\n #else\n #else\n #end\n #end\n"))
+	s.SetFile(f, []byte("#if flag\n #if other_flag\n #else\n #else\n #end\n #end\n"))
 	s.Scan()
 }
 
@@ -606,7 +606,7 @@ func TestInvalidPreprocessor10(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if flag\n #if other_flag\n #else\n #elif\n #end\n #end\n"))
+	s.SetFile(f, []byte("#if flag\n #if other_flag\n #else\n #elif\n #end\n #end\n"))
 	s.Scan()
 }
 
@@ -621,7 +621,7 @@ func TestInvalidPreprocessor11(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if flag\n#ifn other_flag\n#end\n#end\n"))
+	s.SetFile(f, []byte("#if flag\n#ifn other_flag\n#end\n#end\n"))
 	s.Scan()
 }
 
@@ -636,7 +636,7 @@ func TestInvalidPreprocessor12(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("#if flag\n#100\n#end\n#end\n"))
+	s.SetFile(f, []byte("#if flag\n#100\n#end\n#end\n"))
 	s.Scan()
 }
 
@@ -651,6 +651,6 @@ func TestInvalidToken(t *testing.T) {
 	f := fs.AddFile("file.pd", 100)
 	s := NewScanner(handleError, nil)
 
-	s.ScanFile(f, []byte("你好"))
+	s.SetFile(f, []byte("你好"))
 	s.Scan()
 }

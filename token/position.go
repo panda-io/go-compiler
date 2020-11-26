@@ -59,15 +59,13 @@ func (f *File) location(offset int) (line, column int) {
 type FileSet struct {
 	files []*File
 	base  int
-	// TO-DO use it later for language server
-	active *File
 }
 
 // AddFile add new file
 func (s *FileSet) AddFile(filename string, size int) *File {
 	for _, f := range s.files {
 		if f.Name == filename {
-			return f
+			panic(fmt.Sprintf("file %s already added \n", filename))
 		}
 	}
 	f := &File{

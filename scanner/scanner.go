@@ -58,8 +58,8 @@ func NewScanner(handler ErrorHandler, flags []string) *Scanner {
 	return s
 }
 
-// ScanFile start to scan new file
-func (s *Scanner) ScanFile(file *token.File, src []byte) {
+// SetFile set file info and prepare first token
+func (s *Scanner) SetFile(file *token.File, src []byte) {
 	s.file = file
 	s.src = src
 

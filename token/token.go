@@ -7,6 +7,7 @@ type Token int
 const (
 	ILLEGAL Token = iota
 	EOF
+	META
 
 	// literals
 	literalBegin
@@ -15,7 +16,6 @@ const (
 	FLOAT
 	CHAR
 	STRING
-	META
 	literalEnd
 
 	// keywords
