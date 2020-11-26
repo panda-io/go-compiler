@@ -87,6 +87,7 @@ func (p *Parser) expect(t token.Token) {
 	if p.token != t {
 		p.unexpected(p.position, fmt.Sprintf("'%s'", t.String()))
 	}
+	p.next()
 }
 
 func (p *Parser) unexpected(position int, expect string) {

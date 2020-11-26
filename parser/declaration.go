@@ -1,9 +1,32 @@
 package parser
 
-import "github.com/panda-foundation/go-compiler/ast"
+import (
+	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/token"
+)
 
 func (p *Parser) parseVariable() *ast.Variable {
-	return nil
+	p.next()
+	d := &ast.Variable{
+		Position: p.position,
+	}
+	d.Name = p.parseIdentifier()
+	d.Type = p.parseType()
+
+	if p.token == token.Assign {
+		p.next()
+		if !p.token.IsLiteral() || p.token == token.IDENT {
+			p.error(p.position, "variable can only be initialized by const value (string, char, float, int)")
+		}
+		d.Value = &ast.Literal{
+			Position: p.position,
+			Type:     p.token,
+			Value:    p.literal,
+		}
+		p.next()
+	}
+	p.expect(token.Semi)
+	return d
 }
 
 func (p *Parser) parseFunction() *ast.Function {
@@ -11,45 +34,21 @@ func (p *Parser) parseFunction() *ast.Function {
 }
 
 func (p *Parser) parseEnum() *ast.Enum {
+	// ok
 	return nil
 }
 
 func (p *Parser) parseInterface() *ast.Interface {
+	// ok
 	return nil
 }
 
 func (p *Parser) parseClass() *ast.Class {
+	// ok
 	return nil
 }
 
 /*
-func (p *Parser) parseValueDecl(m *Modifier) *ValueDecl {
-	p.next()
-	name := p.parseIdent()
-	typ := p.tryType()
-
-	decl := &ValueDecl{
-		Modifier: m,
-		Name:     name,
-		Type:     typ,
-	}
-
-	pos := p.pos
-	// always permit optional initialization for more tolerant parsing
-	if p.tok == Assign {
-		p.next()
-		decl.Value = p.parseRhs()
-	}
-	p.expect(Semi) // call before accessing p.linecomment
-
-	if decl.Value == nil && decl.Type == nil {
-		p.error(pos, "missing type or initialization")
-		//TO-DO if type is nil, parse type from value
-
-	}
-	return decl
-}
-
 func (p *Parser) parseEnumDecl(m *Modifier) *EnumDecl {
 	p.next()
 	name := p.parseIdent()

@@ -155,10 +155,6 @@ type Ident struct {
 	Name  string // identifier name
 }
 
-func (x *Ident) Pos() int { return x.Start }
-
-func (*Ident) exprNode() {}
-
 func (x *Ident) Print(buffer *bytes.Buffer) {
 	buffer.WriteString(x.Name)
 }

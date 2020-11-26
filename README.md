@@ -33,7 +33,7 @@
 > - new
 > - this-base
 > - invocation (call)
-> - selector (.)
+> - member-access (.)
 > - element-access ([])
 > - paren
 > - ellipsis

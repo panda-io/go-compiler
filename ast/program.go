@@ -10,7 +10,6 @@ type Metadata struct {
 
 // Attributes of type
 type Attributes struct {
-	Name     *Identifier
 	Modifier *Modifier
 	Resolved []*Metadata
 	Custom   []*Metadata

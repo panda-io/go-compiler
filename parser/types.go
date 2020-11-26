@@ -5,19 +5,27 @@ import (
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseIdentifier() *ast.Identifier {
-	position := p.position
-	name := ""
-	if p.token == token.IDENT {
-		name = p.literal
+func (p *Parser) parseType() ast.Type {
+	if p.token.IsScalar() {
+		return &ast.BuitinType{
+			Position: p.position,
+			Token:    p.token,
+		}
+	}
+	t := &ast.TypeName{
+		Position:      p.position,
+		QualifiedName: p.parseQualifiedName(""),
+	}
+	if p.token == token.Less {
 		p.next()
-	} else {
-		p.expect(token.IDENT)
+		t.TypeArguments = append(t.TypeArguments, p.parseType())
+		for p.token == token.Comma {
+			p.next()
+			t.TypeArguments = append(t.TypeArguments, p.parseType())
+		}
+		p.expect(token.Greater)
 	}
-	return &ast.Identifier{
-		Position: position,
-		Name:     name,
-	}
+	return t
 }
 
 /*
@@ -34,19 +42,6 @@ func (p *Parser) parseType() Expr {
 	}
 
 	return typ
-}
-
-// If the result is an identifier, it is not resolved.
-func (p *Parser) parseTypeName() Expr {
-	ident := p.parseIdent()
-	// don't resolve ident yet - it may be a parameter or field name
-	if p.tok == Dot {
-		// ident is a package name
-		p.next()
-		sel := p.parseIdent()
-		return &SelectorExpr{Expr: ident, Selector: sel}
-	}
-	return ident
 }
 
 // If the result is an identifier, it is not resolved.
@@ -139,26 +134,6 @@ func (p *Parser) tryType() Expr {
 	} else if p.tok == IDENT {
 		typ := p.parseTypeName()
 		return typ
-	}
-	return nil
-}
-*/
-/*
-func (p *Parser) parseGeneric() *GenericLit {
-	if p.tok == Less {
-		g := &GenericLit{
-			Start: p.pos,
-		}
-		p.next()
-		g.Types = append(g.Types, p.tryType())
-
-		for p.tok == Comma {
-			p.next()
-			g.Types = append(g.Types, p.tryType())
-		}
-		p.expect(Greater)
-		return g
-
 	}
 	return nil
 }

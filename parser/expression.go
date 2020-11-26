@@ -1,5 +1,25 @@
 package parser
 
+import (
+	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/token"
+)
+
+func (p *Parser) parseIdentifier() *ast.Identifier {
+	position := p.position
+	name := ""
+	if p.token == token.IDENT {
+		name = p.literal
+		p.next()
+	} else {
+		p.expect(token.IDENT)
+	}
+	return &ast.Identifier{
+		Position: position,
+		Name:     name,
+	}
+}
+
 // ----------------------------------------------------------------------------
 // Expressions
 

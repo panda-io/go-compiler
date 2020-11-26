@@ -12,7 +12,7 @@ type Expression interface {
 func (*Literal) expression()    {}
 func (*Identifier) expression() {}
 
-// Literal is basic type
+// Literal expr
 type Literal struct {
 	Position int
 	Type     token.Token // (identifier, string, char, float, int)
