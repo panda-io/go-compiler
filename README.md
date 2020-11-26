@@ -66,6 +66,9 @@
 --------------------- 备忘 -------------------------
 unresolved can be cached
 file has import scope
+
+----------------------------------
+add scope and check. add imports to file scope or something else
     
 --------------------- 限制 TO-DO -------------------
 #前置声明，声明，定义

@@ -21,8 +21,7 @@ func assertEqual(t *testing.T, a interface{}, b interface{}) {
 	}
 }
 
-func handleError(p *token.Position, message string) {
-	fmt.Println("error:", p.String())
+func handleError(position int, message string) {
 	panic(message)
 }
 

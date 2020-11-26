@@ -28,12 +28,12 @@ type preprocessor struct {
 }
 
 // ErrorHandler is callback when error occurs
-type ErrorHandler func(*token.Position, string)
+type ErrorHandler func(int, string)
 
 // Scanner to scan token
 type Scanner struct {
-	file *token.File
-	src  []byte
+	file   *token.File
+	source []byte
 
 	errorHandler ErrorHandler
 
@@ -59,9 +59,9 @@ func NewScanner(handler ErrorHandler, flags []string) *Scanner {
 }
 
 // SetFile set file info and prepare first token
-func (s *Scanner) SetFile(file *token.File, src []byte) {
+func (s *Scanner) SetFile(file *token.File, source []byte) {
 	s.file = file
-	s.src = src
+	s.source = source
 
 	s.preprocessorLevel = 0
 	s.preprocessorStatus = s.preprocessorStatus[:0]
@@ -76,18 +76,18 @@ func (s *Scanner) SetFile(file *token.File, src []byte) {
 }
 
 func (s *Scanner) next() {
-	if s.readOffset < len(s.src) {
+	if s.readOffset < len(s.source) {
 		s.offset = s.readOffset
 		if s.char == '\n' {
 			s.file.AddLine(s.offset)
 		}
-		r, w := rune(s.src[s.readOffset]), 1
+		r, w := rune(s.source[s.readOffset]), 1
 		switch {
 		case r == 0:
 			s.error(s.offset, "illegal character NUL")
 		case r >= utf8.RuneSelf:
 			// not ASCII
-			r, w = utf8.DecodeRune(s.src[s.readOffset:])
+			r, w = utf8.DecodeRune(s.source[s.readOffset:])
 			if r == utf8.RuneError && w == 1 {
 				s.error(s.offset, "illegal UTF-8 encoding")
 			} else if r == bom && s.offset > 0 {
@@ -97,7 +97,7 @@ func (s *Scanner) next() {
 		s.readOffset += w
 		s.char = r
 	} else {
-		s.offset = len(s.src)
+		s.offset = len(s.source)
 		if s.char == '\n' {
 			s.file.AddLine(s.offset)
 		}
@@ -106,15 +106,15 @@ func (s *Scanner) next() {
 }
 
 func (s *Scanner) peek() byte {
-	if s.readOffset < len(s.src) {
-		return s.src[s.readOffset]
+	if s.readOffset < len(s.source) {
+		return s.source[s.readOffset]
 	}
 	return 0
 }
 
 func (s *Scanner) error(offset int, message string) {
 	if s.errorHandler != nil {
-		s.errorHandler(s.file.Position(offset), message)
+		s.errorHandler(s.file.Base+offset, message)
 	}
 }
 
@@ -143,7 +143,7 @@ func (s *Scanner) scanComment() string {
 			s.error(offset, "comment not terminated")
 		}
 	}
-	return string(s.src[offset:s.offset])
+	return string(s.source[offset:s.offset])
 }
 
 func (s *Scanner) scanIdentifier() string {
@@ -151,7 +151,7 @@ func (s *Scanner) scanIdentifier() string {
 	for s.isLetter(s.char) || s.isDecimal(s.char) {
 		s.next()
 	}
-	return string(s.src[offset:s.offset])
+	return string(s.source[offset:s.offset])
 }
 
 func (s *Scanner) scanDigits(base int) {
@@ -213,7 +213,7 @@ func (s *Scanner) scanNumber() (token.Token, string) {
 		}
 	}
 
-	return t, string(s.src[offset:s.offset])
+	return t, string(s.source[offset:s.offset])
 }
 
 func (s *Scanner) scanEscape(quote rune) {
@@ -278,7 +278,7 @@ func (s *Scanner) scanString() string {
 		}
 	}
 
-	return string(s.src[offset:s.offset])
+	return string(s.source[offset:s.offset])
 }
 
 func (s *Scanner) scanChar() string {
@@ -296,7 +296,7 @@ func (s *Scanner) scanChar() string {
 		s.error(offset, "illegal rune literal")
 	}
 	s.next()
-	return string(s.src[offset:s.offset])
+	return string(s.source[offset:s.offset])
 }
 
 func (s *Scanner) scanRawString() string {
@@ -313,17 +313,17 @@ func (s *Scanner) scanRawString() string {
 		}
 	}
 
-	return string(s.src[offset:s.offset])
+	return string(s.source[offset:s.offset])
 }
 
 func (s *Scanner) scanOperators() (t token.Token, literal string) {
 	offset := s.offset - 1
-	t, length := token.ReadOperator(s.src[offset:])
+	t, length := token.ReadOperator(s.source[offset:])
 	if length > 0 {
 		for i := 1; i < length; i++ {
 			s.next()
 		}
-		literal = string(s.src[offset:s.offset])
+		literal = string(s.source[offset:s.offset])
 	}
 	return
 }

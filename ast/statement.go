@@ -4,3 +4,12 @@ package ast
 type Statement interface {
 	statement()
 }
+
+func (*EnumMemberStatement) statement() {}
+
+// EnumMemberStatement to declare eum member
+type EnumMemberStatement struct {
+	Position int
+	Name     *Identifier
+	Value    *Literal
+}
