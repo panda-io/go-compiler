@@ -20,7 +20,6 @@ func NewParser(flags []string) *Parser {
 		root:  ast.NewProgram("", nil),
 	}
 	p.scanner = scanner.NewScanner(p.error, flags)
-
 	return p
 }
 

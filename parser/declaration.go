@@ -1,5 +1,27 @@
 package parser
 
+import "github.com/panda-foundation/go-compiler/ast"
+
+func (p *Parser) parseVariable() *ast.Variable {
+	return nil
+}
+
+func (p *Parser) parseFunction() *ast.Function {
+	return nil
+}
+
+func (p *Parser) parseEnum() *ast.Enum {
+	return nil
+}
+
+func (p *Parser) parseInterface() *ast.Interface {
+	return nil
+}
+
+func (p *Parser) parseClass() *ast.Class {
+	return nil
+}
+
 /*
 func (p *Parser) parseValueDecl(m *Modifier) *ValueDecl {
 	p.next()

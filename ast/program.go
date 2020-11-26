@@ -8,13 +8,20 @@ type Metadata struct {
 	Values   map[string]*Literal
 }
 
+// Attributes of type
+type Attributes struct {
+	Name     *Identifier
+	Modifier *Modifier
+	Resolved []*Metadata
+	Custom   []*Metadata
+}
+
 // Modifier type
 type Modifier struct {
-	Position int
-	Public   bool
-	Static   bool
-	Async    bool
-	Inline   bool
+	Public bool
+	Static bool
+	Async  bool
+	Inline bool
 }
 
 // NewProgram to create new program
@@ -35,6 +42,8 @@ func NewProgram(packageName string, parent *Program) *Program {
 
 // Program type
 type Program struct {
+	Attributes
+
 	Package string
 
 	Variables  map[string]*Variable

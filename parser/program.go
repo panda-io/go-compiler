@@ -7,83 +7,103 @@ import (
 )
 
 func (p *Parser) parseProgram() {
-	/*
-		program := p.root
-		parse metadata
-		namespace := p.parseNamespace(metadata)
-		if namespace.Path != nil {
-			program = p.root.FindPackage(namespace.Path)
+	program := p.root
+	m := p.parseMetadata()
+	if p.token == token.Namespace {
+		n := p.parseNamespace()
+		program = p.findPackage(n)
+		if len([]*ast.Metadata{}) > 0 {
+			program.Custom = append(program.Custom, m...)
+			m = m[:0]
 		}
+		m = p.parseMetadata()
+	}
 
-		// import
-		parse metadata
-		p.parseImport(metadata) // metadata is invalid here
+	if p.token == token.Import {
+		if len(m) > 0 {
+			p.error(m[0].Position, "import should not contain metadata")
+		}
+		p.parseImport() // ignore currently //TO-DO
+	}
 
-		// rest of namespace body
-		for p.tok != EOF {
-			decl := p.parseDecl(declStart) // parse metadata and modifier
-			switch v := decl.(type) {
-			case *ValueDecl:
-				program.Values = append(program.Values, v)
-			case *EnumDecl:
-				program.Enums = append(program.Enums, v)
-			case *InterfaceDecl:
-				program.Interfaces = append(program.Interfaces, v)
-			case *ClassDecl:
-				program.Classes = append(program.Classes, v)
-			case *FuncDecl:
-				program.Functions = append(program.Functions, v)
-			case *BadDecl:
-				fmt.Println("bad decl", v.Pos())
+	for p.token != token.EOF {
+		if len(m) == 0 {
+			m = p.parseMetadata()
+		}
+		modifier := p.parseModifier()
+		switch p.token {
+		case token.Const, token.Var:
+			v := p.parseVariable()
+			v.Custom = append(v.Custom, m...)
+			v.Modifier = modifier
+			name := v.Name.Name
+			if _, ok := program.Variables[name]; ok {
+				p.error(v.Name.Position, fmt.Sprintf("variable %s redeclared", name))
 			}
-		}*/
+			program.Variables[name] = v
 
-	/*
-		func (p *Parser) parseDecl(sync map[Token]bool) Decl {
-		m := p.parseModifier()
-		switch p.tok {
-		case Const, Var:
-			return p.parseValueDecl(m)
+		case token.Function:
+			f := p.parseFunction()
+			f.Custom = append(f.Custom, m...)
+			f.Modifier = modifier
+			name := f.Name.Name
+			if _, ok := program.Functions[name]; ok {
+				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
+			}
+			program.Functions[name] = f
 
-		case Enum:
-			return p.parseEnumDecl(m)
+		case token.Enum:
+			e := p.parseEnum()
+			e.Custom = append(e.Custom, m...)
+			e.Modifier = modifier
+			name := e.Name.Name
+			if _, ok := program.Enums[name]; ok {
+				p.error(e.Name.Position, fmt.Sprintf("function %s redeclared", name))
+			}
+			program.Enums[name] = e
 
-		case Interface:
-			return p.parseInterfaceDecl(m)
+		case token.Interface:
+			i := p.parseInterface()
+			i.Custom = append(i.Custom, m...)
+			i.Modifier = modifier
+			name := i.Name.Name
+			if _, ok := program.Interfaces[name]; ok {
+				p.error(i.Name.Position, fmt.Sprintf("interface %s redeclared", name))
+			}
+			program.Interfaces[name] = i
 
-		case Class:
-			return p.parseClassDecl(m)
-
-		case Function:
-			return p.parseFuncDecl(m)
+		case token.Class:
+			//TO-DO merge partial classes
+			c := p.parseClass()
+			c.Custom = append(c.Custom, m...)
+			c.Modifier = modifier
+			name := c.Name.Name
+			if _, ok := program.Classes[name]; ok {
+				p.error(c.Name.Position, fmt.Sprintf("interface %s redeclared", name))
+			}
+			program.Classes[name] = c
 
 		default:
-			pos := p.pos
-			p.errorExpected(pos, "declaration")
-			return &BadDecl{Start: pos}
+			p.unexpected(p.position, "declaration")
 		}
-	}*/
+	}
 }
 
 func (p *Parser) parseModifier() *ast.Modifier {
 	m := &ast.Modifier{}
 	if p.token == token.Public {
-		m.Position = p.position
 		m.Public = true
 		p.next()
 	}
 	if p.token == token.Static {
-		m.Position = p.position
 		m.Static = true
 		p.next()
 	}
 	if p.token == token.Async {
-		m.Position = p.position
 		m.Async = true
 		p.next()
 	}
 	if p.token == token.Inline {
-		m.Position = p.position
 		m.Inline = true
 		p.next()
 	}
@@ -179,14 +199,31 @@ func (p *Parser) parseImport() {
 	}
 }
 
-func (p *Parser) parseQualifiedName(first string) []string {
-	if first == "" {
-		first = p.parseIdentifier().Name
+func (p *Parser) parseQualifiedName(identifier string) []string {
+	if identifier == "" {
+		identifier = p.parseIdentifier().Name
 	}
-	qualifiedName := []string{first}
+	qualifiedName := []string{identifier}
 	for p.token == token.Dot {
 		p.next()
 		qualifiedName = append(qualifiedName, p.parseIdentifier().Name)
 	}
 	return qualifiedName
+}
+
+func (p *Parser) findPackage(namespace []string) *ast.Program {
+	if len(namespace) == 0 {
+		return p.root
+	}
+
+	program := p.root
+	for len(namespace) > 0 {
+		name := namespace[0]
+		if _, ok := program.Children[name]; !ok {
+			program.Children[name] = ast.NewProgram(name, program)
+		}
+		program = program.Children[name]
+		namespace = namespace[1:len(namespace)]
+	}
+	return program
 }
