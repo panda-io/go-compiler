@@ -45,4 +45,6 @@ type Program struct {
 
 	Parent   *Program
 	Children map[string]*Program
+
+	Document *Metadata
 }
