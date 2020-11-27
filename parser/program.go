@@ -42,7 +42,7 @@ func (p *Parser) parseProgram() {
 
 		case token.Function:
 			p.next()
-			f := p.parseFunction()
+			f := p.parseFunction(nil)
 			f.Custom = append(f.Custom, m...)
 			f.Modifier = modifier
 			name := f.Name.Name

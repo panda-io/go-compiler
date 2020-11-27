@@ -22,23 +22,13 @@ type Variable struct {
 // Function declaration
 type Function struct {
 	Attributes
-	Name *Identifier
+	Name           *Identifier
+	TypeParameters *TypeParameters
+	Parameters     *Parameters
+	ReturnType     Type
+	//Body block
 
-	ReturnType Type
-	/*
-		{
-			"include": "#type_parameter_list"
-		},
-		{
-			"include": "#parenthesized_parameter_list"
-		},
-		{
-			"include": "#type"
-		},
-		{
-			"include": "#block"
-		}
-	*/
+	Class *Class
 }
 
 // Enum declaration

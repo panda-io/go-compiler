@@ -75,6 +75,44 @@ func (p *Parser) parseBaseTypes() *ast.TypeArguments {
 	return t
 }
 
+func (p *Parser) parseParameters() *ast.Parameters {
+	p.expect(token.LeftParen)
+	if p.token == token.RightParen {
+		p.next()
+		return nil
+	}
+	t := &ast.Parameters{
+		Position: p.position,
+	}
+	t.Parameters = append(t.Parameters, p.parseParameter())
+	for p.token == token.Comma {
+		p.next()
+		t.Parameters = append(t.Parameters, p.parseParameter())
+	}
+	p.expect(token.RightParen)
+	return t
+}
+
+func (p *Parser) parseParameter() *ast.Variable {
+	t := &ast.Variable{
+		Name: p.parseIdentifier(),
+	}
+	t.Type = p.parseType()
+	if p.token == token.Assign {
+		p.next()
+		if !p.token.IsLiteral() || p.token == token.IDENT {
+			p.error(p.position, "variable can only be initialized by const value (string, char, float, int)")
+		}
+		t.Value = &ast.Literal{
+			Position: p.position,
+			Type:     p.token,
+			Value:    p.literal,
+		}
+		p.next()
+	}
+	return t
+}
+
 /*
 // ----------------------------------------------------------------------------
 // Types

@@ -57,8 +57,7 @@ enum color
 
 public interface must_do
 {
-    var value int;
-    function print() void; // void can be ommited
+    print() void; // void can be ommited
 }
 
 public class empty

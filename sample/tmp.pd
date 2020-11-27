@@ -45,6 +45,7 @@ enum color
 @serializer(ignore = true)
 public interface must_do
 {
+    print();
 }
 
 @doc("another interface")

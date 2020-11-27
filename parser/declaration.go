@@ -28,8 +28,38 @@ func (p *Parser) parseVariable() *ast.Variable {
 	return d
 }
 
-func (p *Parser) parseFunction() *ast.Function {
-	return nil
+func (p *Parser) parseFunction(c *ast.Class) *ast.Function {
+	d := &ast.Function{
+		Class: c,
+	}
+	tilde := false
+	if p.token == token.Tilde {
+		if c == nil {
+			p.error(p.position, "'~' is not allow outside class as function name")
+		}
+		tilde = true
+		p.next()
+	}
+	d.Name = p.parseIdentifier()
+	if tilde {
+		if d.Name.Name != c.Name.Name {
+			p.error(p.position, "invalid destructor name")
+		}
+		d.Name.Name = "~" + d.Name.Name
+	}
+	if p.token == token.Less {
+		d.TypeParameters = p.parseTypeParameters()
+	}
+	d.Parameters = p.parseParameters()
+	if p.token != token.Semi && p.token != token.LeftBrace {
+		d.ReturnType = p.parseType()
+	}
+	if p.token == token.LeftBrace {
+		//d.Body = p.parseBlock()
+	} else if p.token == token.Semi {
+		p.next()
+	}
+	return d
 }
 
 func (p *Parser) parseEnum() *ast.Enum {
@@ -76,7 +106,7 @@ func (p *Parser) parseInterface() *ast.Interface {
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
 		m := p.parseMetadata()
-		f := p.parseFunction()
+		f := p.parseFunction(nil)
 		f.Custom = append(f.Custom, m...)
 		name := f.Name.Name
 		if _, ok := d.Functions[name]; ok {
@@ -118,7 +148,7 @@ func (p *Parser) parseClass() *ast.Class {
 
 		case token.Function:
 			p.next()
-			f := p.parseFunction()
+			f := p.parseFunction(d)
 			f.Custom = append(f.Custom, m...)
 			f.Modifier = modifier
 			name := f.Name.Name
@@ -134,43 +164,3 @@ func (p *Parser) parseClass() *ast.Class {
 	p.expect(token.RightBrace)
 	return d
 }
-
-/*
-func (p *Parser) parseFuncDecl(m *Modifier, onlyDeclare bool) *FuncDecl {
-	p.expect(Function)
-
-	//Tilde
-	tilde := false
-	if p.tok == Tilde {
-		tilde = true
-		p.next()
-	}
-	ident := p.parseIdent()
-	if tilde {
-		//TO-DO check in class
-		ident.Name = "~" + ident.Name
-	}
-	generic := p.parseGeneric()
-	params := p.parseParameters()
-	result := p.parseResult()
-
-	decl := &FuncDecl{
-		Modifier: m,
-		Name:     ident,
-		Params:   params,
-		Result:   result,
-		Generic:  generic,
-	}
-
-	if onlyDeclare {
-		//TO-DO check later call.delare ?
-		return decl
-	}
-
-	if p.tok == LeftBrace {
-		decl.Body = p.parseBody()
-	}
-
-	return decl
-}
-*/
