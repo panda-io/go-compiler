@@ -23,6 +23,11 @@ type Modifier struct {
 	Inline bool
 }
 
+// Equal to compare is two modifiers are same
+func (m *Modifier) Equal(modifier *Modifier) bool {
+	return m.Public == modifier.Public && m.Static == modifier.Static || m.Async == modifier.Async || m.Inline == modifier.Inline
+}
+
 // NewProgram to create new program
 func NewProgram(packageName string, parent *Program) *Program {
 	return &Program{

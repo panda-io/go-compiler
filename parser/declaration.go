@@ -39,6 +39,7 @@ func (p *Parser) parseEnum() *ast.Enum {
 	p.next()
 	d := &ast.Enum{
 		Position: p.position,
+		Members:  make(map[string]*ast.Variable),
 	}
 	d.Name = p.parseIdentifier()
 	p.expect(token.LeftBrace)
@@ -71,7 +72,8 @@ func (p *Parser) parseEnum() *ast.Enum {
 func (p *Parser) parseInterface() *ast.Interface {
 	p.next()
 	d := &ast.Interface{
-		Position: p.position,
+		Position:  p.position,
+		Functions: make(map[string]*ast.Function),
 	}
 	d.Name = p.parseIdentifier()
 	if p.token == token.Less {
@@ -102,7 +104,9 @@ func (p *Parser) parseInterface() *ast.Interface {
 func (p *Parser) parseClass() *ast.Class {
 	p.next()
 	d := &ast.Class{
-		Position: p.position,
+		Position:  p.position,
+		Variables: make(map[string]*ast.Variable),
+		Functions: make(map[string]*ast.Function),
 	}
 	d.Name = p.parseIdentifier()
 	if p.token == token.Less {

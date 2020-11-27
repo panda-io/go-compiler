@@ -45,13 +45,11 @@ enum color
 @serializer(ignore = true)
 public interface must_do
 {
-    var value int;
 }
 
 @doc("another interface")
 public interface can_do
 {
-    var value int;
 }
 
 @doc("a class")

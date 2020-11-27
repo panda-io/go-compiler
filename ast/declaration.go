@@ -41,7 +41,7 @@ type Interface struct {
 	Position       int
 	Name           *Identifier
 	TypeParameters *TypeParameters
-	Base           []Type
+	Base           *TypeArguments
 	Functions      map[string]*Function
 }
 
@@ -51,7 +51,7 @@ type Class struct {
 	Position       int
 	Name           *Identifier
 	TypeParameters *TypeParameters
-	Base           []Type
+	Base           *TypeArguments
 	Variables      map[string]*Variable
 	Functions      map[string]*Function
 }

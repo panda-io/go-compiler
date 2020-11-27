@@ -63,14 +63,17 @@ func (p *Parser) parseTypeParameter() *ast.TypeParameter {
 	return t
 }
 
-func (p *Parser) parseBaseTypes() []ast.Type {
+func (p *Parser) parseBaseTypes() *ast.TypeArguments {
 	p.next()
-	types := []ast.Type{p.parseType()}
+	t := &ast.TypeArguments{
+		Position: p.position,
+	}
+	t.Arguments = append(t.Arguments, p.parseType())
 	for p.token == token.Comma {
 		p.next()
-		types = append(types, p.parseType())
+		t.Arguments = append(t.Arguments, p.parseType())
 	}
-	return types
+	return t
 }
 
 /*

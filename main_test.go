@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"bytes"
 	"io/ioutil"
@@ -24,4 +25,4 @@ func TestPanda(t *testing.T) {
 	if err != nil {
 		t.Error("compile failed:", err)
 	}
-}
+}*/
