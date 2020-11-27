@@ -19,6 +19,24 @@ type BuitinType struct {
 // TypeName qualified name
 type TypeName struct {
 	Position      int
-	QualifiedName []string
-	TypeArguments []Type
+	QualifiedName []*Identifier
+	TypeArguments *TypeArguments
+}
+
+// TypeArguments type arguments
+type TypeArguments struct {
+	Position  int
+	Arguments []Type
+}
+
+// TypeParameters type parameters
+type TypeParameters struct {
+	Position   int
+	Parameters []*TypeParameter
+}
+
+// TypeParameter type parameter
+type TypeParameter struct {
+	Name *Identifier
+	Type Type
 }

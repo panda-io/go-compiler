@@ -26,6 +26,9 @@ func TestTokens(t *testing.T) {
 	assertEqual(t, ReadToken("Ident"), IDENT)
 	assertEqual(t, ReadToken("await"), Await)
 	assertEqual(t, ReadToken("++"), PlusPlus)
+	assertEqual(t, ReadToken("true"), BOOL)
+	assertEqual(t, ReadToken("false"), BOOL)
+	assertEqual(t, ReadToken("null"), NULL)
 }
 
 func TestTypes(t *testing.T) {

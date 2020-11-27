@@ -12,10 +12,12 @@ const (
 	// literals
 	literalBegin
 	IDENT
+	BOOL
 	INT
 	FLOAT
 	CHAR
 	STRING
+	NULL
 	literalEnd
 
 	// keywords
@@ -32,7 +34,6 @@ const (
 	Default
 	Else
 	Enum
-	False
 	For
 	Function
 	If
@@ -40,7 +41,6 @@ const (
 	Inline
 	Interface
 	New
-	Null
 	Namespace
 	Public
 	Return
@@ -48,7 +48,6 @@ const (
 	Switch
 	This
 	Throw
-	True
 	Try
 	Var
 	Yield
@@ -150,7 +149,6 @@ var (
 		Default:   "default",
 		Else:      "else",
 		Enum:      "enum",
-		False:     "false",
 		For:       "for",
 		Function:  "function",
 		If:        "if",
@@ -158,7 +156,6 @@ var (
 		Inline:    "inline",
 		Interface: "interface",
 		New:       "new",
-		Null:      "null",
 		Namespace: "namespace",
 		Public:    "public",
 		Return:    "return",
@@ -166,7 +163,6 @@ var (
 		Switch:    "switch",
 		This:      "this",
 		Throw:     "throw",
-		True:      "true",
 		Try:       "try",
 		Var:       "var",
 		Yield:     "yield",
@@ -302,6 +298,12 @@ func init() {
 func ReadToken(literal string) Token {
 	if token, ok := tokens[literal]; ok {
 		return token
+	}
+	if literal == "true" || literal == "false" {
+		return BOOL
+	}
+	if literal == "null" {
+		return NULL
 	}
 	return IDENT
 }

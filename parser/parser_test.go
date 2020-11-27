@@ -19,10 +19,16 @@ func assertEqual(t *testing.T, a interface{}, b interface{}) {
 	}
 }
 
-func TestSample(t *testing.T) {
+func TestAllTypes(t *testing.T) {
 	p := NewParser([]string{})
 
 	p.ParseFile("../sample/all_types.pd")
+}
+
+func TestTemp(t *testing.T) {
+	p := NewParser([]string{})
+
+	p.ParseFile("../sample/tmp.pd")
 }
 
 func TestNamespace(t *testing.T) {

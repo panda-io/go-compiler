@@ -32,18 +32,26 @@ type Enum struct {
 	Attributes
 	Position int
 	Name     *Identifier
+	Members  map[string]*Variable
 }
 
 // Interface declaration
 type Interface struct {
 	Attributes
-	Position int
-	Name     *Identifier
+	Position       int
+	Name           *Identifier
+	TypeParameters *TypeParameters
+	Base           []Type
+	Functions      map[string]*Function
 }
 
 // Class declaration
 type Class struct {
 	Attributes
-	Position int
-	Name     *Identifier
+	Position       int
+	Name           *Identifier
+	TypeParameters *TypeParameters
+	Base           []Type
+	Variables      map[string]*Variable
+	Functions      map[string]*Function
 }

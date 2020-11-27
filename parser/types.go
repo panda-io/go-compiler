@@ -7,25 +7,70 @@ import (
 
 func (p *Parser) parseType() ast.Type {
 	if p.token.IsScalar() {
-		return &ast.BuitinType{
+		t := &ast.BuitinType{
 			Position: p.position,
 			Token:    p.token,
 		}
+		p.next()
+		return t
 	}
 	t := &ast.TypeName{
 		Position:      p.position,
-		QualifiedName: p.parseQualifiedName(""),
+		QualifiedName: p.parseQualifiedName(nil),
 	}
 	if p.token == token.Less {
-		p.next()
-		t.TypeArguments = append(t.TypeArguments, p.parseType())
-		for p.token == token.Comma {
-			p.next()
-			t.TypeArguments = append(t.TypeArguments, p.parseType())
-		}
-		p.expect(token.Greater)
+		t.TypeArguments = p.parseTypeArguments()
 	}
 	return t
+}
+
+func (p *Parser) parseTypeArguments() *ast.TypeArguments {
+	p.next()
+	t := &ast.TypeArguments{
+		Position: p.position,
+	}
+	t.Arguments = append(t.Arguments, p.parseType())
+	for p.token == token.Comma {
+		p.next()
+		t.Arguments = append(t.Arguments, p.parseType())
+	}
+	p.expect(token.Greater)
+	return t
+}
+
+func (p *Parser) parseTypeParameters() *ast.TypeParameters {
+	p.next()
+	t := &ast.TypeParameters{
+		Position: p.position,
+	}
+	t.Parameters = append(t.Parameters, p.parseTypeParameter())
+	for p.token == token.Comma {
+		p.next()
+		t.Parameters = append(t.Parameters, p.parseTypeParameter())
+	}
+	p.expect(token.Greater)
+	return t
+}
+
+func (p *Parser) parseTypeParameter() *ast.TypeParameter {
+	t := &ast.TypeParameter{
+		Name: p.parseIdentifier(),
+	}
+	if p.token == token.Colon {
+		p.next()
+		t.Type = p.parseType()
+	}
+	return t
+}
+
+func (p *Parser) parseBaseTypes() []ast.Type {
+	p.next()
+	types := []ast.Type{p.parseType()}
+	for p.token == token.Comma {
+		p.next()
+		types = append(types, p.parseType())
+	}
+	return types
 }
 
 /*

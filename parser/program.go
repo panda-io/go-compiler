@@ -141,7 +141,7 @@ func (p *Parser) parseMetadata() []*ast.Metadata {
 						p.next()
 						p.expect(token.Assign)
 						switch p.token {
-						case token.INT, token.FLOAT, token.CHAR, token.STRING, token.True, token.False:
+						case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL:
 							if _, ok := m.Values[name]; ok {
 								p.error(p.position, "duplicated meta "+name)
 							}
@@ -176,7 +176,11 @@ func (p *Parser) parseNamespace() []string {
 	}
 	p.next()
 
-	namespace := p.parseQualifiedName("")
+	name := p.parseQualifiedName(nil)
+	namespace := []string{}
+	for _, n := range name {
+		namespace = append(namespace, n.Name)
+	}
 	p.expect(token.Semi)
 	return namespace
 }
@@ -185,11 +189,11 @@ func (p *Parser) parseNamespace() []string {
 func (p *Parser) parseImport() {
 	for p.token == token.Import {
 		p.expect(token.Import)
-		name := p.parseIdentifier().Name
+		name := p.parseIdentifier()
 		if p.token == token.Assign {
 			//TO-DO alias name here
 			p.next()
-			name = p.parseIdentifier().Name
+			name = p.parseIdentifier()
 		}
 		//TO-DO full path
 		path := p.parseQualifiedName(name)
@@ -199,14 +203,14 @@ func (p *Parser) parseImport() {
 	}
 }
 
-func (p *Parser) parseQualifiedName(identifier string) []string {
-	if identifier == "" {
-		identifier = p.parseIdentifier().Name
+func (p *Parser) parseQualifiedName(identifier *ast.Identifier) []*ast.Identifier {
+	if identifier == nil {
+		identifier = p.parseIdentifier()
 	}
-	qualifiedName := []string{identifier}
+	qualifiedName := []*ast.Identifier{identifier}
 	for p.token == token.Dot {
 		p.next()
-		qualifiedName = append(qualifiedName, p.parseIdentifier().Name)
+		qualifiedName = append(qualifiedName, p.parseIdentifier())
 	}
 	return qualifiedName
 }
