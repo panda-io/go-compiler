@@ -8,10 +8,7 @@ import (
 )
 
 func (p *Parser) parseVariable() *ast.Variable {
-	p.next()
-	d := &ast.Variable{
-		Position: p.position,
-	}
+	d := &ast.Variable{}
 	d.Name = p.parseIdentifier()
 	d.Type = p.parseType()
 
@@ -36,17 +33,13 @@ func (p *Parser) parseFunction() *ast.Function {
 }
 
 func (p *Parser) parseEnum() *ast.Enum {
-	p.next()
 	d := &ast.Enum{
-		Position: p.position,
-		Members:  make(map[string]*ast.Variable),
+		Members: make(map[string]*ast.Variable),
 	}
 	d.Name = p.parseIdentifier()
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
-		v := &ast.Variable{
-			Position: p.position,
-		}
+		v := &ast.Variable{}
 		v.Name = p.parseIdentifier()
 		if p.token == token.Assign {
 			p.next()
@@ -70,9 +63,7 @@ func (p *Parser) parseEnum() *ast.Enum {
 }
 
 func (p *Parser) parseInterface() *ast.Interface {
-	p.next()
 	d := &ast.Interface{
-		Position:  p.position,
 		Functions: make(map[string]*ast.Function),
 	}
 	d.Name = p.parseIdentifier()
@@ -85,26 +76,20 @@ func (p *Parser) parseInterface() *ast.Interface {
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
 		m := p.parseMetadata()
-		if p.token == token.Function {
-			f := p.parseFunction()
-			f.Custom = append(f.Custom, m...)
-			name := f.Name.Name
-			if _, ok := d.Functions[name]; ok {
-				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
-			}
-			d.Functions[name] = f
-		} else {
-			p.unexpected(p.position, "declaration")
+		f := p.parseFunction()
+		f.Custom = append(f.Custom, m...)
+		name := f.Name.Name
+		if _, ok := d.Functions[name]; ok {
+			p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
 		}
+		d.Functions[name] = f
 	}
 	p.expect(token.RightBrace)
 	return d
 }
 
 func (p *Parser) parseClass() *ast.Class {
-	p.next()
 	d := &ast.Class{
-		Position:  p.position,
 		Variables: make(map[string]*ast.Variable),
 		Functions: make(map[string]*ast.Function),
 	}
@@ -121,6 +106,7 @@ func (p *Parser) parseClass() *ast.Class {
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
+			p.next()
 			v := p.parseVariable()
 			v.Custom = append(v.Custom, m...)
 			v.Modifier = modifier
@@ -131,6 +117,7 @@ func (p *Parser) parseClass() *ast.Class {
 			d.Variables[name] = v
 
 		case token.Function:
+			p.next()
 			f := p.parseFunction()
 			f.Custom = append(f.Custom, m...)
 			f.Modifier = modifier

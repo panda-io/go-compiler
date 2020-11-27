@@ -30,6 +30,7 @@ func (p *Parser) parseProgram() {
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
+			p.next()
 			v := p.parseVariable()
 			v.Custom = append(v.Custom, m...)
 			v.Modifier = modifier
@@ -40,6 +41,7 @@ func (p *Parser) parseProgram() {
 			program.Variables[name] = v
 
 		case token.Function:
+			p.next()
 			f := p.parseFunction()
 			f.Custom = append(f.Custom, m...)
 			f.Modifier = modifier
@@ -50,6 +52,7 @@ func (p *Parser) parseProgram() {
 			program.Functions[name] = f
 
 		case token.Enum:
+			p.next()
 			e := p.parseEnum()
 			e.Custom = append(e.Custom, m...)
 			e.Modifier = modifier
@@ -60,6 +63,7 @@ func (p *Parser) parseProgram() {
 			program.Enums[name] = e
 
 		case token.Interface:
+			p.next()
 			i := p.parseInterface()
 			i.Custom = append(i.Custom, m...)
 			i.Modifier = modifier
@@ -70,6 +74,7 @@ func (p *Parser) parseProgram() {
 			program.Interfaces[name] = i
 
 		case token.Class:
+			p.next()
 			c := p.parseClass()
 			c.Custom = append(c.Custom, m...)
 			c.Modifier = modifier

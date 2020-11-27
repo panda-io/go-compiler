@@ -23,7 +23,6 @@ func (t0 *BuitinType) Equal(t Type) bool {
 
 // TypeName qualified name
 type TypeName struct {
-	Position      int
 	QualifiedName []*Identifier
 	TypeArguments *TypeArguments
 }
@@ -117,6 +116,58 @@ func (t0 *TypeParameter) Equal(t Type) bool {
 	}
 	if t0.Type == nil && t1.Type == nil {
 		return true
+	}
+	return false
+}
+
+// Parameters for function declaration
+type Parameters struct {
+	Position   int
+	Parameters []*Variable
+}
+
+// Equal compare if two type are same
+func (t0 *Parameters) Equal(t Type) bool {
+	t1, ok := t.(*Parameters)
+	if !ok {
+		return false
+	}
+	if len(t0.Parameters) != len(t1.Parameters) {
+		return false
+	}
+	for i, p := range t0.Parameters {
+		if !p.Equal(t1.Parameters[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// Equal compare if two type are same
+func (t0 *Variable) Equal(t Type) bool {
+	t1, ok := t.(*Variable)
+	if !ok {
+		return false
+	}
+	if t0.Name.Name != t1.Name.Name {
+		return false
+	}
+	if !t0.Type.Equal(t1.Type) {
+		return false
+	}
+	if t0.Value != nil && t1.Value != nil {
+		return t0.Value.Equal(t1.Value)
+	}
+	if t0.Value == nil && t1.Value == nil {
+		return true
+	}
+	return false
+}
+
+// Equal compare if two type are same
+func (t0 *Literal) Equal(t Type) bool {
+	if t1, ok := t.(*Literal); ok {
+		return t0.Type == t1.Type && t0.Value == t1.Value
 	}
 	return false
 }

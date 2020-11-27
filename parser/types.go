@@ -15,7 +15,6 @@ func (p *Parser) parseType() ast.Type {
 		return t
 	}
 	t := &ast.TypeName{
-		Position:      p.position,
 		QualifiedName: p.parseQualifiedName(nil),
 	}
 	if p.token == token.Less {

@@ -14,31 +14,43 @@ func (*Class) declaration()     {}
 // Variable declaration
 type Variable struct {
 	Attributes
-	Position int
-	Name     *Identifier
-	Type     Type
-	Value    *Literal
+	Name  *Identifier
+	Type  Type
+	Value *Literal
 }
 
 // Function declaration
 type Function struct {
 	Attributes
-	Position int
-	Name     *Identifier
+	Name *Identifier
+
+	ReturnType Type
+	/*
+		{
+			"include": "#type_parameter_list"
+		},
+		{
+			"include": "#parenthesized_parameter_list"
+		},
+		{
+			"include": "#type"
+		},
+		{
+			"include": "#block"
+		}
+	*/
 }
 
 // Enum declaration
 type Enum struct {
 	Attributes
-	Position int
-	Name     *Identifier
-	Members  map[string]*Variable
+	Name    *Identifier
+	Members map[string]*Variable
 }
 
 // Interface declaration
 type Interface struct {
 	Attributes
-	Position       int
 	Name           *Identifier
 	TypeParameters *TypeParameters
 	Base           *TypeArguments
@@ -48,7 +60,6 @@ type Interface struct {
 // Class declaration
 type Class struct {
 	Attributes
-	Position       int
 	Name           *Identifier
 	TypeParameters *TypeParameters
 	Base           *TypeArguments

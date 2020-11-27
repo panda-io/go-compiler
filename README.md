@@ -38,8 +38,12 @@
 > - paren
 > - ellipsis
 > ### type
-> - field
-> - field-list
+> - builtin type
+> - type name
+> - type arguments
+> - type parameters
+> - parameter
+> - parameter list
 > ### metadata
 > - text
 > - object (literal)
