@@ -23,53 +23,6 @@ func WriteIndent(buffer *bytes.Buffer, indent int) {
 	buffer.Write(indents[:indent])
 }
 
-type Node interface {
-	Pos() int // position of first character belonging to the node
-}
-
-type Expr interface {
-	Node
-	Print(buffer *bytes.Buffer)
-	exprNode()
-}
-
-type Stmt interface {
-	Node
-	Print(buffer *bytes.Buffer, indent int)
-	stmtNode()
-}
-
-type Decl interface {
-	Node
-	declNode()
-}
-
-// ----------------------------------------------------------------------------
-// Meta
-
-// A Metadata node represents a single //-style or /*-style comment.
-type Metadata struct {
-	Start  int // position of "@" starting the comment
-	Name   string
-	Text   string
-	Values map[string]*BasicLit
-}
-
-func (meta *Metadata) Pos() int { return meta.Start }
-
-// ----------------------------------------------------------------------------
-// Modifier
-
-// A Modifier node represents public or static to var, function, class, enum
-type Modifier struct {
-	Start  int
-	Public bool
-	Static bool
-	Async  bool
-}
-
-func (modifier *Modifier) Pos() int { return modifier.Start }
-
 // ----------------------------------------------------------------------------
 // Field
 
@@ -724,47 +677,6 @@ func (s *ForInStmt) Print(buffer *bytes.Buffer, indent int) {
 	buffer.WriteString(" )\n")
 	s.Body.Print(buffer, indent)
 }
-
-// ----------------------------------------------------------------------------
-// Declarations
-// A declaration is represented by one of the following declaration nodes.
-
-// A BadDecl node is a placeholder for declarations containing
-// syntax errors for which no correct declaration nodes can be
-// created.
-//
-type BadDecl struct {
-	Start int // position range of bad declaration
-}
-
-func (d *BadDecl) Pos() int { return d.Start }
-
-func (*BadDecl) declNode() {}
-
-func (*BadDecl) Print(buffer *bytes.Buffer, indent int, onlyDeclare bool) {}
-
-type NamespaceDecl struct {
-	Doc  *Metadata // associated documentation; or nil
-	Path Expr      // namespace path
-}
-
-func (s *NamespaceDecl) Pos() int { return s.Path.Pos() }
-
-func (*NamespaceDecl) declNode() {}
-
-type ImportDecl struct {
-	Doc  *Metadata // associated documentation; or nil
-	Name *Ident    // local name; or nil
-	Path Expr      // import path
-}
-
-func (s *ImportDecl) Pos() int {
-	if s.Name != nil {
-		return s.Name.Pos()
-	}
-	return s.Path.Pos()
-}
-func (*ImportDecl) declNode() {}
 
 type ValueDecl struct {
 	Doc      *Metadata // associated documentation; or nil

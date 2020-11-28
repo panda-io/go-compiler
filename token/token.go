@@ -34,6 +34,7 @@ const (
 	Default
 	Else
 	Enum
+	Finally
 	For
 	Function
 	If
@@ -149,6 +150,7 @@ var (
 		Default:   "default",
 		Else:      "else",
 		Enum:      "enum",
+		Finally:   "finally",
 		For:       "for",
 		Function:  "function",
 		If:        "if",

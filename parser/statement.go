@@ -1,12 +1,153 @@
 package parser
 
+import (
+	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/token"
+)
+
+func (p *Parser) parseStatementBlock() *ast.BlockStatement {
+	block := &ast.BlockStatement{
+		Position: p.position,
+	}
+	p.next()
+	for p.token != token.RightBrace {
+		block.Statements = append(block.Statements, p.parseStatement())
+	}
+	return block
+}
+
+func (p *Parser) parseStatement() ast.Statement {
+	switch p.token {
+	case token.IDENT, token.INT, token.FLOAT, token.CHAR, token.STRING,
+		token.LeftParen, token.LeftBracket, //?
+		token.This, token.Base,
+		token.Plus, token.Minus, token.Mul, token.BitAnd, token.Caret, token.Not: // unary operators
+		//s = p.parseSimpleStmt()
+		//p.expect(Semi)
+		//expression? // check check ~
+
+	case token.Var:
+		return p.parseDeclarationStatement()
+
+	case token.Return:
+		return p.parseReturnStatement()
+
+	case token.Break, token.Continue:
+		return p.parseBranchStatement()
+
+	case token.LeftBrace:
+		return p.parseStatementBlock()
+
+	case token.If:
+		//s = p.parseIfStmt()
+
+	case token.Switch:
+		//s = p.parseSwitchStmt()
+
+	case token.For:
+		//s = p.parseForStmt()
+
+	case token.Try:
+		return p.parseTryStatement()
+
+	case token.Throw:
+		return p.parseThrowStatement()
+
+	case token.Yield:
+		// yield statement //TO-DO
+
+	case token.Await:
+		// await //TO-DO
+
+	case token.META:
+		return p.parseRawStatement()
+
+	default:
+		p.unexpected(p.position, "statement")
+	}
+	return nil
+}
+
+func (p *Parser) parseDeclarationStatement() *ast.DeclarationStatement {
+	s := &ast.DeclarationStatement{
+		Position: p.position,
+	}
+	p.next()
+	s.Name = p.parseIdentifier()
+	if p.token != token.Equal && p.token != token.Semi {
+		s.Type = p.parseType()
+	}
+	if p.token == token.Equal {
+		s.Value = p.parseExpression()
+	}
+	p.expect(token.Semi)
+	return s
+}
+
+func (p *Parser) parseBranchStatement() *ast.BranchStatement {
+	s := &ast.BranchStatement{
+		Position: p.position,
+		Token:    p.token,
+	}
+	p.next()
+	p.expect(token.Semi)
+	return s
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	s := &ast.ReturnStatement{
+		Position: p.position,
+	}
+	p.next()
+	if p.token != token.Semi {
+		s.Expression = p.parseExpression()
+	}
+	p.expect(token.Semi)
+	return s
+}
+
+func (p *Parser) parseThrowStatement() *ast.ThrowStatement {
+	s := &ast.ThrowStatement{
+		Position: p.position,
+	}
+	p.next()
+	s.Expression = p.parseExpression()
+	p.expect(token.Semi)
+	return s
+}
+
+func (p *Parser) parseRawStatement() *ast.RawStatement {
+	s := &ast.RawStatement{
+		Position: p.position,
+	}
+	p.next()
+	if p.token != token.STRING {
+		p.unexpected(p.position, "raw source (string)")
+	}
+	s.Source = p.literal
+	p.next()
+	return s
+}
+
+func (p *Parser) parseTryStatement() *ast.TryStatement {
+	s := &ast.TryStatement{
+		Position: p.position,
+	}
+	p.next()
+	s.TryStatement = p.parseStatementBlock()
+	p.expect(token.Catch)
+	p.expect(token.LeftParen)
+	s.Catch = p.parseParameter()
+	s.CatchStatement = p.parseStatementBlock()
+	if p.token == token.Finally {
+		p.next()
+		s.FinallyStatement = p.parseStatementBlock()
+	}
+	return s
+}
+
 // ----------------------------------------------------------------------------
 // Statements
-
-// parseSimpleStmt returns true as 2nd result if it parsed the assignment
-// of a range clause (with mode == rangeOk). The returned statement is an
-// assignment with a right-hand side that is a single unary expression of
-// the form "range x". No guarantees are given for the left-hand side.
 
 /*
 func (p *Parser) parseSimpleStmt() Stmt {
@@ -38,22 +179,6 @@ func (p *Parser) parseSimpleStmt() Stmt {
 	return &ExprStmt{Expr: x}
 }
 
-func (p *Parser) parseReturnStmt() *ReturnStmt {
-	pos := p.pos
-	p.expect(Return)
-	var result Expr
-	if p.tok != Semi {
-		result = p.parseExpr(false)
-	}
-	p.expect(Semi)
-	return &ReturnStmt{Start: pos, Result: result}
-}
-
-func (p *Parser) parseBranchStmt(tok Token) *BranchStmt {
-	pos := p.expect(tok)
-	p.expect(Semi)
-	return &BranchStmt{Start: pos, Tok: tok}
-}
 
 func (p *Parser) makeExpr(s Stmt, want string) Expr {
 	if s == nil {
@@ -166,75 +291,5 @@ func (p *Parser) parseForStmt() Stmt {
 	}
 }
 
-func (p *Parser) parseStmt() (s Stmt) {
-	switch p.tok {
-	case Const, Var:
-		m := p.parseModifier()
-		s = &DeclStmt{Decl: p.parseValueDecl(m)}
-	case
-		// tokens that may start an expression
-		IDENT, INT, FLOAT, CHAR, STRING,
-		LeftParen, LeftBracket,
-		Plus, Minus, Star, And, Caret, Not: // unary operators
-		s = p.parseSimpleStmt()
-		p.expect(Semi)
-	case Return:
-		s = p.parseReturnStmt()
-	case Break, Continue:
-		s = p.parseBranchStmt(p.tok)
-	case LeftBrace:
-		s = p.parseBlockStmt()
-		p.expect(Semi)
-	case If:
-		s = p.parseIfStmt()
-	case Switch:
-		s = p.parseSwitchStmt()
-	case For:
-		s = p.parseForStmt()
-	case RightBrace:
-		// a semicolon may be omitted before a closing "}"
-		s = &EmptyStmt{Start: p.pos}
-	default:
-		// no statement found
-		pos := p.pos
-		p.errorExpected(pos, "statement")
-		s = &BadStmt{Start: pos}
-	}
 
-	return
-}
-
-// ----------------------------------------------------------------------------
-// Blocks
-func (p *Parser) parseStmtList() (list []Stmt) {
-	for {
-		if len(p.cpp) > 0 {
-			for _, e := range p.cpp {
-				list = append(list, &EmitStmt{
-					Start:   e.Pos(),
-					Content: e.Text,
-				})
-			}
-			p.cpp = p.cpp[:0]
-		}
-		if p.tok == RightBrace || p.tok == EOF {
-			return
-		}
-		list = append(list, p.parseStmt())
-	}
-	return
-}
-
-func (p *Parser) parseBody() *BlockStmt {
-	start := p.expect(LeftBrace)
-	list := p.parseStmtList()
-	p.expect(RightBrace)
-	return &BlockStmt{Start: start, Stmts: list}
-}
-
-func (p *Parser) parseBlockStmt() *BlockStmt {
-	start := p.expect(LeftBrace)
-	list := p.parseStmtList()
-	return &BlockStmt{Start: start, Stmts: list}
-}
 */

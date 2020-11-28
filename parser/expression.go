@@ -5,6 +5,10 @@ import (
 	"github.com/panda-foundation/go-compiler/token"
 )
 
+func (p *Parser) parseExpression() ast.Expression {
+	return nil
+}
+
 func (p *Parser) parseIdentifier() *ast.Identifier {
 	position := p.position
 	name := ""
