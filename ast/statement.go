@@ -14,6 +14,7 @@ func (*RawStatement) statement()         {}
 func (*TryStatement) statement()         {}
 func (*ThrowStatement) statement()       {}
 func (*DeclarationStatement) statement() {}
+func (*IfStatement) statement()          {}
 
 // BlockStatement is statement list
 type BlockStatement struct {
@@ -60,4 +61,12 @@ type DeclarationStatement struct {
 	Name     *Identifier
 	Type     Type
 	Value    Expression
+}
+
+// IfStatement represents an if statement.
+type IfStatement struct {
+	Position  int
+	Condition Expression // condition
+	Body      *BlockStatement
+	Else      Statement
 }

@@ -39,7 +39,7 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseStatementBlock()
 
 	case token.If:
-		//s = p.parseIfStmt()
+		return p.parseIfStatement()
 
 	case token.Switch:
 		//s = p.parseSwitchStmt()
@@ -146,6 +146,59 @@ func (p *Parser) parseTryStatement() *ast.TryStatement {
 	return s
 }
 
+func (p *Parser) parseIfStatement() *ast.IfStatement {
+	s := &ast.IfStatement{
+		Position: p.position,
+	}
+	p.next()
+	s.Condition = p.parseExpression()
+	s.Body = p.parseStatementBlock()
+
+	if p.token == token.Else {
+		p.next()
+		if p.token == token.If {
+			s.Else = p.parseIfStatement()
+		} else if p.token == token.LeftBrace {
+			s.Else = p.parseStatementBlock()
+		} else {
+			p.unexpected(p.position, "if statement or block")
+		}
+	}
+	return s
+}
+
+/*
+func (p *Parser) parseSwitchStatement() *ast.SwitchStatement {
+	pos := p.expect(Switch)
+
+	tag := p.parseSimpleStmt()
+	bodyStart := p.expect(LeftBrace)
+	var list []Stmt
+	for p.tok == Case || p.tok == Default {
+		list = append(list, p.parseCaseClause())
+	}
+	p.expect(RightBrace)
+	body := &BlockStmt{Start: bodyStart, Stmts: list}
+
+	return &SwitchStmt{Start: pos, Tag: p.makeExpr(tag, "switch expression"), Body: body}
+}
+
+func (p *Parser) parseCaseClause() *CaseClause {
+	pos := p.pos
+	var expr Expr
+	if p.tok == Case {
+		p.next()
+		expr = p.parseRhs()
+	} else {
+		p.expect(Default)
+	}
+
+	p.expect(Colon)
+	body := p.parseStmtList()
+
+	return &CaseClause{Start: pos, Expr: expr, Body: body}
+}*/
+
 // ----------------------------------------------------------------------------
 // Statements
 
@@ -193,63 +246,6 @@ func (p *Parser) makeExpr(s Stmt, want string) Expr {
 	}
 	p.error(s.Pos(), fmt.Sprintf("expected %s, found %s (missing parentheses around composite literal?)", want, found))
 	return &BadExpr{Start: s.Pos()}
-}
-
-func (p *Parser) parseIfStmt() *IfStmt {
-	pos := p.expect(If)
-
-	cond := p.parseExpr(true)
-	body := p.parseBlockStmt()
-
-	var else_ Stmt
-	if p.tok == Else {
-		p.next()
-		switch p.tok {
-		case If:
-			else_ = p.parseIfStmt()
-		case LeftBrace:
-			else_ = p.parseBlockStmt()
-			p.expect(Semi)
-		default:
-			p.errorExpected(p.pos, "if statement or block")
-			else_ = &BadStmt{Start: p.pos}
-		}
-	} else {
-		p.expect(Semi)
-	}
-
-	return &IfStmt{Start: pos, Condition: cond, Body: body, Else: else_}
-}
-
-func (p *Parser) parseCaseClause() *CaseClause {
-	pos := p.pos
-	var expr Expr
-	if p.tok == Case {
-		p.next()
-		expr = p.parseRhs()
-	} else {
-		p.expect(Default)
-	}
-
-	p.expect(Colon)
-	body := p.parseStmtList()
-
-	return &CaseClause{Start: pos, Expr: expr, Body: body}
-}
-
-func (p *Parser) parseSwitchStmt() Stmt {
-	pos := p.expect(Switch)
-
-	tag := p.parseSimpleStmt()
-	bodyStart := p.expect(LeftBrace)
-	var list []Stmt
-	for p.tok == Case || p.tok == Default {
-		list = append(list, p.parseCaseClause())
-	}
-	p.expect(RightBrace)
-	body := &BlockStmt{Start: bodyStart, Stmts: list}
-
-	return &SwitchStmt{Start: pos, Tag: p.makeExpr(tag, "switch expression"), Body: body}
 }
 
 func (p *Parser) parseForStmt() Stmt {
