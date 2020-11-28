@@ -105,7 +105,7 @@ func (p *Parser) parseProgram() {
 			program.Classes[name] = c
 
 		default:
-			p.unexpected(p.position, "declaration")
+			p.expectedError(p.position, "declaration")
 		}
 		m = p.parseMetadata()
 	}
@@ -173,7 +173,7 @@ func (p *Parser) parseMetadata() []*ast.Metadata {
 								Value:    p.literal,
 							}
 						default:
-							p.unexpected(p.position, "basic literal (bool, char, int, float, string)")
+							p.expectedError(p.position, "basic literal (bool, char, int, float, string)")
 						}
 						p.next()
 						if p.token == token.RightParen {

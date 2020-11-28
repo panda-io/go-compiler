@@ -85,12 +85,12 @@ func (p *Parser) next() {
 
 func (p *Parser) expect(t token.Token) {
 	if p.token != t {
-		p.unexpected(p.position, fmt.Sprintf("'%s'", t.String()))
+		p.expectedError(p.position, fmt.Sprintf("'%s'", t.String()))
 	}
 	p.next()
 }
 
-func (p *Parser) unexpected(position int, expect string) {
+func (p *Parser) expectedError(position int, expect string) {
 	expect = "expected " + expect
 	if position == p.position {
 		switch {

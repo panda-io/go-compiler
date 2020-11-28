@@ -73,7 +73,6 @@ public class empty
     }
 }
 
-/*
 public class base_class
 {
     var value int = 1;
@@ -118,7 +117,7 @@ public class derive_class : base_class, must_do
 }
 
 
-public class generic<K, V>
+public class generic<K, V:must_do...>
 {
     var k_ K;
     var v_ V;
@@ -134,7 +133,6 @@ public class derive_generic : generic<int, int>
 {
 
 }
-*/
 
 public function main() int
 {

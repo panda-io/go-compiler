@@ -37,7 +37,6 @@
 > - member-access (.)
 > - element-access ([])
 > - paren
-> - ellipsis
 > ### type
 > - builtin type
 > - type name
@@ -67,15 +66,15 @@
 
 
 
-
---------------------- 备忘 -------------------------
+--------------------- backlog -------------------------
 unresolved can be cached
 file has import scope
 
 ----------------------------------
 add scope and check. add imports to file scope or something else
+later convert all type to qualified type
     
---------------------- 限制 TO-DO -------------------
+--------------------- TO-DO -------------------
 #前置声明，声明，定义
 
 #serialize metadata
@@ -92,3 +91,8 @@ add scope and check. add imports to file scope or something else
 #store file info into program
 
 #char represent utf-8 code
+
+//TO-DO
+...   in parameters and type parameters
+
+{a,b,c...} 初始化

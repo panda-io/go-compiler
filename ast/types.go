@@ -54,6 +54,7 @@ func (t0 *TypeName) Equal(t Type) bool {
 type TypeArguments struct {
 	Position  int
 	Arguments []Type
+	Ellipsis  int
 }
 
 // Equal compare if two type are same
@@ -70,6 +71,9 @@ func (t0 *TypeArguments) Equal(t Type) bool {
 			return false
 		}
 	}
+	if t0.Ellipsis != t1.Ellipsis {
+		return false
+	}
 	return true
 }
 
@@ -77,6 +81,7 @@ func (t0 *TypeArguments) Equal(t Type) bool {
 type TypeParameters struct {
 	Position   int
 	Parameters []*TypeParameter
+	Ellipsis   bool
 }
 
 // Equal compare if two type are same
@@ -92,6 +97,9 @@ func (t0 *TypeParameters) Equal(t Type) bool {
 		if !p.Equal(t1.Parameters[i]) {
 			return false
 		}
+	}
+	if t0.Ellipsis != t1.Ellipsis {
+		return false
 	}
 	return true
 }
@@ -124,6 +132,7 @@ func (t0 *TypeParameter) Equal(t Type) bool {
 type Parameters struct {
 	Position   int
 	Parameters []*Variable
+	Ellipsis   bool
 }
 
 // Equal compare if two type are same
@@ -139,6 +148,9 @@ func (t0 *Parameters) Equal(t Type) bool {
 		if !p.Equal(t1.Parameters[i]) {
 			return false
 		}
+	}
+	if t0.Ellipsis != t1.Ellipsis {
+		return false
 	}
 	return true
 }
@@ -169,5 +181,17 @@ func (t0 *Literal) Equal(t Type) bool {
 	if t1, ok := t.(*Literal); ok {
 		return t0.Type == t1.Type && t0.Value == t1.Value
 	}
+	return false
+}
+
+// Arguments type arguments
+type Arguments struct {
+	Position  int
+	Arguments []Expression
+	Ellipsis  int
+}
+
+// Equal compare if two type are same
+func (t0 *Arguments) Equal(t Type) bool {
 	return false
 }

@@ -18,13 +18,10 @@ func (p *Parser) parseStatementBlock() *ast.BlockStatement {
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.token {
-	case token.IDENT, token.INT, token.FLOAT, token.CHAR, token.STRING,
-		token.LeftParen, token.LeftBracket, //?
-		token.This, token.Base,
-		token.Plus, token.Minus, token.Mul, token.BitAnd, token.Caret, token.Not: // unary operators
-		//s = p.parseSimpleStmt()
+	case token.IDENT, token.This, token.Base: // unary operators
+		//s = p.parseSimpleStmt() // parsePrimaryExpression
+		//invocation,[assign, ++, -- (check left must be variable)]
 		//p.expect(Semi)
-		//expression? // check check ~
 
 	case token.Var:
 		return p.parseDeclarationStatement()
@@ -63,7 +60,7 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseRawStatement()
 
 	default:
-		p.unexpected(p.position, "statement")
+		p.expectedError(p.position, "statement")
 	}
 	return nil
 }
@@ -122,7 +119,7 @@ func (p *Parser) parseRawStatement() *ast.RawStatement {
 	}
 	p.next()
 	if p.token != token.STRING {
-		p.unexpected(p.position, "raw source (string)")
+		p.expectedError(p.position, "raw source (string)")
 	}
 	s.Source = p.literal
 	p.next()
@@ -161,7 +158,7 @@ func (p *Parser) parseIfStatement() *ast.IfStatement {
 		} else if p.token == token.LeftBrace {
 			s.Else = p.parseStatementBlock()
 		} else {
-			p.unexpected(p.position, "if statement or block")
+			p.expectedError(p.position, "if statement or block")
 		}
 	}
 	return s

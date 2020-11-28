@@ -14,6 +14,10 @@ func (p *Parser) parseType() ast.Type {
 		p.next()
 		return t
 	}
+	return p.parseTypeName()
+}
+
+func (p *Parser) parseTypeName() *ast.TypeName {
 	t := &ast.TypeName{
 		QualifiedName: p.parseQualifiedName(nil),
 	}
@@ -27,11 +31,23 @@ func (p *Parser) parseTypeArguments() *ast.TypeArguments {
 	p.next()
 	t := &ast.TypeArguments{
 		Position: p.position,
+		Ellipsis: -1,
 	}
 	t.Arguments = append(t.Arguments, p.parseType())
+	if p.token == token.Ellipsis {
+		t.Ellipsis = 0
+		p.next()
+	}
 	for p.token == token.Comma {
 		p.next()
 		t.Arguments = append(t.Arguments, p.parseType())
+		if p.token == token.Ellipsis {
+			if t.Ellipsis > -1 {
+				p.error(p.position, "dupicate ellipsis")
+			}
+			t.Ellipsis = len(t.Arguments) - 1
+			p.next()
+		}
 	}
 	p.expect(token.Greater)
 	return t
@@ -43,9 +59,20 @@ func (p *Parser) parseTypeParameters() *ast.TypeParameters {
 		Position: p.position,
 	}
 	t.Parameters = append(t.Parameters, p.parseTypeParameter())
+	if p.token == token.Ellipsis {
+		t.Ellipsis = true
+		p.next()
+	}
 	for p.token == token.Comma {
+		if t.Ellipsis {
+			p.error(p.position, "ellipsis must be in the last position")
+		}
 		p.next()
 		t.Parameters = append(t.Parameters, p.parseTypeParameter())
+		if p.token == token.Ellipsis {
+			t.Ellipsis = true
+			p.next()
+		}
 	}
 	p.expect(token.Greater)
 	return t
@@ -85,7 +112,14 @@ func (p *Parser) parseParameters() *ast.Parameters {
 		Position: p.position,
 	}
 	t.Parameters = append(t.Parameters, p.parseParameter())
+	if p.token == token.Ellipsis {
+		t.Ellipsis = true
+		p.next()
+	}
 	for p.token == token.Comma {
+		if t.Ellipsis {
+			p.error(p.position, "ellipsis must be in the last position")
+		}
 		p.next()
 		t.Parameters = append(t.Parameters, p.parseParameter())
 	}
@@ -113,113 +147,31 @@ func (p *Parser) parseParameter() *ast.Variable {
 	return t
 }
 
-/*
-// ----------------------------------------------------------------------------
-// Types
-// ----------------------------------------------------------------------------
-func (p *Parser) parseType() Expr {
-	typ := p.tryType()
-
-	if typ == nil {
-		pos := p.pos
-		p.errorExpected(pos, "type")
-		return &BadExpr{Start: pos}
-	}
-
-	return typ
-}
-
-// If the result is an identifier, it is not resolved.
-func (p *Parser) tryVarType(isParam bool) Expr {
-	if isParam && p.tok == Ellipsis {
-		pos := p.pos
+func (p *Parser) parseArguments() *ast.Arguments {
+	p.expect(token.LeftParen)
+	if p.token == token.RightParen {
 		p.next()
-		typ := p.tryType() // don't use parseType so we can provide better error message
-		if typ == nil {
-			p.error(pos, "'...' parameter is missing type")
-			typ = &BadExpr{Start: pos}
-		}
-		return &EllipsisLit{Start: pos, Expr: typ}
+		return nil
 	}
-	return p.tryType()
-}
-
-// If the result is an identifier, it is not resolved.
-func (p *Parser) parseVarType(isParam bool) Expr {
-	typ := p.tryVarType(isParam)
-	if typ == nil {
-		pos := p.pos
-		p.errorExpected(pos, "type")
-		p.next() // make progress
-		typ = &BadExpr{Start: pos}
+	t := &ast.Arguments{
+		Position: p.position,
 	}
-	return typ
-}
-
-func (p *Parser) parseParameterList() (params []*Field) {
-	for p.tok != RightParen {
-		field := &Field{}
-		typ := p.parseVarType(true)
-		if p.tok == Comma {
-			field.Name = nil
-			field.Type = typ
-			p.expect(Comma)
-			params = append(params, field)
-			continue
-		}
-		ok := false
-		field.Name, ok = typ.(*Ident)
-		if !ok {
-			p.expect(IDENT)
-		}
-		field.Type = p.parseVarType(true)
-		if p.tok == Equal {
+	t.Arguments = append(t.Arguments, p.parseExpression())
+	if p.token == token.Ellipsis {
+		t.Ellipsis = 0
+		p.next()
+	}
+	for p.token == token.Comma {
+		p.next()
+		t.Arguments = append(t.Arguments, p.parseExpression())
+		if p.token == token.Ellipsis {
+			if t.Ellipsis > -1 {
+				p.error(p.position, "dupicate ellipsis")
+			}
+			t.Ellipsis = len(t.Arguments) - 1
 			p.next()
-			field.Default = p.parseExpr(false)
-		}
-		params = append(params, field)
-		if p.tok != RightParen {
-			p.expect(Comma)
 		}
 	}
-	//TP-DO ...
-	//TO-DO check default
-	return
+	p.expect(token.RightParen)
+	return t
 }
-
-func (p *Parser) parseParameters() *FieldList {
-	var params []*Field
-	start := p.expect(LeftParen)
-	if p.tok != RightParen {
-		params = p.parseParameterList()
-	}
-	p.expect(RightParen)
-
-	return &FieldList{Start: start, Fields: params}
-}
-
-func (p *Parser) parseResult() *Field {
-	typ := p.tryType()
-	if typ != nil {
-		return &Field{Type: typ}
-	}
-	return &Field{Type: &Scalar{Token: Void}}
-}
-
-// If the result is an identifier, it is not resolved.
-func (p *Parser) tryType() Expr {
-	if p.tok.IsScalar() {
-		scalar := &Scalar{
-			Start: p.pos,
-			Token: p.tok,
-		}
-		p.next()
-		return scalar
-
-	} else if p.tok == IDENT {
-		typ := p.parseTypeName()
-		return typ
-	}
-	return nil
-}
-*/

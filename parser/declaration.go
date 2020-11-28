@@ -158,7 +158,7 @@ func (p *Parser) parseClass() *ast.Class {
 			d.Functions[name] = f
 
 		default:
-			p.unexpected(p.position, "declaration")
+			p.expectedError(p.position, "declaration")
 		}
 	}
 	p.expect(token.RightBrace)
