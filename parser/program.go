@@ -7,16 +7,13 @@ import (
 )
 
 func (p *Parser) parseProgram() {
-	program := p.root
 	m := p.parseMetadata()
-	if p.token == token.Namespace {
-		n := p.parseNamespace()
-		program = p.findPackage(n)
-		if len(m) > 0 {
-			program.Custom = append(program.Custom, m...)
-		}
-		m = p.parseMetadata()
+	n := p.parseNamespace()
+	program := p.findPackage(n)
+	if len(m) > 0 {
+		program.Custom = append(program.Custom, m...)
 	}
+	m = p.parseMetadata()
 
 	if p.token == token.Import {
 		if len(m) > 0 {
@@ -193,11 +190,11 @@ func (p *Parser) parseMetadata() []*ast.Metadata {
 }
 
 func (p *Parser) parseNamespace() []string {
-	if p.token != token.Namespace {
+	p.expect(token.Namespace)
+	p.next()
+	if p.token == token.Semi {
 		return nil
 	}
-	p.next()
-
 	name := p.parseQualifiedName(nil)
 	namespace := []string{}
 	for _, n := range name {

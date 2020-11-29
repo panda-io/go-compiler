@@ -36,6 +36,7 @@ const (
 	Enum
 	Finally
 	For
+	Foreach
 	Function
 	If
 	Import
@@ -51,6 +52,7 @@ const (
 	Throw
 	Try
 	Var
+	While
 	Yield
 	keywordEnd
 
@@ -152,6 +154,7 @@ var (
 		Enum:      "enum",
 		Finally:   "finally",
 		For:       "for",
+		Foreach:   "foreach",
 		Function:  "function",
 		If:        "if",
 		Import:    "import",
@@ -167,6 +170,7 @@ var (
 		Throw:     "throw",
 		Try:       "try",
 		Var:       "var",
+		While:     "while",
 		Yield:     "yield",
 
 		Bool:    "bool",
