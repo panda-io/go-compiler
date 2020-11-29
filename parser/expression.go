@@ -6,7 +6,7 @@ import (
 )
 
 func (p *Parser) parseExpression() ast.Expression {
-	return nil
+	return p.parseBinaryExpression(1)
 }
 
 func (p *Parser) parseIdentifier() *ast.Identifier {
@@ -44,6 +44,13 @@ func (p *Parser) parseOperand() ast.Expression {
 			Type:     p.token,
 		}
 		p.next()
+		return e
+
+	case token.New:
+		e := &ast.ClassCreateExpression{}
+		p.next()
+		e.Type = p.parseType()
+		e.Arguments = p.parseArguments()
 		return e
 
 	case token.LeftParen:
@@ -104,64 +111,46 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// Expressions
-
-/*
-// If lhs is set and the result is an identifier, it is not resolved.
-func (p *Parser) parseUnaryExpr(lhs bool) Expr {
-	switch p.tok {
-	case Plus, Minus, Not, Caret:
-		pos, op := p.pos, p.tok
+func (p *Parser) parseUnaryExpression() ast.Expression {
+	switch p.token {
+	case token.Plus, token.Minus, token.Not, token.Caret:
+		e := &ast.UnaryExpression{
+			Position: p.position,
+			Operator: p.token,
+		}
 		p.next()
-		x := p.parseUnaryExpr(false)
-		return &UnaryExpr{Start: pos, Op: op, Expr: x}
+		e.Expression = p.parseUnaryExpression()
+		return e
 	}
-	return p.parsePrimaryExpr(lhs)
+	return p.parsePrimaryExpression()
 }
 
-func (p *Parser) tokPrec() (Token, int) {
-	tok := p.tok
-	if p.inRhs && tok == Assign {
-		tok = Equal
-	}
-	return tok, tok.Precedence()
-}
-
-// If lhs is set and the result is an identifier, it is not resolved.
-func (p *Parser) parseBinaryExpr(lhs bool, prec1 int) Expr {
-	x := p.parseUnaryExpr(lhs)
+func (p *Parser) parseBinaryExpression(precedence int) ast.Expression {
+	x := p.parseUnaryExpression()
 	for {
-		if p.tok == Semi {
+		op := p.token
+		if op == token.Semi {
 			return x
 		}
-
-		op, oprec := p.tokPrec()
-		if oprec < prec1 {
+		opPrec := p.token.Precedence()
+		if opPrec < precedence {
 			return x
 		}
-		p.expect(op)
-		if lhs {
-			lhs = false
+		p.next()
+		y := p.parseBinaryExpression(p.token.Precedence() + 1)
+		if op == token.Question {
+			p.expect(token.Colon)
+			z := p.parseBinaryExpression(opPrec + 1)
+			return &ast.TernaryExpression{
+				Condition: x,
+				First:     y,
+				Second:    z,
+			}
 		}
-		y := p.parseBinaryExpr(false, oprec+1)
-		if op == Question {
-			// TernaryExpr
-			p.expect(Colon)
-			z := p.parseBinaryExpr(false, oprec+1)
-			x = &TernaryExpr{Condition: x, First: y, Second: z}
-		} else {
-			x = &BinaryExpr{Left: x, Op: op, Right: y}
+		return &ast.BinaryExpression{
+			Left:     x,
+			Operator: op,
+			Right:    y,
 		}
 	}
 }
-
-// Continue
-// If lhs is set and the result is an identifier, it is not resolved.
-// The result may be a type or even a raw type ([...]int). Callers must
-// check the result (using checkExpr or checkExprOrType), depending on
-// context.
-func (p *Parser) parseExpr(lhs bool) Expr {
-	return p.parseBinaryExpr(lhs, LowestPrec+1)
-}
-*/

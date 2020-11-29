@@ -17,6 +17,10 @@ func (*ParenExpression) expression()         {}
 func (*MemberAccessExpression) expression()  {}
 func (*ElementAccessExpression) expression() {}
 func (*InvocationExpression) expression()    {}
+func (*ClassCreateExpression) expression()   {}
+func (*UnaryExpression) expression()         {}
+func (*BinaryExpression) expression()        {}
+func (*TernaryExpression) expression()       {}
 
 // Literal expr
 type Literal struct {
@@ -59,4 +63,31 @@ type ElementAccessExpression struct {
 type InvocationExpression struct {
 	Function  Expression
 	Arguments *Arguments
+}
+
+// ClassCreateExpression expr
+type ClassCreateExpression struct {
+	Type      Type
+	Arguments *Arguments
+}
+
+// UnaryExpression expr
+type UnaryExpression struct {
+	Position   int
+	Operator   token.Token
+	Expression Expression
+}
+
+// BinaryExpression expr
+type BinaryExpression struct {
+	Left     Expression
+	Operator token.Token
+	Right    Expression
+}
+
+// TernaryExpression expr
+type TernaryExpression struct {
+	Condition Expression
+	First     Expression
+	Second    Expression
 }
