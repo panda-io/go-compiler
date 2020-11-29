@@ -19,21 +19,76 @@ func assertEqual(t *testing.T, a interface{}, b interface{}) {
 	}
 }
 
-func TestAllTypes(t *testing.T) {
-	p := NewParser([]string{})
-
-	p.ParseFile("../sample/all_types.pd")
+func TestStatement(t *testing.T) {
+	p := NewParser([]string{"cpp"})
+	p.ParseStatementBlock([]byte("{;var i int = 1; var j float = 1.0; i++; j = i + 1; return i;}"))
+	p.ParseStatementBlock([]byte("{{var i int = 0;}}"))
+	p.ParseStatementBlock([]byte("{for(;;){break;}}"))
+	p.ParseStatementBlock([]byte("{for(var i = 0; i < 10; i++){break;}}"))
+	p.ParseStatementBlock([]byte("{if (a == 1) {} else if (a == 2) {} else {}}"))
+	p.ParseStatementBlock([]byte("{while(true){}}"))
+	p.ParseStatementBlock([]byte("{switch(a.b.c){case 1:{} case 2:{} default:{}}}"))
+	p.ParseStatementBlock([]byte("{foreach(var item : data){}}"))
+	p.ParseStatementBlock([]byte("{foreach(var key; var value : data){}}"))
+	p.ParseStatementBlock([]byte("{try{}catch(e exception){}finally{}}"))
+	p.ParseStatementBlock([]byte("{throw \"some message\";}"))
+	p.ParseStatementBlock([]byte("{@\"raw source\"}"))
+	p.ParseStatementBlock([]byte("{yield}")) //TO-DO
+	p.ParseStatementBlock([]byte("{await}")) //TO-DO
 }
 
-func TestTemp(t *testing.T) {
-	p := NewParser([]string{})
+func TestStatementFail1(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("no effect statement did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseStatementBlock([]byte("{1+1;}"))
+}
 
-	p.ParseFile("../sample/tmp.pd")
+func TestStatementFail2(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("none declare statement did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseStatementBlock([]byte("{for(1; i < 10; i++){break;}}"))
+}
+
+func TestStatementFail3(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("no effect statement did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseStatementBlock([]byte("{a.b.c;}"))
+}
+
+func TestStatementFail4(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("raw statement did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseStatementBlock([]byte("{@what}"))
+}
+
+func TestStatementFail5(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("if else statement did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseStatementBlock([]byte("{if (true) {} else do_something();}"))
 }
 
 func TestNamespace(t *testing.T) {
-	p := NewParser([]string{})
-
+	p := NewParser([]string{"cpp"})
 	p.ParseBytes([]byte("@doc \"package document here\" \nnamespace first.second.third;"))
 	assertEqual(t, p.root.Children["first"].Package, "first")
 	assertEqual(t, p.root.Children["first"].Children["second"].Package, "second")

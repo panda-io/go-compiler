@@ -5,11 +5,11 @@ type Declaration interface {
 	declaration()
 }
 
-func (*Variable) declaration()  {}
-func (*Function) declaration()  {}
-func (*Enum) declaration()      {}
-func (*Interface) declaration() {}
-func (*Class) declaration()     {}
+func (*Variable) declaration()  { return }
+func (*Function) declaration()  { return }
+func (*Enum) declaration()      { return }
+func (*Interface) declaration() { return }
+func (*Class) declaration()     { return }
 
 // Variable declaration
 type Variable struct {
@@ -26,7 +26,7 @@ type Function struct {
 	TypeParameters *TypeParameters
 	Parameters     *Parameters
 	ReturnType     Type
-	//Body block
+	Body           *BlockStatement
 
 	Class *Class
 }

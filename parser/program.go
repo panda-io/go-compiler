@@ -192,6 +192,7 @@ func (p *Parser) parseMetadata() []*ast.Metadata {
 func (p *Parser) parseNamespace() []string {
 	p.expect(token.Namespace)
 	if p.token == token.Semi {
+		p.next()
 		return nil
 	}
 	name := p.parseQualifiedName(nil)

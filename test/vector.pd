@@ -1,0 +1,13 @@
+namespace;
+
+function main()
+{
+    var v = new collection.vector<int>();
+    console.print_line(v.size());
+    v.push(1);
+    v.push(2);
+    console.print_line(v.size());
+    var x = v.pop();
+    console.print_line(x);
+    console.print_line(v.size());
+}

@@ -9,18 +9,18 @@ type Expression interface {
 	expression()
 }
 
-func (*BuitinType) expression()              {}
-func (*Literal) expression()                 {}
-func (*Identifier) expression()              {}
-func (*ClassReference) expression()          {}
-func (*ParenExpression) expression()         {}
-func (*MemberAccessExpression) expression()  {}
-func (*ElementAccessExpression) expression() {}
-func (*InvocationExpression) expression()    {}
-func (*ClassCreateExpression) expression()   {}
-func (*UnaryExpression) expression()         {}
-func (*BinaryExpression) expression()        {}
-func (*TernaryExpression) expression()       {}
+func (*BuitinType) expression()              { return }
+func (*Literal) expression()                 { return }
+func (*Identifier) expression()              { return }
+func (*ClassReference) expression()          { return }
+func (*ParenExpression) expression()         { return }
+func (*MemberAccessExpression) expression()  { return }
+func (*ElementAccessExpression) expression() { return }
+func (*InvocationExpression) expression()    { return }
+func (*ClassCreateExpression) expression()   { return }
+func (*UnaryExpression) expression()         { return }
+func (*BinaryExpression) expression()        { return }
+func (*TernaryExpression) expression()       { return }
 
 // Literal expr
 type Literal struct {

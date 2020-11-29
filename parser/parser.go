@@ -40,6 +40,14 @@ type Parser struct {
 	root    *ast.Program
 }
 
+// ParseStatementBlock parse string statement block source
+func (p *Parser) ParseStatementBlock(source []byte) {
+	file := p.files.AddFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
+	p.scanner.SetFile(file, source)
+	p.next()
+	p.parseStatementBlock()
+}
+
 // ParseBytes parse string source
 func (p *Parser) ParseBytes(source []byte) {
 	file := p.files.AddFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))

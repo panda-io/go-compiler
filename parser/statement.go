@@ -13,12 +13,14 @@ func (p *Parser) parseStatementBlock() *ast.BlockStatement {
 	for p.token != token.RightBrace {
 		block.Statements = append(block.Statements, p.parseStatement())
 	}
+	p.next()
 	return block
 }
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.token {
 	case token.Semi:
+		p.next()
 		return &ast.EmptyStatement{}
 
 	case token.Var, token.IDENT, token.This, token.Base:
@@ -56,52 +58,67 @@ func (p *Parser) parseStatement() ast.Statement {
 
 	case token.Yield:
 		// yield statement //TO-DO
+		p.next()
+		return nil
 
 	case token.Await:
 		// await //TO-DO
+		p.next()
+		return nil
 
 	case token.META:
 		return p.parseRawStatement()
 
 	default:
-		p.expectedError(p.position, "statement or no effect expression")
+		p.expectedError(p.position, "statement")
+		return nil
 	}
-	return nil
 }
 
 func (p *Parser) parseSimpleStatement() ast.Statement {
 	switch p.token {
 	case token.IDENT, token.This, token.Base:
-		e := p.parsePrimaryExpression()
-		switch p.token {
-		case token.Assign,
-			token.PlusAssign, token.MinusAssign, token.MulAssign, token.DivAssign,
-			token.ModAssign, token.AndAssign, token.OrAssign,
-			token.XorAssign, token.LeftShiftAssign, token.RightShiftAssign:
-			s := &ast.AssignStatement{
-				Left: e,
-			}
-			p.next()
-			s.Right = p.parseExpression()
-			return s
-
-		case token.PlusPlus, token.MinusMinus:
-			s := &ast.IncreaseDecreaseStatement{
-				Expression: e,
-				Token:      p.token,
-			}
-			p.next()
-			return s
-
-		default:
-			p.expectedError(p.position, "statement or no effect expression")
-			return nil
-		}
+		return p.parseAssignStatement(false)
 
 	case token.Var:
 		return p.parseDeclarationStatement()
+
 	default:
-		p.expectedError(p.position, "statement or no effect expression")
+		p.expectedError(p.position, "statement")
+		return nil
+	}
+}
+
+func (p *Parser) parseAssignStatement(skipSemi bool) ast.Statement {
+	e := p.parsePrimaryExpression()
+	switch p.token {
+	case token.Assign,
+		token.PlusAssign, token.MinusAssign, token.MulAssign, token.DivAssign,
+		token.ModAssign, token.AndAssign, token.OrAssign,
+		token.XorAssign, token.LeftShiftAssign, token.RightShiftAssign:
+		s := &ast.AssignStatement{
+			Left: e,
+		}
+		p.next()
+		s.Right = p.parseExpression()
+		if !skipSemi {
+			p.expect(token.Semi)
+		}
+		return s
+
+	case token.PlusPlus, token.MinusMinus:
+		s := &ast.IncreaseDecreaseStatement{
+			Expression: e,
+			Token:      p.token,
+		}
+		p.next()
+		if !skipSemi {
+			p.expect(token.Semi)
+		}
+		return s
+
+	default:
+		p.expectedError(p.position, "statement")
 		return nil
 	}
 }
@@ -112,13 +129,16 @@ func (p *Parser) parseDeclarationStatement() *ast.DeclarationStatement {
 	}
 	p.next()
 	s.Name = p.parseIdentifier()
-	if p.token != token.Equal && p.token != token.Semi {
+	if p.token != token.Assign && p.token != token.Semi && p.token != token.Colon {
 		s.Type = p.parseType()
 	}
-	if p.token == token.Equal {
+	if p.token == token.Assign {
+		p.next()
 		s.Value = p.parseExpression()
 	}
-	p.expect(token.Semi)
+	if p.token == token.Semi {
+		p.next()
+	}
 	return s
 }
 
@@ -176,6 +196,7 @@ func (p *Parser) parseTryStatement() *ast.TryStatement {
 	p.expect(token.Catch)
 	p.expect(token.LeftParen)
 	s.Catch = p.parseParameter()
+	p.expect(token.RightParen)
 	s.CatchStatement = p.parseStatementBlock()
 	if p.token == token.Finally {
 		p.next()
@@ -214,7 +235,7 @@ func (p *Parser) parseSwitchStatement() *ast.SwitchStatement {
 	p.next()
 	s.Tag = p.parseExpression()
 	p.expect(token.LeftBrace)
-	for p.token == token.Case || p.token == p.token {
+	for p.token == token.Case || p.token == token.Default {
 		s.Body = append(s.Body, p.parseCaseStatement())
 	}
 	p.expect(token.RightBrace)
@@ -254,11 +275,18 @@ func (p *Parser) parseForStatement() *ast.ForStatement {
 	}
 	p.next()
 	p.expect(token.LeftParen)
-	s.Initialize = p.parseSimpleStatement()
+	if p.token != token.Semi {
+		s.Initialize = p.parseSimpleStatement()
+	} else {
+		p.next()
+	}
+	if p.token != token.Semi {
+		s.Condition = p.parseExpression()
+	}
 	p.expect(token.Semi)
-	s.Condition = p.parseExpression()
-	p.expect(token.Semi)
-	s.Post = p.parseSimpleStatement()
+	if p.token != token.RightParen {
+		s.Post = p.parseAssignStatement(true)
+	}
 	p.expect(token.RightParen)
 	s.Body = p.parseStatementBlock()
 	return s
@@ -270,10 +298,9 @@ func (p *Parser) parseForeachStatement() *ast.ForeachStatement {
 	}
 	p.next()
 	p.expect(token.LeftParen)
-	s.Value = p.parseSimpleStatement()
-	if p.token == token.Semi {
+	s.Value = p.parseDeclarationStatement()
+	if p.token != token.Colon {
 		s.Key = s.Value
-		p.next()
 		s.Value = p.parseSimpleStatement()
 	}
 	p.expect(token.Colon)

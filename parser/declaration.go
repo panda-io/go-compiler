@@ -55,7 +55,7 @@ func (p *Parser) parseFunction(c *ast.Class) *ast.Function {
 		d.ReturnType = p.parseType()
 	}
 	if p.token == token.LeftBrace {
-		//d.Body = p.parseBlock()
+		d.Body = p.parseStatementBlock()
 	} else if p.token == token.Semi {
 		p.next()
 	}

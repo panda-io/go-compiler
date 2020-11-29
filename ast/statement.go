@@ -7,22 +7,22 @@ type Statement interface {
 	statement()
 }
 
-func (*EmptyStatement) statement()            {}
-func (*BlockStatement) statement()            {}
-func (*ReturnStatement) statement()           {}
-func (*BranchStatement) statement()           {}
-func (*RawStatement) statement()              {}
-func (*TryStatement) statement()              {}
-func (*ThrowStatement) statement()            {}
-func (*DeclarationStatement) statement()      {}
-func (*IfStatement) statement()               {}
-func (*AssignStatement) statement()           {}
-func (*IncreaseDecreaseStatement) statement() {}
-func (*SwitchStatement) statement()           {}
-func (*CaseStatement) statement()             {}
-func (*WhileStatement) statement()            {}
-func (*ForStatement) statement()              {}
-func (*ForeachStatement) statement()          {}
+func (*EmptyStatement) statement()            { return }
+func (*BlockStatement) statement()            { return }
+func (*ReturnStatement) statement()           { return }
+func (*BranchStatement) statement()           { return }
+func (*RawStatement) statement()              { return }
+func (*TryStatement) statement()              { return }
+func (*ThrowStatement) statement()            { return }
+func (*DeclarationStatement) statement()      { return }
+func (*IfStatement) statement()               { return }
+func (*AssignStatement) statement()           { return }
+func (*IncreaseDecreaseStatement) statement() { return }
+func (*SwitchStatement) statement()           { return }
+func (*CaseStatement) statement()             { return }
+func (*WhileStatement) statement()            { return }
+func (*ForStatement) statement()              { return }
+func (*ForeachStatement) statement()          { return }
 
 // EmptyStatement statement
 type EmptyStatement struct {
