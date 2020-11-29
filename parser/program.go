@@ -191,7 +191,6 @@ func (p *Parser) parseMetadata() []*ast.Metadata {
 
 func (p *Parser) parseNamespace() []string {
 	p.expect(token.Namespace)
-	p.next()
 	if p.token == token.Semi {
 		return nil
 	}
