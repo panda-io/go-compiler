@@ -179,3 +179,8 @@ func TestNamespace(t *testing.T) {
 	assertEqual(t, p.root.Children["first"].Package, "first")
 	assertEqual(t, p.root.Children["first"].Children["second"].Package, "second")
 }
+
+func TestExpression(t *testing.T) {
+	p := NewParser([]string{"cpp"})
+	p.ParseStatementBlock([]byte("{ this.call_back(); var a = new vector<int>(); }"))
+}

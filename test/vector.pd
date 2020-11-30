@@ -1,6 +1,6 @@
 namespace;
 
-import collection;
+using collection;
 
 function main()
 {

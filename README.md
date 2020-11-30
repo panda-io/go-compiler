@@ -1,98 +1,169 @@
-# Panda compiler written in golang
+# Panda compiler
 
-> ## **ast**
-> ---
-> ### declarations
-> - variable (var, const)
-> - function
-> - enum
-> - interface
-> - class
-> ### statements
-> - raw
-> - declaration
-> - empty (;)
-> - assign
-> - increase-decrease
-> - expression
-> - if-else
-> - for (foreach)
-> - switch
-> - return
-> - branch (break, continue)
-> - try-catch-finally
-> - block
-> - yield
-> - throw
-> - await
-> ### expressions
-> - literal
-> - identifier
-> - unary
-> - binary
-> - ternary
-> - new
-> - this-base
-> - invocation (call)
-> - member-access (.)
-> - element-access ([])
-> - paren
-> ### type
-> - builtin type
-> - type name
-> - type arguments
-> - type parameters
-> - parameter
-> - parameter list
-> ### metadata
-> - text
-> - object (literal)
-> ### modifiers
-> - public
-> - static
-> - async
+## **AST**
 
+### **declarations**
+- variable (var, const)
+- function
+- enum
+- interface
+- class
 
+### statements
+- raw source @"source"
+- empty statement ;
+- expression statement
+- declaration statement
+- compound statements {}
+- if statement 
+  - if (condition) {} else
+  - if (initialize;condition) {} else
+- switch statement 
+  - switch(init)
+  - switch(init;operand) {}
+- for statement 
+  - for {} 
+  - for (condition) {}
+  - for (init;condition)
+  - for (init;condition;loop) {}
+  - for (init value : range) {}
+  - for (init key; init value : range) {}
+- continue statement
+- break statement
+- return statement
+- try statement
+- yield statement
+- yield return statement
+- throw statement
+- await statement
 
+### **expressions**
+- primary expression
+  - literal
+  - this, base
+  - name
+  - .name //qualified name
+  
+- postfix operators
+  - subscript operator	[]
+  - function call	()
+  - member access operator	.
+  - postfix increment operator	++
+  - postfix decrement operator	--
 
+- unary operators
+  - unary plus operator +
+  - unary negation operator -
+  - logical negation operator !
+  - complement operator ~
+  - new operator
 
+- binary operators
+  - multiplicative operators *, /, %
+  - additive operators +, -
+  - shift operators >>, <<
+  - relational and equality operators <, >, <=, >=, ==, !=
+  - bitwise operators &, ^, |
+  - logical operators &&, ||
+  - assignment operators =, +=, -=, *=, /=, %=, <<=, >>=, &=, ^=, |=
 
+- conditional operator condition ? expression : expression 
 
+- constant expressions
+  - constant expressions used in declarations of:
+    - array bounds
+    - selectors in case statements
+    - bit-field length specification
+    - enumeration initializers
+  - only operands that are legal constant expressions:
+    - literals
+    - enumeration constants
+    - values declared as const
 
+- parentheses experssions ()
 
+- #operator precedence and associativity#
+  - group 1. scope resolution (type)	a.b.c
+  - group 2. left to right:
+    - member selection .
+    - subscript  []
+    - function call	()
+    - postfix increment	++	
+    - postfix decrement	--	
+    - type name	typeid	
+  - group 3. right to left
+    - complement	~
+    - logical not	!
+    - unary negation	-	
+    - unary plus	+
+    - create object	new
+  - group 4. left to right
+    - multiplication	*	
+    - division	/	
+    - modulus	%	
+  - group 5. left to right
+    - addition	+	
+    - subtraction	-	
+  - group 6. left to right
+    - left shift	<<	
+    - right shift	>>	
+  - group 7. left to right
+    - less than	<	
+    - greater than	>	
+    - less than or equal to	<=	
+    - greater than or equal to	>=	
+  - group 8. left to right
+    - equality	==	
+    - inequality	!=	
+  - group 9. left to right
+    - bitwise AND	&
+  - group 10. left to right
+    - bitwise exclusive OR	^
+  - group 11. left to right
+    - bitwise inclusive OR	|
+  - group 12. left to right
+    - logical AND	&&
+  - group 13. left to right
+    - logical OR	||
+  - group 14. right to left
+    - conditional	? :	
+  - group 15. right to left
+    - assignment	=	
+    - multiplication assignment	*=	
+    - division assignment	/=	
+    - modulus assignment	%=	
+    - addition assignment	+=	
+    - subtraction assignment	-=	
+    - left-shift assignment	<<=	
+    - right-shift assignment	>>=	
+    - bitwise AND assignment	&=
+    - bitwise inclusive OR assignment	|=	
+    - bitwise exclusive OR assignment	^=
+ 
+### **type**
+ - builtin type
+ - type name
+ - type argument
+ - type argument list
+ - type parameter
+ - type parameter list
+ - argument
+ - argument list
+ - parameter
+ - parameter list
 
+### **metadata**
+- text          
+- object (literal)
+  
+### **modifiers**
+- public
+- static
 
+### limitations
+- no function overloading
+- single inheritance
+- variable declaration can only use const expression for initialization
 
-
-
-
---------------------- backlog -------------------------
-unresolved can be cached
-file has import scope
-
-----------------------------------
-add scope and check. add imports to file scope or something else
-later convert all type to qualified type
-    
---------------------- TO-DO -------------------
-#前置声明，声明，定义
-
-#serialize metadata
-
-#变量声明时初始化，只能是basic lit, 复杂类型不能在声明时初始化
-
-#interface 不能继承
-#class 单继承
-
-#声明，如果没有设置初始值，则自动赋值
-
-#静态变量赋值
-
-#store file info into program
-
-#char represent utf-8 code
-
-//TO-DO
-...   in parameters and type parameters
-
-{a,b,c...} 初始化
+### roadmap
+ - new object(){a = 1, b = 2, c = 3}

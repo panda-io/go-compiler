@@ -99,6 +99,7 @@ func (p *Parser) parseAssignStatement(skipSemi bool) ast.Statement {
 		s := &ast.AssignStatement{
 			Left: e,
 		}
+		//TO-DO what expression can be assign
 		p.next()
 		s.Right = p.parseExpression()
 		if !skipSemi {

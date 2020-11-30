@@ -98,7 +98,6 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
 			return e
 
 		case token.LeftParen:
-			p.next()
 			f := &ast.InvocationExpression{
 				Function: e,
 			}
@@ -133,20 +132,21 @@ func (p *Parser) parseBinaryExpression(precedence int) ast.Expression {
 			return x
 		}
 		opPrec := p.token.Precedence()
-		if opPrec < precedence {
+		if opPrec <= precedence {
 			return x
 		}
 		p.next()
-		y := p.parseBinaryExpression(p.token.Precedence() + 1)
 		if op == token.Question {
 			p.expect(token.Colon)
-			z := p.parseBinaryExpression(opPrec + 1)
+			y := p.parseBinaryExpression(opPrec)
+			z := p.parseBinaryExpression(opPrec)
 			return &ast.TernaryExpression{
 				Condition: x,
 				First:     y,
 				Second:    z,
 			}
 		}
+		y := p.parseBinaryExpression(opPrec)
 		return &ast.BinaryExpression{
 			Left:     x,
 			Operator: op,

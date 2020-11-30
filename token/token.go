@@ -22,7 +22,6 @@ const (
 
 	// keywords
 	keywordBegin
-	Async
 	Await
 	Base
 	Break
@@ -140,7 +139,6 @@ const (
 
 var (
 	tokenStrings = [...]string{
-		Async:     "async",
 		Await:     "await",
 		Base:      "base",
 		Break:     "break",
@@ -356,7 +354,7 @@ func (t Token) Precedence() int {
 		return 1
 	case And:
 		return 2
-	case Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, Question:
+	case Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual:
 		return 3
 	case Plus, Minus, BitOr, Caret:
 		return 4
