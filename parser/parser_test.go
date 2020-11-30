@@ -89,11 +89,90 @@ func TestStatementFail5(t *testing.T) {
 
 func TestDeclaration(t *testing.T) {
 	p := NewParser([]string{"cpp"})
-	p.ParseBytes([]byte("namespace; public interface x<type> { print(); } public class a {} public class b<type> : a, x<type> { public var e int = 100; public function print(){} function ~b(){}}"))
-	p.ParseBytes([]byte("namespace; public enum { blue, yello, red = 10 }"))
-
+	p.ParseBytes([]byte("namespace; public interface x<type> { print(); } public class a {} public class b<type> : a, x<type> { public var e int = 100; public function print<t>() void {} function ~b(){}}"))
+	p.ParseBytes([]byte("namespace; public enum test { blue, yello, red = 10 }"))
+	p.ParseBytes([]byte("namespace; interface a {} interface b : a {}"))
 }
 
+func TestDeclarationFail1(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("var init did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; var a int = gen_int(); function gen_int() int { return 1; }"))
+}
+
+func TestDeclarationFail2(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("destructor did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; function ~gen_int() int { return 1; }"))
+}
+
+func TestDeclarationFail3(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("destructor did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; class test { function ~test1(){} }"))
+}
+
+func TestDeclarationFail4(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("enum did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; public enum test { blue, yello, red = \"red\" }"))
+}
+
+func TestDeclarationFail5(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("interface redeclare did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; interface a { b() int; b() int}"))
+}
+
+func TestDeclarationFail6(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("class redeclare did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; class a { function b() int; function b() int}"))
+}
+
+func TestDeclarationFail7(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("class redeclare did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; class a { var b int; var b int; }"))
+}
+
+func TestDeclarationFail8(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("class unexpected did not panic")
+		}
+	}()
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; class a { enum b {} }"))
+}
 func TestNamespace(t *testing.T) {
 	p := NewParser([]string{"cpp"})
 	p.ParseBytes([]byte("@doc \"package document here\" \nnamespace first.second.third;"))
