@@ -75,6 +75,11 @@ func (s *Scanner) SetFile(file *token.File, source []byte) {
 	}
 }
 
+// GetFileName return source file name
+func (s *Scanner) GetFileName() string {
+	return s.file.Name
+}
+
 func (s *Scanner) next() {
 	if s.readOffset < len(s.source) {
 		s.offset = s.readOffset

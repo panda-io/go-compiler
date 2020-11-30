@@ -77,6 +77,8 @@ func TestBasic(t *testing.T) {
 	_, tok, literal = s.Scan()
 	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "newline")
+
+	assertEqual(t, s.GetFileName(), "file.pd")
 }
 
 func TestNumber(t *testing.T) {

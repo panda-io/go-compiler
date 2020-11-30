@@ -1,8 +1,10 @@
 namespace;
 
+import collection;
+
 function main()
 {
-    var v = new collection.vector<int>();
+    var v = new vector<int>();
     console.print_line(v.size());
     v.push(1);
     v.push(2);

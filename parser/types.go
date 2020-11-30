@@ -175,3 +175,7 @@ func (p *Parser) parseArguments() *ast.Arguments {
 	p.expect(token.RightParen)
 	return t
 }
+
+func (p *Parser) validateType(t ast.Type) {
+
+}

@@ -16,20 +16,28 @@ import (
 // NewParser create new parser
 func NewParser(flags []string) *Parser {
 	p := &Parser{
-		files: &token.FileSet{},
-		root:  ast.NewProgram("", nil),
+		files:   &token.FileSet{},
+		root:    ast.NewProgram("", nil),
+		imports: make(map[string][]*fileImport),
 	}
 	p.scanner = scanner.NewScanner(p.error, flags)
 	return p
+}
+
+type undefinedError struct {
+	position int
+	message  string
+}
+
+type fileImport struct {
+	alias *ast.Identifier
+	path  []*ast.Identifier
 }
 
 type parserState struct {
 	position int
 	token    token.Token
 	literal  string
-
-	exprLevel   int
-	inRightHand bool
 }
 
 // Parser to parse panda source
@@ -38,6 +46,9 @@ type Parser struct {
 	files   *token.FileSet
 	scanner *scanner.Scanner
 	root    *ast.Program
+	imports map[string][]*fileImport
+
+	errors []*undefinedError
 }
 
 // ParseStatementBlock parse string statement block source
@@ -117,8 +128,21 @@ func (p *Parser) error(position int, message string) {
 	panic(fmt.Sprintf("error: %s \n %s \n", p.files.Position(position).String(), message))
 }
 
+func (p *Parser) undefined(position int, message string) {
+	p.errors = append(p.errors, &undefinedError{
+		position: position,
+		message:  message,
+	})
+}
+
 func (p *Parser) parse(file *token.File, source []byte) {
 	p.scanner.SetFile(file, source)
 	p.next()
 	p.parseProgram()
+}
+
+func (p *Parser) validate() bool {
+	p.errors = p.errors[:0]
+	p.validateProgram(p.root)
+	return len(p.errors) == 0
 }

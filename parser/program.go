@@ -204,21 +204,20 @@ func (p *Parser) parseNamespace() []string {
 	return namespace
 }
 
-//TO-DO currently only skip, later need to be added into scope for checking
 func (p *Parser) parseImport() {
 	for p.token == token.Import {
+		f := p.scanner.GetFileName()
 		p.expect(token.Import)
+		i := &fileImport{}
 		name := p.parseIdentifier()
 		if p.token == token.Assign {
-			//TO-DO alias name here
+			i.alias = name
 			p.next()
 			name = p.parseIdentifier()
 		}
-		//TO-DO full path
-		path := p.parseQualifiedName(name)
-		fmt.Println("import:", path)
+		i.path = p.parseQualifiedName(name)
 		p.expect(token.Semi)
-		//TO-DO collect imports	// imports = append(imports, importDecl)
+		p.imports[f] = append(p.imports[f], i)
 	}
 }
 
@@ -249,4 +248,22 @@ func (p *Parser) findPackage(namespace []string) *ast.Program {
 		namespace = namespace[1:len(namespace)]
 	}
 	return program
+}
+
+func (p *Parser) validateProgram(program *ast.Program) {
+	for _, v := range program.Variables {
+		fmt.Println(v.Name.Name)
+	}
+	for _, f := range program.Functions {
+		fmt.Println(f.Name.Name)
+	}
+	for _, e := range program.Enums {
+		fmt.Println(e.Name.Name)
+	}
+	for _, i := range program.Interfaces {
+		fmt.Println(i.Name.Name)
+	}
+	for _, c := range program.Classes {
+		fmt.Println(c.Name.Name)
+	}
 }

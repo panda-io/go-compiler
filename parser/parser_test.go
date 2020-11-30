@@ -87,6 +87,13 @@ func TestStatementFail5(t *testing.T) {
 	p.ParseStatementBlock([]byte("{if (true) {} else do_something();}"))
 }
 
+func TestDeclaration(t *testing.T) {
+	p := NewParser([]string{"cpp"})
+	p.ParseBytes([]byte("namespace; public interface x<type> { print(); } public class a {} public class b<type> : a, x<type> { public var e int = 100; public function print(){} function ~b(){}}"))
+	p.ParseBytes([]byte("namespace; public enum { blue, yello, red = 10 }"))
+
+}
+
 func TestNamespace(t *testing.T) {
 	p := NewParser([]string{"cpp"})
 	p.ParseBytes([]byte("@doc \"package document here\" \nnamespace first.second.third;"))
