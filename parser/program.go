@@ -118,14 +118,6 @@ func (p *Parser) parseModifier() *ast.Modifier {
 		m.Static = true
 		p.next()
 	}
-	if p.token == token.Async {
-		m.Async = true
-		p.next()
-	}
-	if p.token == token.Inline {
-		m.Inline = true
-		p.next()
-	}
 	return m
 }
 

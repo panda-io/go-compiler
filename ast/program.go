@@ -19,8 +19,6 @@ type Attributes struct {
 type Modifier struct {
 	Public bool
 	Static bool
-	Async  bool
-	Inline bool
 }
 
 // Equal to compare is two modifiers are same

@@ -22,7 +22,6 @@ const (
 
 	// keywords
 	keywordBegin
-	Await
 	Base
 	Break
 	Case
@@ -39,7 +38,6 @@ const (
 	Function
 	If
 	Import
-	Inline
 	Interface
 	New
 	Namespace
@@ -52,7 +50,6 @@ const (
 	Try
 	Var
 	While
-	Yield
 	keywordEnd
 
 	// scalars
@@ -139,7 +136,6 @@ const (
 
 var (
 	tokenStrings = [...]string{
-		Await:     "await",
 		Base:      "base",
 		Break:     "break",
 		Case:      "case",
@@ -156,7 +152,6 @@ var (
 		Function:  "function",
 		If:        "if",
 		Import:    "import",
-		Inline:    "inline",
 		Interface: "interface",
 		New:       "new",
 		Namespace: "namespace",
@@ -169,7 +164,6 @@ var (
 		Try:       "try",
 		Var:       "var",
 		While:     "while",
-		Yield:     "yield",
 
 		Bool:    "bool",
 		Char:    "char",

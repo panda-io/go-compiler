@@ -32,10 +32,7 @@
 - break statement
 - return statement
 - try statement
-- yield statement
-- yield return statement
 - throw statement
-- await statement
 
 ### **expressions**
 - primary expression
@@ -166,4 +163,5 @@
 - variable declaration can only use const expression for initialization
 
 ### roadmap
- - new object(){a = 1, b = 2, c = 3}
+- coroutine
+- new object(){a = 1, b = 2, c = 3}

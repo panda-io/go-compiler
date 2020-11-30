@@ -24,7 +24,6 @@ func TestTokens(t *testing.T) {
 	assertEqual(t, Token(1000).String(), "")
 	assertEqual(t, ReadToken("i16"), Int16)
 	assertEqual(t, ReadToken("Ident"), IDENT)
-	assertEqual(t, ReadToken("await"), Await)
 	assertEqual(t, ReadToken("++"), PlusPlus)
 	assertEqual(t, ReadToken("true"), BOOL)
 	assertEqual(t, ReadToken("false"), BOOL)
@@ -32,7 +31,7 @@ func TestTokens(t *testing.T) {
 }
 
 func TestTypes(t *testing.T) {
-	assertEqual(t, Async.IsKeyword(), true)
+	assertEqual(t, Case.IsKeyword(), true)
 	assertEqual(t, IDENT.IsLiteral(), true)
 	assertEqual(t, String.IsScalar(), true)
 	assertEqual(t, Or.IsOperator(), true)
