@@ -19,6 +19,7 @@ const (
 	preprocessorEnd    = "end"
 
 	// TO-DO add logical check for preprocessor
+	// TO-DO separate preprocessor
 	// () == != ! && ||
 )
 
@@ -27,10 +28,8 @@ type preprocessor struct {
 	satisfied    bool
 }
 
-// ErrorHandler is callback when error occurs
 type ErrorHandler func(int, string)
 
-// Scanner to scan token
 type Scanner struct {
 	file   *token.File
 	source []byte
@@ -46,7 +45,6 @@ type Scanner struct {
 	readOffset int
 }
 
-// NewScanner create new scanner
 func NewScanner(handler ErrorHandler, flags []string) *Scanner {
 	s := &Scanner{
 		errorHandler: handler,
@@ -58,7 +56,6 @@ func NewScanner(handler ErrorHandler, flags []string) *Scanner {
 	return s
 }
 
-// SetFile set file info and prepare first token
 func (s *Scanner) SetFile(file *token.File, source []byte) {
 	s.file = file
 	s.source = source
@@ -494,7 +491,6 @@ func (s *Scanner) digitVal(char rune) int {
 	return 16 // larger than any legal digit val
 }
 
-// Scan next token
 func (s *Scanner) Scan() (position int, t token.Token, literal string) {
 	for s.char == ' ' || s.char == '\t' || s.char == '\n' || s.char == '\r' {
 		s.next()

@@ -1,9 +1,7 @@
 package token
 
-// Token present language token
 type Token int
 
-// all available token list
 const (
 	ILLEGAL Token = iota
 	EOF
@@ -34,7 +32,6 @@ const (
 	Enum
 	Finally
 	For
-	Foreach
 	Function
 	If
 	Import
@@ -44,12 +41,12 @@ const (
 	Public
 	Return
 	Static
+	Super
 	Switch
 	This
 	Throw
 	Try
 	Var
-	While
 	keywordEnd
 
 	// scalars
@@ -136,7 +133,6 @@ const (
 
 var (
 	tokenStrings = [...]string{
-		Base:      "base",
 		Break:     "break",
 		Case:      "case",
 		Catch:     "catch",
@@ -148,7 +144,6 @@ var (
 		Enum:      "enum",
 		Finally:   "finally",
 		For:       "for",
-		Foreach:   "foreach",
 		Function:  "function",
 		If:        "if",
 		Import:    "import",
@@ -158,12 +153,12 @@ var (
 		Public:    "public",
 		Return:    "return",
 		Static:    "static",
+		Super:     "super",
 		Switch:    "switch",
 		This:      "this",
 		Throw:     "throw",
 		Try:       "try",
 		Var:       "var",
-		While:     "while",
 
 		Bool:    "bool",
 		Char:    "char",
@@ -292,7 +287,6 @@ func init() {
 	}
 }
 
-// ReadToken read literal to token, or identifier
 func ReadToken(literal string) Token {
 	if token, ok := tokens[literal]; ok {
 		return token
@@ -313,27 +307,23 @@ func (t Token) String() string {
 	return ""
 }
 
-// IsLiteral check if token is literal
 func (t Token) IsLiteral() bool {
 	return literalBegin < t && t < literalEnd
 }
 
-// IsOperator check if token is operator
 func (t Token) IsOperator() bool {
 	return operatorBegin < t && t < operatorEnd
 }
 
-// IsKeyword check if token is keyword
 func (t Token) IsKeyword() bool {
 	return keywordBegin < t && t < keywordEnd
 }
 
-// IsScalar check if token is built-in type
 func (t Token) IsScalar() bool {
 	return scalarBegin < t && t < scalarEnd
 }
 
-// CppType convert to cpp type (when export)
+// TO-DO replace in generator
 func (t Token) CppType() string {
 	if t.IsScalar() {
 		return cppTypes[t]
@@ -341,7 +331,6 @@ func (t Token) CppType() string {
 	panic("invalid type:" + t.String())
 }
 
-// Precedence returns the operator precedence of the binary operator op
 func (t Token) Precedence() int {
 	switch t {
 	case Or:

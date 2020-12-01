@@ -4,20 +4,17 @@ import (
 	"fmt"
 )
 
-// Position present position of token
 type Position struct {
 	file   *File
 	offset int
 }
 
-// String return the location of current position
 func (p Position) String() string {
 	path := p.file.Name
 	line, column := p.file.location(p.offset)
 	return fmt.Sprintf("%s:%d:%d", path, line, column)
 }
 
-// File store info of source file
 type File struct {
 	Name  string
 	Size  int
@@ -25,12 +22,10 @@ type File struct {
 	lines []int
 }
 
-// AddLine add line to soure file
 func (f *File) AddLine(offset int) {
 	f.lines = append(f.lines, offset)
 }
 
-// Position create position info
 func (f *File) Position(offset int) *Position {
 	return &Position{
 		file:   f,
@@ -55,13 +50,11 @@ func (f *File) location(offset int) (line, column int) {
 	return
 }
 
-// FileSet represents a set of source files.
 type FileSet struct {
 	files []*File
 	base  int
 }
 
-// AddFile add new file
 func (s *FileSet) AddFile(filename string, size int) *File {
 	for _, f := range s.files {
 		if f.Name == filename {
@@ -79,7 +72,6 @@ func (s *FileSet) AddFile(filename string, size int) *File {
 	return f
 }
 
-// File returns the file that contains the position (global position)
 func (s *FileSet) File(position int) *File {
 	for _, f := range s.files {
 		if position <= f.Base+f.Size {
@@ -89,7 +81,6 @@ func (s *FileSet) File(position int) *File {
 	return nil
 }
 
-// Position converts global position to a local positon in file
 func (s *FileSet) Position(position int) *Position {
 	if f := s.File(position); f != nil {
 		return f.Position(position - f.Base)

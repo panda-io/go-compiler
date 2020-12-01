@@ -2,7 +2,6 @@ package token
 
 var operatorRoot *operatorNode
 
-// ReadOperator greedy read operators by tree search
 func ReadOperator(bytes []byte) (Token, int) {
 	return operatorRoot.find(bytes)
 }

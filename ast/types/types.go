@@ -1,19 +1,28 @@
-package ast
+package types
 
-import "github.com/panda-foundation/go-compiler/token"
+import (
+	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/token"
+)
 
-// Type struct
 type Type interface {
+	node.Node
 	Equal(Type) bool
 }
 
-// BuitinType basic type
-type BuitinType struct {
-	Position int
-	Token    token.Token
+type Base struct {
+	node.Base
 }
 
-// Equal compare if two type are same
+func (*Base) Equal(*Base) bool {
+	return false
+}
+
+type BuitinType struct {
+	Base
+	Token token.Token
+}
+
 func (t0 *BuitinType) Equal(t Type) bool {
 	if t1, ok := t.(*BuitinType); ok {
 		return t0.Token == t1.Token
@@ -21,13 +30,12 @@ func (t0 *BuitinType) Equal(t Type) bool {
 	return false
 }
 
-// TypeName qualified name
 type TypeName struct {
-	QualifiedName []*Identifier
+	Base
+	QualifiedName []string
 	TypeArguments *TypeArguments
 }
 
-// Equal compare if two type are same
 func (t0 *TypeName) Equal(t Type) bool {
 	t1, ok := t.(*TypeName)
 	if !ok {
@@ -36,8 +44,8 @@ func (t0 *TypeName) Equal(t Type) bool {
 	if len(t0.QualifiedName) != len(t1.QualifiedName) {
 		return false
 	}
-	for i, n := range t0.QualifiedName {
-		if n.Name != t1.QualifiedName[i].Name {
+	for i, name := range t0.QualifiedName {
+		if name != t1.QualifiedName[i] {
 			return false
 		}
 	}
@@ -50,14 +58,12 @@ func (t0 *TypeName) Equal(t Type) bool {
 	return false
 }
 
-// TypeArguments type arguments
 type TypeArguments struct {
-	Position  int
+	Base
 	Arguments []Type
 	Ellipsis  int
 }
 
-// Equal compare if two type are same
 func (t0 *TypeArguments) Equal(t Type) bool {
 	t1, ok := t.(*TypeArguments)
 	if !ok {
@@ -71,20 +77,15 @@ func (t0 *TypeArguments) Equal(t Type) bool {
 			return false
 		}
 	}
-	if t0.Ellipsis != t1.Ellipsis {
-		return false
-	}
-	return true
+	return t0.Ellipsis == t1.Ellipsis
 }
 
-// TypeParameters type parameters
 type TypeParameters struct {
-	Position   int
+	Base
 	Parameters []*TypeParameter
 	Ellipsis   bool
 }
 
-// Equal compare if two type are same
 func (t0 *TypeParameters) Equal(t Type) bool {
 	t1, ok := t.(*TypeParameters)
 	if !ok {
@@ -98,25 +99,21 @@ func (t0 *TypeParameters) Equal(t Type) bool {
 			return false
 		}
 	}
-	if t0.Ellipsis != t1.Ellipsis {
-		return false
-	}
-	return true
+	return t0.Ellipsis == t1.Ellipsis
 }
 
-// TypeParameter type parameter
 type TypeParameter struct {
-	Name *Identifier
+	Base
+	Name string
 	Type Type
 }
 
-// Equal compare if two type parameter are same
 func (t0 *TypeParameter) Equal(t Type) bool {
 	t1, ok := t.(*TypeParameter)
 	if !ok {
 		return false
 	}
-	if t0.Name.Name != t1.Name.Name {
+	if t0.Name != t1.Name {
 		return false
 	}
 	if t0.Type != nil && t1.Type != nil {
@@ -128,14 +125,12 @@ func (t0 *TypeParameter) Equal(t Type) bool {
 	return false
 }
 
-// Parameters for function declaration
 type Parameters struct {
-	Position   int
-	Parameters []*Variable
+	Base
+	Parameters []*Parameter
 	Ellipsis   bool
 }
 
-// Equal compare if two type are same
 func (t0 *Parameters) Equal(t Type) bool {
 	t1, ok := t.(*Parameters)
 	if !ok {
@@ -149,49 +144,32 @@ func (t0 *Parameters) Equal(t Type) bool {
 			return false
 		}
 	}
-	if t0.Ellipsis != t1.Ellipsis {
-		return false
-	}
-	return true
+	return t0.Ellipsis == t1.Ellipsis
 }
 
-// Equal compare if two type are same
-func (t0 *Variable) Equal(t Type) bool {
-	t1, ok := t.(*Variable)
+type Parameter struct {
+	Base
+	Name string
+	Type Type
+}
+
+func (t0 *Parameter) Equal(t Type) bool {
+	t1, ok := t.(*Parameter)
 	if !ok {
 		return false
 	}
-	if t0.Name.Name != t1.Name.Name {
+	if t0.Name != t1.Name {
 		return false
 	}
-	if !t0.Type.Equal(t1.Type) {
-		return false
-	}
-	if t0.Value != nil && t1.Value != nil {
-		return t0.Value.Equal(t1.Value)
-	}
-	if t0.Value == nil && t1.Value == nil {
-		return true
-	}
-	return false
+	return t0.Type.Equal(t1.Type)
 }
 
-// Equal compare if two type are same
-func (t0 *Literal) Equal(t Type) bool {
-	if t1, ok := t.(*Literal); ok {
-		return t0.Type == t1.Type && t0.Value == t1.Value
-	}
-	return false
-}
-
-// Arguments type arguments
 type Arguments struct {
-	Position  int
-	Arguments []Expression
+	Base
+	Arguments []node.Node
 	Ellipsis  int
 }
 
-// Equal compare if two type are same
 func (t0 *Arguments) Equal(t Type) bool {
 	return false
 }
