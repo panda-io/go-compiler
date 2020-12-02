@@ -3,38 +3,37 @@ package parser
 import (
 	"fmt"
 
-	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/ast/declaration"
+	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseVariable() *ast.Variable {
-	d := &ast.Variable{}
+func (p *Parser) parseVariable(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Variable {
+	d := &declaration.Variable{}
+	d.Modifier = modifier
+	d.Custom = attributes
+	d.Token = p.token
+	p.next()
 	d.Name = p.parseIdentifier()
 	d.Type = p.parseType()
 
 	if p.token == token.Assign {
 		p.next()
-		if !p.token.IsLiteral() || p.token == token.IDENT {
-			p.error(p.position, "variable can only be initialized by const value (string, char, float, int)")
-		}
-		d.Value = &ast.Literal{
-			Position: p.position,
-			Type:     p.token,
-			Value:    p.literal,
-		}
-		p.next()
+		d.Value = p.parseExpression()
 	}
 	p.expect(token.Semi)
 	return d
 }
 
-func (p *Parser) parseFunction(c *ast.Class) *ast.Function {
-	d := &ast.Function{
-		Class: c,
-	}
+func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*declaration.Attribute, class *declaration.Class) *declaration.Function {
+	d := &declaration.Function{}
+	d.Class = class
+	d.Modifier = modifier
+	d.Custom = attributes
+	p.next()
 	tilde := false
 	if p.token == token.Tilde {
-		if c == nil {
+		if class == nil {
 			p.error(p.position, "'~' is not allow outside class as function name")
 		}
 		tilde = true
@@ -42,7 +41,7 @@ func (p *Parser) parseFunction(c *ast.Class) *ast.Function {
 	}
 	d.Name = p.parseIdentifier()
 	if tilde {
-		if d.Name.Name != c.Name.Name {
+		if d.Name.Name != class.Name.Name {
 			p.error(p.position, "invalid destructor name")
 		}
 		d.Name.Name = "~" + d.Name.Name
@@ -55,33 +54,28 @@ func (p *Parser) parseFunction(c *ast.Class) *ast.Function {
 		d.ReturnType = p.parseType()
 	}
 	if p.token == token.LeftBrace {
-		d.Body = p.parseStatementBlock()
+		d.Body = p.parseCompoundStatement()
 	} else if p.token == token.Semi {
 		p.next()
 	}
 	return d
 }
 
-func (p *Parser) parseEnum() *ast.Enum {
-	d := &ast.Enum{
-		Members: make(map[string]*ast.Variable),
+func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Enum {
+	d := &declaration.Enum{
+		Members: make(map[string]*declaration.Variable),
 	}
+	d.Modifier = modifier
+	d.Custom = attributes
+	p.next()
 	d.Name = p.parseIdentifier()
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
-		v := &ast.Variable{}
+		v := &declaration.Variable{}
 		v.Name = p.parseIdentifier()
 		if p.token == token.Assign {
 			p.next()
-			if p.token != token.INT {
-				p.error(p.position, "value can only be int")
-			}
-			v.Value = &ast.Literal{
-				Position: p.position,
-				Type:     p.token,
-				Value:    p.literal,
-			}
-			p.next()
+			v.Value = p.parseExpression()
 		}
 		if p.token != token.Comma {
 			break
@@ -92,22 +86,25 @@ func (p *Parser) parseEnum() *ast.Enum {
 	return d
 }
 
-func (p *Parser) parseInterface() *ast.Interface {
-	d := &ast.Interface{
-		Functions: make(map[string]*ast.Function),
+func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Interface {
+	d := &declaration.Interface{
+		Functions: make(map[string]*declaration.Function),
 	}
+	d.Modifier = modifier
+	d.Custom = attributes
+	p.next()
 	d.Name = p.parseIdentifier()
 	if p.token == token.Less {
 		d.TypeParameters = p.parseTypeParameters()
 	}
 	if p.token == token.Colon {
-		d.Base = p.parseBaseTypes()
+		d.Parents = p.parseIneritanceTypes()
 	}
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
-		m := p.parseMetadata()
-		f := p.parseFunction(nil)
-		f.Custom = append(f.Custom, m...)
+		attr := p.parseAttributes()
+		f := p.parseFunction(nil, nil, nil)
+		f.Custom = attr
 		name := f.Name.Name
 		if _, ok := d.Functions[name]; ok {
 			p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
@@ -118,28 +115,28 @@ func (p *Parser) parseInterface() *ast.Interface {
 	return d
 }
 
-func (p *Parser) parseClass() *ast.Class {
-	d := &ast.Class{
-		Variables: make(map[string]*ast.Variable),
-		Functions: make(map[string]*ast.Function),
+func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Class {
+	d := &declaration.Class{
+		Variables: make(map[string]*declaration.Variable),
+		Functions: make(map[string]*declaration.Function),
 	}
+	d.Modifier = modifier
+	d.Custom = attributes
+	p.next()
 	d.Name = p.parseIdentifier()
 	if p.token == token.Less {
 		d.TypeParameters = p.parseTypeParameters()
 	}
 	if p.token == token.Colon {
-		d.Base = p.parseBaseTypes()
+		d.Parents = p.parseIneritanceTypes()
 	}
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
-		m := p.parseMetadata()
+		attr := p.parseAttributes()
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
-			p.next()
-			v := p.parseVariable()
-			v.Custom = append(v.Custom, m...)
-			v.Modifier = modifier
+			v := p.parseVariable(modifier, attr)
 			name := v.Name.Name
 			if _, ok := d.Variables[name]; ok {
 				p.error(v.Name.Position, fmt.Sprintf("variable %s redeclared", name))
@@ -147,10 +144,7 @@ func (p *Parser) parseClass() *ast.Class {
 			d.Variables[name] = v
 
 		case token.Function:
-			p.next()
-			f := p.parseFunction(d)
-			f.Custom = append(f.Custom, m...)
-			f.Modifier = modifier
+			f := p.parseFunction(modifier, attr, d)
 			name := f.Name.Name
 			if _, ok := d.Functions[name]; ok {
 				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
@@ -163,4 +157,76 @@ func (p *Parser) parseClass() *ast.Class {
 	}
 	p.expect(token.RightBrace)
 	return d
+}
+
+func (p *Parser) parseModifier() *declaration.Modifier {
+	m := &declaration.Modifier{}
+	if p.token == token.Public {
+		m.Public = true
+		p.next()
+	}
+	if p.token == token.Static {
+		m.Static = true
+		p.next()
+	}
+	return m
+}
+
+func (p *Parser) parseAttributes() []*declaration.Attribute {
+	if p.token != token.META {
+		return nil
+	}
+	var attr []*declaration.Attribute
+	for p.token == token.META {
+		p.next()
+		if p.token != token.IDENT {
+			p.expect(token.IDENT)
+		}
+		m := &declaration.Attribute{Position: p.position}
+		m.Name = p.literal
+		p.next()
+
+		if p.token == token.STRING {
+			m.Text = p.literal
+			p.next()
+		} else if p.token == token.LeftParen {
+			p.next()
+			if p.token == token.STRING {
+				m.Text = p.literal
+				p.next()
+			} else {
+				m.Values = make(map[string]*expression.Literal)
+				for {
+					if p.token == token.IDENT {
+						name := p.literal
+						p.next()
+						p.expect(token.Assign)
+						switch p.token {
+						case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL:
+							if _, ok := m.Values[name]; ok {
+								p.error(p.position, "duplicated attribute "+name)
+							}
+							m.Values[name] = &expression.Literal{
+								Type:  p.token,
+								Value: p.literal,
+							}
+							m.Values[name].Position = p.position
+						default:
+							p.expectedError(p.position, "basic literal (bool, char, int, float, string)")
+						}
+						p.next()
+						if p.token == token.RightParen {
+							break
+						}
+						p.expect(token.Comma)
+					} else {
+						p.expect(token.IDENT)
+					}
+				}
+			}
+			p.expect(token.RightParen)
+		}
+		attr = append(attr, m)
+	}
+	return attr
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/token"
 )
 
 type Declaration interface {
@@ -15,6 +16,10 @@ type Declaration interface {
 type Modifier struct {
 	Public bool
 	Static bool
+}
+
+func (m0 *Modifier) Equal(m1 *Modifier) bool {
+	return m0.Public == m1.Public && m0.Static == m1.Static
 }
 
 type Attribute struct {
@@ -31,8 +36,8 @@ type Attributes struct {
 
 type Base struct {
 	node.Base
-	Modifier
 	Attributes
+	Modifier  *Modifier
 	Namespace []string
 }
 
@@ -40,6 +45,7 @@ func (*Base) declaration() {}
 
 type Variable struct {
 	Base
+	Token token.Token
 	Name  *expression.Identifier
 	Type  types.Type
 	Value expression.Expression
@@ -66,7 +72,7 @@ type Interface struct {
 	Base
 	Name           *expression.Identifier
 	TypeParameters *types.TypeParameters
-	Parents        []types.Type
+	Parents        []*types.TypeName
 	Functions      map[string]*Function
 }
 
@@ -74,7 +80,7 @@ type Class struct {
 	Base
 	Name           *expression.Identifier
 	TypeParameters *types.TypeParameters
-	Parents        []types.Type
+	Parents        []*types.TypeName
 	Variables      map[string]*Variable
 	Functions      map[string]*Function
 }

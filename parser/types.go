@@ -1,38 +1,36 @@
 package parser
 
 import (
-	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseType() ast.Type {
+func (p *Parser) parseType() types.Type {
 	if p.token.IsScalar() {
-		t := &ast.BuitinType{
-			Position: p.position,
-			Token:    p.token,
-		}
+		t := &types.BuitinType{}
+		t.Position = p.position
+		t.Token = p.token
 		p.next()
 		return t
 	}
 	return p.parseTypeName()
 }
 
-func (p *Parser) parseTypeName() *ast.TypeName {
-	t := &ast.TypeName{
-		QualifiedName: p.parseQualifiedName(nil),
-	}
+func (p *Parser) parseTypeName() *types.TypeName {
+	t := &types.TypeName{}
+	t.Position = p.position
+	t.QualifiedName = p.parseQualifiedName("")
 	if p.token == token.Less {
 		t.TypeArguments = p.parseTypeArguments()
 	}
 	return t
 }
 
-func (p *Parser) parseTypeArguments() *ast.TypeArguments {
-	p.next()
-	t := &ast.TypeArguments{
-		Position: p.position,
-		Ellipsis: -1,
-	}
+func (p *Parser) parseTypeArguments() *types.TypeArguments {
+	t := &types.TypeArguments{}
+	t.Position = p.position
+	t.Ellipsis = -1
+	p.next() // skip <
 	t.Arguments = append(t.Arguments, p.parseType())
 	if p.token == token.Ellipsis {
 		t.Ellipsis = 0
@@ -53,11 +51,10 @@ func (p *Parser) parseTypeArguments() *ast.TypeArguments {
 	return t
 }
 
-func (p *Parser) parseTypeParameters() *ast.TypeParameters {
-	p.next()
-	t := &ast.TypeParameters{
-		Position: p.position,
-	}
+func (p *Parser) parseTypeParameters() *types.TypeParameters {
+	t := &types.TypeParameters{}
+	t.Position = p.position
+	p.next() // skip <
 	t.Parameters = append(t.Parameters, p.parseTypeParameter())
 	if p.token == token.Ellipsis {
 		t.Ellipsis = true
@@ -78,10 +75,10 @@ func (p *Parser) parseTypeParameters() *ast.TypeParameters {
 	return t
 }
 
-func (p *Parser) parseTypeParameter() *ast.TypeParameter {
-	t := &ast.TypeParameter{
-		Name: p.parseIdentifier(),
-	}
+func (p *Parser) parseTypeParameter() *types.TypeParameter {
+	t := &types.TypeParameter{}
+	t.Position = p.position
+	t.Name = p.parseIdentifier().Name
 	if p.token == token.Colon {
 		p.next()
 		t.Type = p.parseType()
@@ -89,27 +86,23 @@ func (p *Parser) parseTypeParameter() *ast.TypeParameter {
 	return t
 }
 
-func (p *Parser) parseBaseTypes() *ast.TypeArguments {
-	p.next()
-	t := &ast.TypeArguments{
-		Position: p.position,
-	}
-	t.Arguments = append(t.Arguments, p.parseType())
+func (p *Parser) parseIneritanceTypes() []*types.TypeName {
+	p.next() // skip :
+	result := []*types.TypeName{p.parseTypeName()}
 	for p.token == token.Comma {
 		p.next()
-		t.Arguments = append(t.Arguments, p.parseType())
+		result = append(result, p.parseTypeName())
 	}
-	return t
+	return result
 }
 
-func (p *Parser) parseParameters() *ast.Parameters {
+func (p *Parser) parseParameters() *types.Parameters {
+	t := &types.Parameters{}
+	t.Position = p.position
 	p.expect(token.LeftParen)
 	if p.token == token.RightParen {
 		p.next()
 		return nil
-	}
-	t := &ast.Parameters{
-		Position: p.position,
 	}
 	t.Parameters = append(t.Parameters, p.parseParameter())
 	if p.token == token.Ellipsis {
@@ -127,34 +120,21 @@ func (p *Parser) parseParameters() *ast.Parameters {
 	return t
 }
 
-func (p *Parser) parseParameter() *ast.Variable {
-	t := &ast.Variable{
-		Name: p.parseIdentifier(),
-	}
+func (p *Parser) parseParameter() *types.Parameter {
+	t := &types.Parameter{}
+	t.Position = p.position
+	t.Name = p.parseIdentifier().Name
 	t.Type = p.parseType()
-	if p.token == token.Assign {
-		p.next()
-		if !p.token.IsLiteral() || p.token == token.IDENT {
-			p.error(p.position, "variable can only be initialized by const value (string, char, float, int)")
-		}
-		t.Value = &ast.Literal{
-			Position: p.position,
-			Type:     p.token,
-			Value:    p.literal,
-		}
-		p.next()
-	}
 	return t
 }
 
-func (p *Parser) parseArguments() *ast.Arguments {
+func (p *Parser) parseArguments() *types.Arguments {
+	t := &types.Arguments{}
+	t.Position = p.position
 	p.expect(token.LeftParen)
 	if p.token == token.RightParen {
 		p.next()
-		return nil
-	}
-	t := &ast.Arguments{
-		Position: p.position,
+		return t
 	}
 	t.Arguments = append(t.Arguments, p.parseExpression())
 	if p.token == token.Ellipsis {
@@ -176,6 +156,14 @@ func (p *Parser) parseArguments() *ast.Arguments {
 	return t
 }
 
-func (p *Parser) validateType(t ast.Type) {
-
+func (p *Parser) parseQualifiedName(identifier string) []string {
+	if identifier == "" {
+		identifier = p.parseIdentifier().Name
+	}
+	qualifiedName := []string{identifier}
+	for p.token == token.Dot {
+		p.next()
+		qualifiedName = append(qualifiedName, p.parseIdentifier().Name)
+	}
+	return qualifiedName
 }

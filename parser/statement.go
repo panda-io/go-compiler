@@ -1,39 +1,69 @@
 package parser
 
 import (
-	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseStatementBlock() *ast.BlockStatement {
-	block := &ast.BlockStatement{
-		Position: p.position,
-	}
-	p.next()
-	for p.token != token.RightBrace {
-		block.Statements = append(block.Statements, p.parseStatement())
-	}
-	p.next()
-	return block
-}
-
-func (p *Parser) parseStatement() ast.Statement {
+func (p *Parser) parseStatement() statement.Statement {
 	switch p.token {
 	case token.Semi:
+		s := &statement.Empty{}
+		s.Position = p.position
 		p.next()
-		return &ast.EmptyStatement{}
+		return s
 
-	case token.Var, token.IDENT, token.This, token.Base:
-		return p.parseSimpleStatement()
+	//case token.Var: //simpleStatement
+
+	case token.IDENT, token.This, token.Base:
+		//TO-DO add more //token.Var
+		return p.parseSimpleStatement(true)
+
+	case token.Break:
+		s := &statement.Break{}
+		s.Position = p.position
+		p.next()
+		p.expect(token.Semi)
+		return s
+
+	case token.Continue:
+		s := &statement.Continue{}
+		s.Position = p.position
+		p.next()
+		p.expect(token.Semi)
+		return s
 
 	case token.Return:
-		return p.parseReturnStatement()
+		s := &statement.Return{}
+		s.Position = p.position
+		p.next()
+		if p.token != token.Semi {
+			s.Expression = p.parseExpression()
+		}
+		p.expect(token.Semi)
+		return s
 
-	case token.Break, token.Continue:
-		return p.parseBranchStatement()
+	case token.Throw:
+		s := &statement.Throw{}
+		s.Position = p.position
+		p.next()
+		s.Expression = p.parseExpression()
+		p.expect(token.Semi)
+		return s
+
+	case token.META:
+		s := &statement.Raw{}
+		s.Position = p.position
+		p.next()
+		if p.token != token.STRING {
+			p.expectedError(p.position, "raw source (string)")
+		}
+		s.Source = p.literal
+		p.next()
+		return s
 
 	case token.LeftBrace:
-		return p.parseStatementBlock()
+		return p.parseCompoundStatement()
 
 	case token.If:
 		return p.parseIfStatement()
@@ -41,93 +71,86 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.Switch:
 		return p.parseSwitchStatement()
 
-	case token.While:
-		return p.parseWhileStatement()
-
 	case token.For:
 		return p.parseForStatement()
-
-	case token.Foreach:
-		return p.parseForeachStatement()
 
 	case token.Try:
 		return p.parseTryStatement()
 
-	case token.Throw:
-		return p.parseThrowStatement()
-
-	case token.Yield:
-		// yield statement //TO-DO
-		p.next()
-		return nil
-
-	case token.Await:
-		// await //TO-DO
-		p.next()
-		return nil
-
-	case token.META:
-		return p.parseRawStatement()
-
 	default:
 		p.expectedError(p.position, "statement")
 		return nil
 	}
 }
 
-func (p *Parser) parseSimpleStatement() ast.Statement {
-	switch p.token {
-	case token.IDENT, token.This, token.Base:
-		return p.parseAssignStatement(false)
-
-	case token.Var:
-		return p.parseDeclarationStatement()
-
-	default:
-		p.expectedError(p.position, "statement")
-		return nil
+func (p *Parser) parseCompoundStatement() *statement.Compound {
+	s := &statement.Compound{}
+	s.Position = p.position
+	p.next()
+	for p.token != token.RightBrace {
+		s.Statements = append(s.Statements, p.parseStatement())
 	}
+	p.next()
+	return s
 }
 
-func (p *Parser) parseAssignStatement(skipSemi bool) ast.Statement {
-	e := p.parsePrimaryExpression()
-	switch p.token {
-	case token.Assign,
-		token.PlusAssign, token.MinusAssign, token.MulAssign, token.DivAssign,
-		token.ModAssign, token.AndAssign, token.OrAssign,
-		token.XorAssign, token.LeftShiftAssign, token.RightShiftAssign:
-		s := &ast.AssignStatement{
-			Left: e,
-		}
-		//TO-DO what expression can be assign
-		p.next()
-		s.Right = p.parseExpression()
-		if !skipSemi {
-			p.expect(token.Semi)
-		}
-		return s
+func (p *Parser) parseSimpleStatement(consumeSemi bool) statement.Statement {
+	/*
+		switch p.token {
+		case token.IDENT, token.This, token.Base:
+			return p.parseAssignStatement(false)
 
-	case token.PlusPlus, token.MinusMinus:
-		s := &ast.IncreaseDecreaseStatement{
-			Expression: e,
-			Token:      p.token,
-		}
-		p.next()
-		if !skipSemi {
-			p.expect(token.Semi)
-		}
-		return s
+		case token.Var:
+			return p.parseDeclarationStatement()
 
-	default:
-		p.expectedError(p.position, "statement")
-		return nil
-	}
+		default:
+			p.expectedError(p.position, "statement")
+			return nil
+		}*/
+	return nil
 }
 
-func (p *Parser) parseDeclarationStatement() *ast.DeclarationStatement {
-	s := &ast.DeclarationStatement{
-		Position: p.position,
-	}
+/*
+func (p *Parser) parseAssignStatement(skipSemi bool) statement.Statement {
+
+		e := p.parsePrimaryExpression()
+		switch p.token {
+		case token.Assign,
+			token.PlusAssign, token.MinusAssign, token.MulAssign, token.DivAssign,
+			token.ModAssign, token.AndAssign, token.OrAssign,
+			token.XorAssign, token.LeftShiftAssign, token.RightShiftAssign:
+			s := &ast.AssignStatement{
+				Left: e,
+			}
+			//TO-DO what expression can be assign
+			p.next()
+			s.Right = p.parseExpression()
+			if !skipSemi {
+				p.expect(token.Semi)
+			}
+			return s
+
+		case token.PlusPlus, token.MinusMinus:
+			s := &ast.IncreaseDecreaseStatement{
+				Expression: e,
+				Token:      p.token,
+			}
+			p.next()
+			if !skipSemi {
+				p.expect(token.Semi)
+			}
+			return s
+
+		default:
+			p.expectedError(p.position, "statement")
+			return nil
+		}
+}
+*/
+// To-DO with simple statement
+func (p *Parser) parseDeclarationStatement(consumeSemi bool) *statement.Declaration {
+	s := &statement.Declaration{}
+	s.Position = p.position
 	p.next()
 	s.Name = p.parseIdentifier()
 	if p.token != token.Assign && p.token != token.Semi && p.token != token.Colon {
@@ -137,91 +160,49 @@ func (p *Parser) parseDeclarationStatement() *ast.DeclarationStatement {
 		p.next()
 		s.Value = p.parseExpression()
 	}
-	if p.token == token.Semi {
+	if p.token == token.Semi && consumeSemi {
 		p.next()
 	}
 	return s
 }
 
-func (p *Parser) parseBranchStatement() *ast.BranchStatement {
-	s := &ast.BranchStatement{
-		Position: p.position,
-		Token:    p.token,
-	}
+func (p *Parser) parseTryStatement() *statement.Try {
+	s := &statement.Try{}
+	s.Position = p.position
 	p.next()
-	p.expect(token.Semi)
-	return s
-}
-
-func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-	s := &ast.ReturnStatement{
-		Position: p.position,
-	}
-	p.next()
-	if p.token != token.Semi {
-		s.Expression = p.parseExpression()
-	}
-	p.expect(token.Semi)
-	return s
-}
-
-func (p *Parser) parseThrowStatement() *ast.ThrowStatement {
-	s := &ast.ThrowStatement{
-		Position: p.position,
-	}
-	p.next()
-	s.Expression = p.parseExpression()
-	p.expect(token.Semi)
-	return s
-}
-
-func (p *Parser) parseRawStatement() *ast.RawStatement {
-	s := &ast.RawStatement{
-		Position: p.position,
-	}
-	p.next()
-	if p.token != token.STRING {
-		p.expectedError(p.position, "raw source (string)")
-	}
-	s.Source = p.literal
-	p.next()
-	return s
-}
-
-func (p *Parser) parseTryStatement() *ast.TryStatement {
-	s := &ast.TryStatement{
-		Position: p.position,
-	}
-	p.next()
-	s.TryStatement = p.parseStatementBlock()
+	s.Try = p.parseStatement()
 	p.expect(token.Catch)
 	p.expect(token.LeftParen)
-	s.Catch = p.parseParameter()
+	s.Operand = p.parseParameters()
 	p.expect(token.RightParen)
-	s.CatchStatement = p.parseStatementBlock()
+	s.Catch = p.parseStatement()
 	if p.token == token.Finally {
 		p.next()
-		s.FinallyStatement = p.parseStatementBlock()
+		s.Finally = p.parseStatement()
 	}
 	return s
 }
 
-func (p *Parser) parseIfStatement() *ast.IfStatement {
-	s := &ast.IfStatement{
-		Position: p.position,
-	}
+func (p *Parser) parseIfStatement() *statement.If {
+	s := &statement.If{}
 	p.next()
 	p.expect(token.LeftParen)
-	s.Condition = p.parseExpression()
+	first := p.parseSimpleStatement(false)
+	if p.token == token.Semi {
+		p.next()
+		s.Initialization = first
+		s.Condition = p.parseSimpleStatement(false)
+	} else {
+		s.Condition = first
+	}
 	p.expect(token.RightParen)
-	s.Body = p.parseStatementBlock()
-
+	s.Body = p.parseStatement()
 	if p.token == token.Else {
 		p.next()
 		if p.token == token.If {
 			s.Else = p.parseIfStatement()
 		} else if p.token == token.LeftBrace {
-			s.Else = p.parseStatementBlock()
+			s.Else = p.parseStatement()
 		} else {
 			p.expectedError(p.position, "if statement or block")
 		}
@@ -229,12 +210,20 @@ func (p *Parser) parseIfStatement() *ast.IfStatement {
 	return s
 }
 
-func (p *Parser) parseSwitchStatement() *ast.SwitchStatement {
-	s := &ast.SwitchStatement{
-		Position: p.position,
-	}
+func (p *Parser) parseSwitchStatement() *statement.Switch {
+	s := &statement.Switch{}
+	s.Position = p.position
 	p.next()
-	s.Tag = p.parseExpression()
+	p.expect(token.LeftParen)
+	first := p.parseSimpleStatement(false)
+	if p.token == token.Semi {
+		p.next()
+		s.Initialization = first
+		s.Operand = p.parseSimpleStatement(false)
+	} else {
+		s.Operand = first
+	}
+	p.expect(token.RightParen)
 	p.expect(token.LeftBrace)
 	for p.token == token.Case || p.token == token.Default {
 		s.Body = append(s.Body, p.parseCaseStatement())
@@ -243,10 +232,9 @@ func (p *Parser) parseSwitchStatement() *ast.SwitchStatement {
 	return s
 }
 
-func (p *Parser) parseCaseStatement() *ast.CaseStatement {
-	s := &ast.CaseStatement{
-		Position: p.position,
-	}
+func (p *Parser) parseCaseStatement() *statement.Case {
+	s := &statement.Case{}
+	s.Position = p.position
 	if p.token == token.Case {
 		p.next()
 		s.Case = p.parseExpression()
@@ -254,59 +242,71 @@ func (p *Parser) parseCaseStatement() *ast.CaseStatement {
 		p.expect(token.Default)
 	}
 	p.expect(token.Colon)
-	s.Body = p.parseStatementBlock()
+	s.Body = p.parseStatement()
 	return s
 }
 
-func (p *Parser) parseWhileStatement() *ast.WhileStatement {
-	s := &ast.WhileStatement{
-		Position: p.position,
-	}
+func (p *Parser) parseForStatement() statement.Statement {
+	position := p.position
 	p.next()
-	p.expect(token.LeftParen)
-	s.Condition = p.parseExpression()
-	p.expect(token.RightParen)
-	s.Body = p.parseStatementBlock()
-	return s
-}
-
-func (p *Parser) parseForStatement() *ast.ForStatement {
-	s := &ast.ForStatement{
-		Position: p.position,
-	}
-	p.next()
-	p.expect(token.LeftParen)
-	if p.token != token.Semi {
-		s.Initialize = p.parseSimpleStatement()
+	if p.token != token.LeftBrace {
+		s := &statement.For{}
+		s.Position = position
+		s.Body = p.parseStatement()
+		return s
 	} else {
 		p.next()
+		first := p.parseSimpleStatement(false)
+		if p.token == token.RightParen {
+			p.next()
+			s := &statement.For{}
+			s.Position = position
+			s.Condition = first
+			s.Body = p.parseStatement()
+			return s
+		} else if p.token == token.Colon {
+			p.next()
+			s := &statement.Foreach{}
+			s.Position = position
+			s.Item = first
+			s.Iterator = p.parseExpression()
+			p.expect(token.RightParen)
+			s.Body = p.parseStatement()
+			return s
+		} else {
+			p.expect(token.Semi)
+			second := p.parseSimpleStatement(false)
+			if p.token == token.Colon {
+				s := &statement.Foreach{}
+				s.Position = position
+				s.Key = first
+				s.Item = second
+				s.Iterator = p.parseExpression()
+				p.expect(token.RightParen)
+				s.Body = p.parseStatement()
+				return s
+			} else if p.token == token.RightParen {
+				p.next()
+				s := &statement.For{}
+				s.Position = position
+				s.Initialization = first
+				s.Condition = second
+				s.Body = p.parseStatement()
+				return s
+			} else if p.token == token.Semi {
+				p.next()
+				s := &statement.For{}
+				s.Position = position
+				s.Initialization = first
+				s.Condition = second
+				s.Post = p.parseSimpleStatement(false)
+				p.expect(token.RightParen)
+				s.Body = p.parseStatement()
+				return s
+			} else {
+				p.error(position, "unknow token: "+p.token.String())
+				return nil
+			}
+		}
 	}
-	if p.token != token.Semi {
-		s.Condition = p.parseExpression()
-	}
-	p.expect(token.Semi)
-	if p.token != token.RightParen {
-		s.Post = p.parseAssignStatement(true)
-	}
-	p.expect(token.RightParen)
-	s.Body = p.parseStatementBlock()
-	return s
-}
-
-func (p *Parser) parseForeachStatement() *ast.ForeachStatement {
-	s := &ast.ForeachStatement{
-		Position: p.position,
-	}
-	p.next()
-	p.expect(token.LeftParen)
-	s.Value = p.parseDeclarationStatement()
-	if p.token != token.Colon {
-		s.Key = s.Value
-		s.Value = p.parseSimpleStatement()
-	}
-	p.expect(token.Colon)
-	s.Iterator = p.parseExpression()
-	p.expect(token.RightParen)
-	s.Body = p.parseStatementBlock()
-	return s
 }

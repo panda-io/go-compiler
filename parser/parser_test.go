@@ -176,8 +176,8 @@ func TestDeclarationFail8(t *testing.T) {
 func TestNamespace(t *testing.T) {
 	p := NewParser([]string{"cpp"})
 	p.ParseBytes([]byte("@doc \"package document here\" \nnamespace first.second.third;"))
-	assertEqual(t, p.root.Children["first"].Package, "first")
-	assertEqual(t, p.root.Children["first"].Children["second"].Package, "second")
+	assertEqual(t, p.program.Children["first"].Package, "first")
+	assertEqual(t, p.program.Children["first"].Children["second"].Package, "second")
 }
 
 func TestExpression(t *testing.T) {

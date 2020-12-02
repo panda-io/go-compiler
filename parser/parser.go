@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/scanner"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -17,7 +18,7 @@ import (
 func NewParser(flags []string) *Parser {
 	p := &Parser{
 		files:   &token.FileSet{},
-		root:    ast.NewProgram("", nil),
+		root:    ast.NewPackage("", nil),
 		imports: make(map[string][]*fileImport),
 	}
 	p.scanner = scanner.NewScanner(p.error, flags)
@@ -30,8 +31,8 @@ type undefinedError struct {
 }
 
 type fileImport struct {
-	alias *ast.Identifier
-	path  []*ast.Identifier
+	alias *expression.Identifier
+	path  []string
 }
 
 type parserState struct {
@@ -45,7 +46,7 @@ type Parser struct {
 	parserState
 	files   *token.FileSet
 	scanner *scanner.Scanner
-	root    *ast.Program
+	program *ast.Package
 	imports map[string][]*fileImport
 
 	errors []*undefinedError

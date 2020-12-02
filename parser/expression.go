@@ -1,30 +1,29 @@
 package parser
 
 import (
-	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseExpression() ast.Expression {
-	return p.parseBinaryExpression(1)
+func (p *Parser) parseExpression() expression.Expression {
+	//return p.parseBinaryExpression(1)
+	return nil
 }
 
-func (p *Parser) parseIdentifier() *ast.Identifier {
-	position := p.position
-	name := ""
+func (p *Parser) parseIdentifier() *expression.Identifier {
+	e := &expression.Identifier{}
+	e.Position = p.position
 	if p.token == token.IDENT {
-		name = p.literal
+		e.Name = p.literal
 		p.next()
 	} else {
 		p.expect(token.IDENT)
 	}
-	return &ast.Identifier{
-		Position: position,
-		Name:     name,
-	}
+	return e
 }
 
-func (p *Parser) parseOperand() ast.Expression {
+/*
+func (p *Parser) parseOperand() expression.Expression {
 	switch p.token {
 	case token.IDENT:
 		return p.parseIdentifier()
@@ -154,3 +153,4 @@ func (p *Parser) parseBinaryExpression(precedence int) ast.Expression {
 		}
 	}
 }
+*/

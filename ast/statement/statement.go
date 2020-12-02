@@ -23,7 +23,7 @@ type Empty struct {
 
 type Raw struct {
 	Base
-	Source *expression.Literal
+	Source string
 }
 
 type Expression struct {
@@ -35,12 +35,12 @@ type Declaration struct {
 	Base
 	Name  *expression.Identifier
 	Type  types.Type
-	Value Expression
+	Value expression.Expression
 }
 
 type Return struct {
 	Base
-	Expression Expression
+	Expression expression.Expression
 }
 
 type Continue struct {
@@ -61,7 +61,7 @@ type Try struct {
 
 type Throw struct {
 	Base
-	Expression Expression
+	Expression expression.Expression
 }
 
 type If struct {
@@ -74,14 +74,14 @@ type If struct {
 
 type Switch struct {
 	Base
-	Position int
-	Operand  Expression
-	Body     []*Case
+	Initialization Statement
+	Operand        Statement
+	Body           []*Case
 }
 
 type Case struct {
 	Base
-	Case Expression
+	Case expression.Expression
 	Body Statement
 }
 
@@ -96,8 +96,8 @@ type For struct {
 type Foreach struct {
 	Base
 	Key      Statement
-	Value    Statement
-	Iterator Expression
+	Item     Statement
+	Iterator expression.Expression
 	Body     Statement
 }
 

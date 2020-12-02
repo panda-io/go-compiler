@@ -7,30 +7,27 @@ import (
 )
 
 func (p *Parser) parseProgram() {
-	m := p.parseMetadata()
+	m := p.parseAttributes()
 	n := p.parseNamespace()
 	program := p.findPackage(n)
 	if len(m) > 0 {
 		program.Custom = append(program.Custom, m...)
 	}
-	m = p.parseMetadata()
+	m = p.parseAttributes()
 
 	if p.token == token.Import {
 		if len(m) > 0 {
-			p.error(m[0].Position, "import should not contain metadata")
+			p.error(m[0].Position, "import should not contain attributes")
 		}
-		p.parseImport() // ignore currently //TO-DO
-		m = p.parseMetadata()
+		p.parseImport()
+		m = p.parseAttributes()
 	}
 
 	for p.token != token.EOF {
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
-			p.next()
-			v := p.parseVariable()
-			v.Custom = append(v.Custom, m...)
-			v.Modifier = modifier
+			v := p.parseVariable(modifier, m)
 			name := v.Name.Name
 			if _, ok := program.Variables[name]; ok {
 				p.error(v.Name.Position, fmt.Sprintf("variable %s redeclared", name))
@@ -38,10 +35,7 @@ func (p *Parser) parseProgram() {
 			program.Variables[name] = v
 
 		case token.Function:
-			p.next()
-			f := p.parseFunction(nil)
-			f.Custom = append(f.Custom, m...)
-			f.Modifier = modifier
+			f := p.parseFunction(modifier, m, nil)
 			name := f.Name.Name
 			if _, ok := program.Functions[name]; ok {
 				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
@@ -49,10 +43,7 @@ func (p *Parser) parseProgram() {
 			program.Functions[name] = f
 
 		case token.Enum:
-			p.next()
-			e := p.parseEnum()
-			e.Custom = append(e.Custom, m...)
-			e.Modifier = modifier
+			e := p.parseEnum(modifier, m)
 			name := e.Name.Name
 			if _, ok := program.Enums[name]; ok {
 				p.error(e.Name.Position, fmt.Sprintf("enum %s redeclared", name))
@@ -60,10 +51,7 @@ func (p *Parser) parseProgram() {
 			program.Enums[name] = e
 
 		case token.Interface:
-			p.next()
-			i := p.parseInterface()
-			i.Custom = append(i.Custom, m...)
-			i.Modifier = modifier
+			i := p.parseInterface(modifier, m)
 			name := i.Name.Name
 			if _, ok := program.Interfaces[name]; ok {
 				p.error(i.Name.Position, fmt.Sprintf("interface %s redeclared", name))
@@ -71,10 +59,7 @@ func (p *Parser) parseProgram() {
 			program.Interfaces[name] = i
 
 		case token.Class:
-			p.next()
-			c := p.parseClass()
-			c.Custom = append(c.Custom, m...)
-			c.Modifier = modifier
+			c := p.parseClass(modifier, m)
 			name := c.Name.Name
 			if existing, ok := program.Classes[name]; ok {
 				if !c.Modifier.Equal(existing.Modifier) {
@@ -83,8 +68,13 @@ func (p *Parser) parseProgram() {
 				if !c.TypeParameters.Equal(existing.TypeParameters) {
 					p.error(c.Name.Position, fmt.Sprintf("partial class %s's type parameters are different", name))
 				}
-				if !c.Base.Equal(existing.Base) {
+				if len(c.Parents) != len(existing.Parents) {
 					p.error(c.Name.Position, fmt.Sprintf("partial class %s's base type are different", name))
+				}
+				for i, parent := range existing.Parents {
+					if !parent.Equal(existing.Parents[i]) {
+						p.error(c.Name.Position, fmt.Sprintf("partial class %s's base type are different", name))
+					}
 				}
 				for n, v := range existing.Variables {
 					if _, ok := c.Variables[n]; ok {
@@ -104,81 +94,8 @@ func (p *Parser) parseProgram() {
 		default:
 			p.expectedError(p.position, "declaration")
 		}
-		m = p.parseMetadata()
+		m = p.parseAttributes()
 	}
-}
-
-func (p *Parser) parseModifier() *ast.Modifier {
-	m := &ast.Modifier{}
-	if p.token == token.Public {
-		m.Public = true
-		p.next()
-	}
-	if p.token == token.Static {
-		m.Static = true
-		p.next()
-	}
-	return m
-}
-
-func (p *Parser) parseMetadata() []*ast.Metadata {
-	if p.token != token.META {
-		return nil
-	}
-
-	var meta []*ast.Metadata
-	for p.token == token.META {
-		p.next()
-		if p.token != token.IDENT {
-			p.expect(token.IDENT)
-		}
-		m := &ast.Metadata{Position: p.position}
-		m.Name = p.literal
-		p.next()
-
-		if p.token == token.STRING {
-			m.Text = p.literal
-			p.next()
-		} else if p.token == token.LeftParen {
-			p.next()
-			if p.token == token.STRING {
-				m.Text = p.literal
-				p.next()
-			} else {
-				m.Values = make(map[string]*ast.Literal)
-				for {
-					if p.token == token.IDENT {
-						name := p.literal
-						p.next()
-						p.expect(token.Assign)
-						switch p.token {
-						case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL:
-							if _, ok := m.Values[name]; ok {
-								p.error(p.position, "duplicated meta "+name)
-							}
-							m.Values[name] = &ast.Literal{
-								Position: p.position,
-								Type:     p.token,
-								Value:    p.literal,
-							}
-						default:
-							p.expectedError(p.position, "basic literal (bool, char, int, float, string)")
-						}
-						p.next()
-						if p.token == token.RightParen {
-							break
-						}
-						p.expect(token.Comma)
-					} else {
-						p.expect(token.IDENT)
-					}
-				}
-			}
-			p.expect(token.RightParen)
-		}
-		meta = append(meta, m)
-	}
-	return meta
 }
 
 func (p *Parser) parseNamespace() []string {
@@ -187,11 +104,7 @@ func (p *Parser) parseNamespace() []string {
 		p.next()
 		return nil
 	}
-	name := p.parseQualifiedName(nil)
-	namespace := []string{}
-	for _, n := range name {
-		namespace = append(namespace, n.Name)
-	}
+	namespace := p.parseQualifiedName("")
 	p.expect(token.Semi)
 	return namespace
 }
@@ -207,34 +120,21 @@ func (p *Parser) parseImport() {
 			p.next()
 			name = p.parseIdentifier()
 		}
-		i.path = p.parseQualifiedName(name)
+		i.path = p.parseQualifiedName(name.Name)
 		p.expect(token.Semi)
 		p.imports[f] = append(p.imports[f], i)
 	}
 }
 
-func (p *Parser) parseQualifiedName(identifier *ast.Identifier) []*ast.Identifier {
-	if identifier == nil {
-		identifier = p.parseIdentifier()
-	}
-	qualifiedName := []*ast.Identifier{identifier}
-	for p.token == token.Dot {
-		p.next()
-		qualifiedName = append(qualifiedName, p.parseIdentifier())
-	}
-	return qualifiedName
-}
-
-func (p *Parser) findPackage(namespace []string) *ast.Program {
+func (p *Parser) findPackage(namespace []string) *ast.Package {
 	if len(namespace) == 0 {
-		return p.root
+		return p.program
 	}
-
-	program := p.root
+	program := p.program
 	for len(namespace) > 0 {
 		name := namespace[0]
 		if _, ok := program.Children[name]; !ok {
-			program.Children[name] = ast.NewProgram(name, program)
+			program.Children[name] = ast.NewPackage(name, program)
 		}
 		program = program.Children[name]
 		namespace = namespace[1:len(namespace)]
@@ -242,7 +142,7 @@ func (p *Parser) findPackage(namespace []string) *ast.Program {
 	return program
 }
 
-func (p *Parser) validateProgram(program *ast.Program) {
+func (p *Parser) validateProgram(program *ast.Package) {
 	for _, v := range program.Variables {
 		fmt.Println(v.Name.Name)
 	}
