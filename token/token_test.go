@@ -35,13 +35,7 @@ func TestTypes(t *testing.T) {
 	assertEqual(t, IDENT.IsLiteral(), true)
 	assertEqual(t, String.IsScalar(), true)
 	assertEqual(t, Or.IsOperator(), true)
-	assertEqual(t, String.CppType(), "std::string")
 	assertEqual(t, META.Precedence(), 0)
-	assertEqual(t, Or.Precedence(), 1)
-	assertEqual(t, And.Precedence(), 2)
-	assertEqual(t, Equal.Precedence(), 3)
-	assertEqual(t, Plus.Precedence(), 4)
-	assertEqual(t, Mul.Precedence(), 5)
 }
 
 func TestOperators(t *testing.T) {
@@ -56,16 +50,6 @@ func TestOperators(t *testing.T) {
 
 	o, _ = ReadOperator([]byte("+++++"))
 	assertEqual(t, o, PlusPlus)
-}
-
-func TestCppTypePanic(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("cpp type did not panic")
-		}
-	}()
-
-	IDENT.CppType()
 }
 
 func TestPosition(t *testing.T) {

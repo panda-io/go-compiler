@@ -91,10 +91,10 @@ const (
 	Mul
 	Div
 	Mod
-	Caret
 	BitAnd
 	BitOr
-	Tilde
+	BitXor
+	Complement
 	Not
 	Assign
 	Less
@@ -196,10 +196,10 @@ var (
 		Mul:              "*",
 		Div:              "/",
 		Mod:              "%",
-		Caret:            "^",
 		BitAnd:           "&",
 		BitOr:            "|",
-		Tilde:            "~",
+		BitXor:           "^",
+		Complement:       "~",
 		Not:              "!",
 		Assign:           "=",
 		Less:             "<",
@@ -230,33 +230,6 @@ var (
 		Semi:             ";",
 		Dot:              ".",
 		Ellipsis:         "...",
-	}
-
-	cppTypes = [...]string{
-		Bool:    "bool",
-		Char:    "uint32_t",
-		Int8:    "int8_t",
-		Int16:   "int16_t",
-		Int32:   "int32_t",
-		Int64:   "int64_t",
-		Uint8:   "uint8_t",
-		Uint16:  "uint16_t",
-		Uint32:  "uint32_t",
-		Uint64:  "uint64_t",
-		SByte:   "int8_t",
-		Short:   "int16_t",
-		Int:     "int32_t",
-		Long:    "int64_t",
-		Byte:    "uint8_t",
-		Ushort:  "uint16_t",
-		Uint:    "uint32_t",
-		Ulong:   "uint64_t",
-		Float32: "float",
-		Float64: "double",
-		Float:   "float",
-		Double:  "double",
-		String:  "std::string",
-		Void:    "void",
 	}
 
 	tokens map[string]Token
@@ -323,26 +296,44 @@ func (t Token) IsScalar() bool {
 	return scalarBegin < t && t < scalarEnd
 }
 
-// TO-DO replace in generator
-func (t Token) CppType() string {
-	if t.IsScalar() {
-		return cppTypes[t]
-	}
-	panic("invalid type:" + t.String())
-}
-
 func (t Token) Precedence() int {
 	switch t {
-	case Or:
+	case Assign, MulAssign, DivAssign, ModAssign, PlusAssign, MinusAssign,
+		LeftShiftAssign, RightShiftAssign, AndAssign, OrAssign, XorAssign:
 		return 1
-	case And:
+
+	case Question:
 		return 2
-	case Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual:
+
+	case Or:
 		return 3
-	case Plus, Minus, BitOr, Caret:
+
+	case And:
 		return 4
-	case Mul, Div, Mod, LeftShift, RightShift, BitAnd:
+
+	case BitOr:
 		return 5
+
+	case BitXor:
+		return 6
+
+	case BitAnd:
+		return 7
+
+	case Equal, NotEqual:
+		return 8
+
+	case Less, LessEqual, Greater, GreaterEqual:
+		return 9
+
+	case LeftShift, RightShift:
+		return 10
+
+	case Plus, Minus:
+		return 11
+
+	case Mul, Div, Mod:
+		return 12
 	}
 	return 0
 }

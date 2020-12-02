@@ -10,6 +10,7 @@ import (
 
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/ast/expression"
+	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/scanner"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -18,7 +19,7 @@ import (
 func NewParser(flags []string) *Parser {
 	p := &Parser{
 		files:   &token.FileSet{},
-		root:    ast.NewPackage("", nil),
+		program: ast.NewPackage("", nil),
 		imports: make(map[string][]*fileImport),
 	}
 	p.scanner = scanner.NewScanner(p.error, flags)
@@ -41,7 +42,6 @@ type parserState struct {
 	literal  string
 }
 
-// Parser to parse panda source
 type Parser struct {
 	parserState
 	files   *token.FileSet
@@ -52,21 +52,25 @@ type Parser struct {
 	errors []*undefinedError
 }
 
-// ParseStatementBlock parse string statement block source
-func (p *Parser) ParseStatementBlock(source []byte) {
+func (p *Parser) ParseExpression(source []byte) expression.Expression {
 	file := p.files.AddFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
 	p.scanner.SetFile(file, source)
 	p.next()
-	p.parseStatementBlock()
+	return p.parseExpression()
 }
 
-// ParseBytes parse string source
+func (p *Parser) ParseCompoundStatement(source []byte) statement.Statement {
+	file := p.files.AddFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
+	p.scanner.SetFile(file, source)
+	p.next()
+	return p.parseCompoundStatement()
+}
+
 func (p *Parser) ParseBytes(source []byte) {
 	file := p.files.AddFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
 	p.parse(file, source)
 }
 
-// ParseFile parse from file
 func (p *Parser) ParseFile(fileName string) {
 	source, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -76,7 +80,6 @@ func (p *Parser) ParseFile(fileName string) {
 	p.parse(file, source)
 }
 
-// ParseFolder parse files under folder (include sub folders)
 func (p *Parser) ParseFolder(folder string) {
 	folderInfo, err := os.Open(folder)
 	if err != nil {
@@ -142,8 +145,9 @@ func (p *Parser) parse(file *token.File, source []byte) {
 	p.parseProgram()
 }
 
+/*
 func (p *Parser) validate() bool {
 	p.errors = p.errors[:0]
-	p.validateProgram(p.root)
+	p.validateProgram(p.program)
 	return len(p.errors) == 0
-}
+}*/

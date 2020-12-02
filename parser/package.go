@@ -137,11 +137,12 @@ func (p *Parser) findPackage(namespace []string) *ast.Package {
 			program.Children[name] = ast.NewPackage(name, program)
 		}
 		program = program.Children[name]
-		namespace = namespace[1:len(namespace)]
+		namespace = namespace[1:]
 	}
 	return program
 }
 
+/*
 func (p *Parser) validateProgram(program *ast.Package) {
 	for _, v := range program.Variables {
 		fmt.Println(v.Name.Name)
@@ -158,4 +159,4 @@ func (p *Parser) validateProgram(program *ast.Package) {
 	for _, c := range program.Classes {
 		fmt.Println(c.Name.Name)
 	}
-}
+}*/

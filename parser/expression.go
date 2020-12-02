@@ -6,8 +6,7 @@ import (
 )
 
 func (p *Parser) parseExpression() expression.Expression {
-	//return p.parseBinaryExpression(1)
-	return nil
+	return p.parseBinaryExpression(0)
 }
 
 func (p *Parser) parseIdentifier() *expression.Identifier {
@@ -22,135 +21,127 @@ func (p *Parser) parseIdentifier() *expression.Identifier {
 	return e
 }
 
-/*
 func (p *Parser) parseOperand() expression.Expression {
 	switch p.token {
 	case token.IDENT:
 		return p.parseIdentifier()
 
 	case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL, token.NULL, token.Void:
-		e := &ast.Literal{
-			Position: p.position,
-			Type:     p.token,
-			Value:    p.literal,
-		}
+		e := &expression.Literal{}
+		e.Position = p.position
+		e.Type = p.token
+		e.Value = p.literal
 		p.next()
 		return e
 
-	case token.This, token.Base:
-		e := &ast.ClassReference{
-			Position: p.position,
-			Type:     p.token,
-		}
+	case token.This:
+		e := &expression.This{}
+		e.Position = p.position
 		p.next()
+		return e
+
+	case token.Base:
+		e := &expression.Base{}
+		e.Position = p.position
+		p.next()
+		return e
+
+	case token.LeftParen:
+		e := &expression.Parentheses{}
+		e.Position = p.position
+		p.next()
+		e.Expression = p.parseExpression()
+		p.expect(token.RightParen)
+		return e
+
+	default:
+		p.error(p.position, "unexpected "+p.token.String())
+		return nil
+	}
+}
+
+func (p *Parser) parsePrimaryExpression() expression.Expression {
+	o := p.parseOperand()
+	for {
+		switch p.token {
+		case token.Dot:
+			e := &expression.MemberAccess{}
+			e.Position = p.position
+			p.next()
+			e.Parent = o
+			e.Member = p.parseIdentifier()
+			return e
+
+		case token.LeftBracket:
+			e := &expression.Subscripting{}
+			e.Position = p.position
+			p.next()
+			e.Element = p.parseExpression()
+			p.expect(token.RightBracket)
+			return e
+
+		case token.LeftParen:
+			e := &expression.Invocation{}
+			e.Position = p.position
+			e.Function = o
+			e.Arguments = p.parseArguments()
+			return e
+
+		default:
+			return o
+		}
+	}
+}
+
+func (p *Parser) parseUnaryExpression() expression.Expression {
+	switch p.token {
+	case token.Plus, token.Minus, token.Not, token.BitXor:
+		e := &expression.Unary{}
+		e.Position = p.position
+		e.Operator = p.token
+		p.next()
+		e.Expression = p.parseUnaryExpression()
 		return e
 
 	case token.New:
-		e := &ast.ClassCreateExpression{}
+		e := &expression.New{}
+		e.Position = p.position
 		p.next()
 		e.Type = p.parseType()
 		e.Arguments = p.parseArguments()
 		return e
 
-	case token.LeftParen:
-		e := &ast.ParenExpression{
-			Position: p.position,
-		}
-		p.next()
-		e.Expression = p.parseExpression()
-		p.expect(token.RightParen)
-		return e
-	}
-
-	if p.token.IsScalar() {
-		e := &ast.BuitinType{
-			Position: p.position,
-			Token:    p.token,
-		}
-		p.next()
-		return e
-	}
-	p.error(p.position, "unexpected "+p.token.String())
-	return nil
-}
-
-func (p *Parser) parsePrimaryExpression() ast.Expression {
-	e := p.parseOperand()
-	for {
-		switch p.token {
-		case token.Dot:
-			p.next()
-			m := &ast.MemberAccessExpression{
-				Parent: e,
-				Member: p.parseIdentifier(),
-			}
-			e = m
-
-		case token.LeftBracket:
-			p.next()
-			m := &ast.ElementAccessExpression{
-				Parent:  e,
-				Element: p.parseExpression(),
-			}
-			e = m
-			p.expect(token.RightBracket)
-			return e
-
-		case token.LeftParen:
-			f := &ast.InvocationExpression{
-				Function: e,
-			}
-			f.Arguments = p.parseArguments()
-			return f
-
-		default:
-			return e
-		}
-	}
-}
-
-func (p *Parser) parseUnaryExpression() ast.Expression {
-	switch p.token {
-	case token.Plus, token.Minus, token.Not, token.Caret:
-		e := &ast.UnaryExpression{
-			Position: p.position,
-			Operator: p.token,
-		}
-		p.next()
-		e.Expression = p.parseUnaryExpression()
-		return e
 	}
 	return p.parsePrimaryExpression()
 }
 
-func (p *Parser) parseBinaryExpression(precedence int) ast.Expression {
+func (p *Parser) parseBinaryExpression(precedence int) expression.Expression {
 	x := p.parseUnaryExpression()
 	for {
-		op := p.token
-		if op == token.Semi {
+		if p.token == token.Semi {
 			return x
 		}
+		op := p.token
 		opPrec := p.token.Precedence()
 		if opPrec <= precedence {
 			return x
 		}
 		p.next()
+		y := p.parseBinaryExpression(opPrec)
 		if op == token.Question {
 			p.expect(token.Colon)
-			y := p.parseBinaryExpression(opPrec)
 			z := p.parseBinaryExpression(opPrec)
-			return &ast.TernaryExpression{
+			x = &expression.Conditional{
 				Condition: x,
 				First:     y,
 				Second:    z,
 			}
-		}
-		y := p.parseBinaryExpression(opPrec)
-		return &ast.BinaryExpression{
-			Left:     x,
-			Operator: op,
-			Right:    y,
+		} else {
+			x = &expression.Binary{
+				Left:     x,
+				Operator: op,
+				Right:    y,
+			}
 		}
 	}
 }
-*/

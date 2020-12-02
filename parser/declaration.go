@@ -32,7 +32,7 @@ func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*dec
 	d.Custom = attributes
 	p.next()
 	tilde := false
-	if p.token == token.Tilde {
+	if p.token == token.Complement {
 		if class == nil {
 			p.error(p.position, "'~' is not allow outside class as function name")
 		}
