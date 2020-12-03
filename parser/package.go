@@ -14,11 +14,11 @@ func (p *Parser) parseProgram() {
 		program.Custom = append(program.Custom, m...)
 	}
 
-	if p.token == token.Import {
+	if p.token == token.Using {
 		if len(m) > 0 {
 			p.error(m[0].Position, "import should not contain attributes")
 		}
-		p.parseImport()
+		p.parseUsing()
 	}
 
 	for p.token != token.EOF {
@@ -125,11 +125,11 @@ func (p *Parser) parseNamespace() []string {
 	return namespace
 }
 
-func (p *Parser) parseImport() {
-	for p.token == token.Import {
+func (p *Parser) parseUsing() {
+	for p.token == token.Using {
 		f := p.scanner.GetFileName()
-		p.expect(token.Import)
-		i := &fileImport{}
+		p.expect(token.Using)
+		i := &usingNamespace{}
 		name := p.parseIdentifier()
 		if p.token == token.Assign {
 			i.alias = name

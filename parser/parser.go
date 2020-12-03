@@ -20,7 +20,7 @@ func NewParser(flags []string) *Parser {
 	p := &Parser{
 		files:   &token.FileSet{},
 		program: ast.NewPackage("", nil),
-		imports: make(map[string][]*fileImport),
+		imports: make(map[string][]*usingNamespace),
 	}
 	p.scanner = scanner.NewScanner(p.error, flags)
 	return p
@@ -31,7 +31,7 @@ type undefinedError struct {
 	message  string
 }
 
-type fileImport struct {
+type usingNamespace struct {
 	alias *expression.Identifier
 	path  []string
 }
@@ -47,7 +47,7 @@ type Parser struct {
 	files   *token.FileSet
 	scanner *scanner.Scanner
 	program *ast.Package
-	imports map[string][]*fileImport
+	imports map[string][]*usingNamespace
 
 	errors []*undefinedError
 }
