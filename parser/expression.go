@@ -61,16 +61,16 @@ func (p *Parser) parseOperand() expression.Expression {
 }
 
 func (p *Parser) parsePrimaryExpression() expression.Expression {
-	o := p.parseOperand()
+	x := p.parseOperand()
 	for {
 		switch p.token {
 		case token.Dot:
 			e := &expression.MemberAccess{}
 			e.Position = p.position
 			p.next()
-			e.Parent = o
+			e.Parent = x
 			e.Member = p.parseIdentifier()
-			return e
+			x = e
 
 		case token.LeftBracket:
 			e := &expression.Subscripting{}
@@ -78,17 +78,31 @@ func (p *Parser) parsePrimaryExpression() expression.Expression {
 			p.next()
 			e.Element = p.parseExpression()
 			p.expect(token.RightBracket)
-			return e
+			x = e
 
 		case token.LeftParen:
 			e := &expression.Invocation{}
 			e.Position = p.position
-			e.Function = o
+			e.Function = x
 			e.Arguments = p.parseArguments()
+			x = e
+
+		case token.PlusPlus:
+			e := &expression.Increment{}
+			e.Position = p.position
+			e.Expression = x
+			p.next()
+			return e
+
+		case token.MinusMinus:
+			e := &expression.Decrement{}
+			e.Position = p.position
+			e.Expression = x
+			p.next()
 			return e
 
 		default:
-			return o
+			return x
 		}
 	}
 }
@@ -111,8 +125,9 @@ func (p *Parser) parseUnaryExpression() expression.Expression {
 		e.Arguments = p.parseArguments()
 		return e
 
+	default:
+		return p.parsePrimaryExpression()
 	}
-	return p.parsePrimaryExpression()
 }
 
 func (p *Parser) parseBinaryExpression(precedence int) expression.Expression {
