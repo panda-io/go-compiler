@@ -157,14 +157,72 @@
 - public
 - static
 
-### limitations
+### **operator overloading**
+- unary operations
+
+    | expression	| translated to |
+    |:---:|:---|
+    |+a	| a.unary_plus() |
+    |-a	| a.unary_minus() |
+    |!a	| a.unary_not() |
+
+- increments and decrements
+
+    | expression	| translated to |
+    |:---:|:---|
+    |a++| a.increment() |
+    |a--| a.decrement() |
+
+- binary operations
+
+    | expression	| translated to |
+    |:---:|:---|
+    |a + b| a.plus(b) |
+    |a - b| a.minus(b) |
+    |a * b| a.mul(b) |
+    |a / b| a.div(b) |
+    |a % b| a.mod(b) |
+
+- indexed access
+
+    | expression	| translated to |
+    |:---:|:---|
+    |a[i]| a.get(i) |
+    |a[i] = value| a.set(i, value) |
+
+- invoke operator
+
+    | expression	| translated to |
+    |:---:|:---|
+    |a()| a.invoke() |
+    |a(b, c, d)| a.invoke(b, c, d) |
+
+- augmented assignments
+
+    | expression	| translated to |
+    |:---:|:---|
+    |a += b| a.plus_assign(b) |
+    |a -= b| a.minus_assign(b) |
+    |a *= b| a.mul_assign(b) |
+    |a /= b| a.div_assign(b) |
+    |a %= b| a.mod_assign(b) |
+
+- equality, inequality and comparison
+ 
+    | expression	| translated to |
+    |:---:|:---|
+    |a == b| a.compare(b) == 0 |
+    |a != b| a.compare(b) != 0 |
+    |a > b| a.compare(b) > 0 |
+    |a < b| a.compare(b) < 0 |
+    |a >= b| a.compare(b) >= 0 |
+    |a <= b| a.compare(b) <= 0 |
+
+### **limitations**
 - no function overloading
 - single inheritance
 - variable declaration can only use const expression for initialization
 
-### roadmap
+### **roadmap**
 - coroutine
 - new object(){a = 1, b = 2, c = 3}
-
-### TO-DO
-check name conflict between var class enum function interface
