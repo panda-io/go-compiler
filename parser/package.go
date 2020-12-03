@@ -7,106 +7,56 @@ import (
 )
 
 func (p *Parser) parseProgram() {
-	m := p.parseAttributes()
+	attr := p.parseAttributes()
 	n := p.parseNamespace()
 	program := p.findPackage(n)
-	if len(m) > 0 {
-		program.Custom = append(program.Custom, m...)
+	if len(attr) > 0 {
+		program.Custom = append(program.Custom, attr...)
+		attr = attr[:0]
 	}
 
 	if p.token == token.Using {
-		if len(m) > 0 {
-			p.error(m[0].Position, "import should not contain attributes")
-		}
 		p.parseUsing()
 	}
 
 	for p.token != token.EOF {
+		attr = p.parseAttributes()
 		modifier := p.parseModifier()
-		m = p.parseAttributes()
 		switch p.token {
 		case token.Const, token.Var:
-			v := p.parseVariable(modifier, m)
-			name := v.Name.Name
-			if _, ok := program.Variables[name]; ok {
-				p.error(v.Name.Position, fmt.Sprintf("variable %s redeclared", name))
+			m := p.parseVariable(modifier, attr)
+			if p.redeclared(m.Name.Name, program.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("variable %s redeclared", m.Name.Name))
 			}
-			program.Variables[name] = v
+			program.Members = append(program.Members, m)
 
 		case token.Function:
-			f := p.parseFunction(modifier, m, nil)
-			name := f.Name.Name
-			if _, ok := program.Functions[name]; ok {
-				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
+			m := p.parseFunction(modifier, attr, nil)
+			if p.redeclared(m.Name.Name, program.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
 			}
-			program.Functions[name] = f
+			program.Members = append(program.Members, m)
 
 		case token.Enum:
-			e := p.parseEnum(modifier, m)
-			name := e.Name.Name
-			if _, ok := program.Enums[name]; ok {
-				p.error(e.Name.Position, fmt.Sprintf("enum %s redeclared", name))
+			m := p.parseEnum(modifier, attr)
+			if p.redeclared(m.Name.Name, program.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("enum %s redeclared", m.Name.Name))
 			}
-			program.Enums[name] = e
+			program.Members = append(program.Members, m)
 
 		case token.Interface:
-			i := p.parseInterface(modifier, m)
-			name := i.Name.Name
-			if _, ok := program.Interfaces[name]; ok {
-				p.error(i.Name.Position, fmt.Sprintf("interface %s redeclared", name))
+			m := p.parseInterface(modifier, attr)
+			if p.redeclared(m.Name.Name, program.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("interface %s redeclared", m.Name.Name))
 			}
-			program.Interfaces[name] = i
+			program.Members = append(program.Members, m)
 
 		case token.Class:
-			c := p.parseClass(modifier, m)
-			name := c.Name.Name
-			if existing, ok := program.Classes[name]; ok {
-				if !c.Modifier.Equal(existing.Modifier) {
-					p.error(c.Name.Position, fmt.Sprintf("partial class %s's modifier are different", name))
-				}
-				if !c.TypeParameters.Equal(existing.TypeParameters) {
-					p.error(c.Name.Position, fmt.Sprintf("partial class %s's type parameters are different", name))
-				}
-				if len(c.Parents) != len(existing.Parents) {
-					p.error(c.Name.Position, fmt.Sprintf("partial class %s's base type are different", name))
-				}
-				for i, parent := range existing.Parents {
-					if !parent.Equal(existing.Parents[i]) {
-						p.error(c.Name.Position, fmt.Sprintf("partial class %s's base type are different", name))
-					}
-				}
-				for n, v := range existing.Variables {
-					if _, ok := c.Variables[n]; ok {
-						p.error(v.Name.Position, fmt.Sprintf("class member %s's is redeclared", n))
-					}
-					c.Variables[n] = v
-				}
-				for n, f := range existing.Functions {
-					if _, ok := c.Functions[n]; ok {
-						p.error(f.Name.Position, fmt.Sprintf("class member %s's is redeclared", n))
-					}
-					c.Functions[n] = f
-				}
-				for n, e := range existing.Enums {
-					if _, ok := c.Enums[n]; ok {
-						p.error(e.Name.Position, fmt.Sprintf("class member %s's is redeclared", n))
-					}
-					c.Enums[n] = e
-				}
-				for n, i := range existing.Interfaces {
-					if _, ok := c.Interfaces[n]; ok {
-						p.error(i.Name.Position, fmt.Sprintf("class member %s's is redeclared", n))
-					}
-					c.Interfaces[n] = i
-				}
-				for n, cc := range existing.Classes {
-					if _, ok := c.Classes[n]; ok {
-						p.error(cc.Name.Position, fmt.Sprintf("class member %s's is redeclared", n))
-					}
-					c.Classes[n] = cc
-				}
+			m := p.parseClass(modifier, attr)
+			if p.redeclared(m.Name.Name, program.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("class %s redeclared", m.Name.Name))
 			}
-			program.Classes[name] = c
+			program.Members = append(program.Members, m)
 
 		default:
 			p.expectedError(p.position, "declaration")

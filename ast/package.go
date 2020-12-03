@@ -6,14 +6,7 @@ import (
 
 func NewPackage(packageName string, parent *Package) *Package {
 	return &Package{
-		Name: packageName,
-
-		Variables:  make(map[string]*declaration.Variable),
-		Functions:  make(map[string]*declaration.Function),
-		Enums:      make(map[string]*declaration.Enum),
-		Interfaces: make(map[string]*declaration.Interface),
-		Classes:    make(map[string]*declaration.Class),
-
+		Name:     packageName,
 		Parent:   parent,
 		Children: make(map[string]*Package),
 	}
@@ -21,15 +14,8 @@ func NewPackage(packageName string, parent *Package) *Package {
 
 type Package struct {
 	declaration.Attributes
-
-	Name string
-
-	Variables  map[string]*declaration.Variable
-	Functions  map[string]*declaration.Function
-	Enums      map[string]*declaration.Enum
-	Interfaces map[string]*declaration.Interface
-	Classes    map[string]*declaration.Class
-
+	Name     string
+	Members  []declaration.Declaration
 	Parent   *Package
 	Children map[string]*Package
 }

@@ -165,3 +165,6 @@
 ### roadmap
 - coroutine
 - new object(){a = 1, b = 2, c = 3}
+
+### TO-DO
+check name conflict between var class enum function interface

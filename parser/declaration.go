@@ -62,9 +62,7 @@ func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*dec
 }
 
 func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Enum {
-	d := &declaration.Enum{
-		Members: make(map[string]*declaration.Variable),
-	}
+	d := &declaration.Enum{}
 	d.Modifier = modifier
 	d.Custom = attributes
 	p.next()
@@ -77,6 +75,10 @@ func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declara
 			p.next()
 			v.Value = p.parseExpression()
 		}
+		if p.redeclared(v.Name.Name, d.Members) {
+			p.error(v.Name.Position, fmt.Sprintf("function %s redeclared", v.Name.Name))
+		}
+		d.Members = append(d.Members, v)
 		if p.token != token.Comma {
 			break
 		}
@@ -87,10 +89,7 @@ func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declara
 }
 
 func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Interface {
-	d := &declaration.Interface{
-		Functions:  make(map[string]*declaration.Function),
-		Interfaces: make(map[string]*declaration.Interface),
-	}
+	d := &declaration.Interface{}
 	d.Modifier = modifier
 	d.Custom = attributes
 	p.next()
@@ -104,22 +103,21 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
 		attr := p.parseAttributes()
+		modifier := p.parseModifier()
 		switch p.token {
 		case token.Function:
-			f := p.parseFunction(nil, attr, nil)
-			name := f.Name.Name
-			if _, ok := d.Functions[name]; ok {
-				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
+			m := p.parseFunction(modifier, attr, nil)
+			if p.redeclared(m.Name.Name, d.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
 			}
-			d.Functions[name] = f
+			d.Members = append(d.Members, m)
 
 		case token.Interface:
-			i := p.parseInterface(nil, attr)
-			name := i.Name.Name
-			if _, ok := d.Interfaces[name]; ok {
-				p.error(i.Name.Position, fmt.Sprintf("interface %s redeclared", name))
+			m := p.parseInterface(modifier, attr)
+			if p.redeclared(m.Name.Name, d.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("interface %s redeclared", m.Name.Name))
 			}
-			d.Interfaces[name] = i
+			d.Members = append(d.Members, m)
 
 		default:
 			p.expectedError(p.position, "declaration")
@@ -130,13 +128,7 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 }
 
 func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Class {
-	d := &declaration.Class{
-		Variables:  make(map[string]*declaration.Variable),
-		Functions:  make(map[string]*declaration.Function),
-		Enums:      make(map[string]*declaration.Enum),
-		Interfaces: make(map[string]*declaration.Interface),
-		Classes:    make(map[string]*declaration.Class),
-	}
+	d := &declaration.Class{}
 	d.Modifier = modifier
 	d.Custom = attributes
 	p.next()
@@ -153,44 +145,39 @@ func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declar
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
-			v := p.parseVariable(modifier, attr)
-			name := v.Name.Name
-			if _, ok := d.Variables[name]; ok {
-				p.error(v.Name.Position, fmt.Sprintf("variable %s redeclared", name))
+			m := p.parseVariable(modifier, attr)
+			if p.redeclared(m.Name.Name, d.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("variable %s redeclared", m.Name.Name))
 			}
-			d.Variables[name] = v
+			d.Members = append(d.Members, m)
 
 		case token.Function:
-			f := p.parseFunction(modifier, attr, d)
-			name := f.Name.Name
-			if _, ok := d.Functions[name]; ok {
-				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
+			m := p.parseFunction(modifier, attr, d)
+			if p.redeclared(m.Name.Name, d.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
 			}
-			d.Functions[name] = f
+			d.Members = append(d.Members, m)
 
 		case token.Enum:
-			e := p.parseEnum(modifier, attr)
-			name := e.Name.Name
-			if _, ok := d.Enums[name]; ok {
-				p.error(e.Name.Position, fmt.Sprintf("enum %s redeclared", name))
+			m := p.parseEnum(modifier, attr)
+			if p.redeclared(m.Name.Name, d.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("enum %s redeclared", m.Name.Name))
 			}
-			d.Enums[name] = e
+			d.Members = append(d.Members, m)
 
 		case token.Interface:
-			i := p.parseInterface(modifier, attr)
-			name := i.Name.Name
-			if _, ok := d.Interfaces[name]; ok {
-				p.error(i.Name.Position, fmt.Sprintf("interface %s redeclared", name))
+			m := p.parseInterface(modifier, attr)
+			if p.redeclared(m.Name.Name, d.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("interface %s redeclared", m.Name.Name))
 			}
-			d.Interfaces[name] = i
+			d.Members = append(d.Members, m)
 
 		case token.Class:
-			c := p.parseClass(modifier, attr)
-			name := c.Name.Name
-			if _, ok := d.Classes[name]; ok {
-				p.error(c.Name.Position, fmt.Sprintf("class %s redeclared", name))
+			m := p.parseClass(modifier, attr)
+			if p.redeclared(m.Name.Name, d.Members) {
+				p.error(m.Name.Position, fmt.Sprintf("class %s redeclared", m.Name.Name))
 			}
-			d.Classes[name] = c
+			d.Members = append(d.Members, m)
 
 		default:
 			p.expectedError(p.position, "declaration")

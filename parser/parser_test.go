@@ -50,9 +50,12 @@ func TestStatementFail1(t *testing.T) {
 
 func TestDeclaration(t *testing.T) {
 	p := NewParser([]string{"cpp"})
-	p.ParseBytes([]byte("namespace; public interface x<type> { function print(); } public class a {} public class b<type> : a, x<type> { public var e int = 100; public function print<t>() void {} function ~b(){}}"))
-	p.ParseBytes([]byte("namespace; public enum test { blue, yello, red = 10 }"))
-	p.ParseBytes([]byte("namespace; interface a {} interface b : a {}"))
+	p.ParseBytes([]byte("@doc \"some package doc\" \nnamespace; var i int = 1; function print() { console.print_line(i); }"))
+	p.ParseBytes([]byte("namespace; @meta(a = true, b = \"yes\", c = 1) \npublic enum test { blue, yello, red = 10 }"))
+	p.ParseBytes([]byte("namespace; interface ia {} interface ib : ia {}"))
+	p.ParseBytes([]byte("namespace; public interface x<type> { function print(); public interface nested { function hello(); } }"))
+	p.ParseBytes([]byte("namespace; public class a {} public class b<type> : a, x<type> { public var e int = 100; public function print<t>() void {} function ~b(){}}"))
+	p.ParseBytes([]byte("namespace; public class c { public class nested { public enum color { blue, green, red = 10 } public static var value int; public interface ii {}}}"))
 }
 
 func TestDeclarationFail1(t *testing.T) {
@@ -62,7 +65,7 @@ func TestDeclarationFail1(t *testing.T) {
 		}
 	}()
 	p := NewParser([]string{"cpp"})
-	p.ParseBytes([]byte("namespace; function ~gen_int() int { return 1; }"))
+	p.ParseBytes([]byte("@doc(\"some package doc\")\nnamespace; function ~gen_int() int { return 1; }"))
 }
 
 func TestDeclarationFail2(t *testing.T) {

@@ -11,6 +11,7 @@ import (
 type Declaration interface {
 	node.Node
 	declaration()
+	Identifier() string
 }
 
 type Modifier struct {
@@ -51,6 +52,10 @@ type Variable struct {
 	Value expression.Expression
 }
 
+func (v *Variable) Identifier() string {
+	return v.Name.Name
+}
+
 type Function struct {
 	Base
 	Name           *expression.Identifier
@@ -62,10 +67,18 @@ type Function struct {
 	Class *Class
 }
 
+func (f *Function) Identifier() string {
+	return f.Name.Name
+}
+
 type Enum struct {
 	Base
 	Name    *expression.Identifier
-	Members map[string]*Variable
+	Members []Declaration
+}
+
+func (e *Enum) Identifier() string {
+	return e.Name.Name
 }
 
 type Interface struct {
@@ -73,8 +86,11 @@ type Interface struct {
 	Name           *expression.Identifier
 	TypeParameters *types.TypeParameters
 	Parents        []*types.TypeName
-	Functions      map[string]*Function
-	Interfaces     map[string]*Interface
+	Members        []Declaration
+}
+
+func (i *Interface) Identifier() string {
+	return i.Name.Name
 }
 
 type Class struct {
@@ -82,9 +98,9 @@ type Class struct {
 	Name           *expression.Identifier
 	TypeParameters *types.TypeParameters
 	Parents        []*types.TypeName
-	Variables      map[string]*Variable
-	Functions      map[string]*Function
-	Enums          map[string]*Enum
-	Interfaces     map[string]*Interface
-	Classes        map[string]*Class
+	Members        []Declaration
+}
+
+func (c *Class) Identifier() string {
+	return c.Name.Name
 }

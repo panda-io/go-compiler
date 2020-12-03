@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/ast/declaration"
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/scanner"
@@ -143,6 +144,15 @@ func (p *Parser) parse(file *token.File, source []byte) {
 	p.scanner.SetFile(file, source)
 	p.next()
 	p.parseProgram()
+}
+
+func (p *Parser) redeclared(name string, declarations []declaration.Declaration) bool {
+	for _, d := range declarations {
+		if d.Identifier() == name {
+			return true
+		}
+	}
+	return false
 }
 
 /*
