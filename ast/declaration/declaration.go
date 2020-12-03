@@ -74,6 +74,7 @@ type Interface struct {
 	TypeParameters *types.TypeParameters
 	Parents        []*types.TypeName
 	Functions      map[string]*Function
+	Interfaces     map[string]*Interface
 }
 
 type Class struct {
@@ -83,4 +84,7 @@ type Class struct {
 	Parents        []*types.TypeName
 	Variables      map[string]*Variable
 	Functions      map[string]*Function
+	Enums          map[string]*Enum
+	Interfaces     map[string]*Interface
+	Classes        map[string]*Class
 }

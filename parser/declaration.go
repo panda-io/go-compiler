@@ -88,7 +88,8 @@ func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declara
 
 func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Interface {
 	d := &declaration.Interface{
-		Functions: make(map[string]*declaration.Function),
+		Functions:  make(map[string]*declaration.Function),
+		Interfaces: make(map[string]*declaration.Interface),
 	}
 	d.Modifier = modifier
 	d.Custom = attributes
@@ -103,13 +104,26 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
 		attr := p.parseAttributes()
-		f := p.parseFunction(nil, nil, nil)
-		f.Custom = attr
-		name := f.Name.Name
-		if _, ok := d.Functions[name]; ok {
-			p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
+		switch p.token {
+		case token.Function:
+			f := p.parseFunction(nil, attr, nil)
+			name := f.Name.Name
+			if _, ok := d.Functions[name]; ok {
+				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
+			}
+			d.Functions[name] = f
+
+		case token.Interface:
+			i := p.parseInterface(nil, attr)
+			name := i.Name.Name
+			if _, ok := d.Interfaces[name]; ok {
+				p.error(i.Name.Position, fmt.Sprintf("interface %s redeclared", name))
+			}
+			d.Interfaces[name] = i
+
+		default:
+			p.expectedError(p.position, "declaration")
 		}
-		d.Functions[name] = f
 	}
 	p.expect(token.RightBrace)
 	return d
@@ -117,8 +131,11 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 
 func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Class {
 	d := &declaration.Class{
-		Variables: make(map[string]*declaration.Variable),
-		Functions: make(map[string]*declaration.Function),
+		Variables:  make(map[string]*declaration.Variable),
+		Functions:  make(map[string]*declaration.Function),
+		Enums:      make(map[string]*declaration.Enum),
+		Interfaces: make(map[string]*declaration.Interface),
+		Classes:    make(map[string]*declaration.Class),
 	}
 	d.Modifier = modifier
 	d.Custom = attributes
@@ -150,6 +167,30 @@ func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declar
 				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", name))
 			}
 			d.Functions[name] = f
+
+		case token.Enum:
+			e := p.parseEnum(modifier, attr)
+			name := e.Name.Name
+			if _, ok := d.Enums[name]; ok {
+				p.error(e.Name.Position, fmt.Sprintf("enum %s redeclared", name))
+			}
+			d.Enums[name] = e
+
+		case token.Interface:
+			i := p.parseInterface(modifier, attr)
+			name := i.Name.Name
+			if _, ok := d.Interfaces[name]; ok {
+				p.error(i.Name.Position, fmt.Sprintf("interface %s redeclared", name))
+			}
+			d.Interfaces[name] = i
+
+		case token.Class:
+			c := p.parseClass(modifier, attr)
+			name := c.Name.Name
+			if _, ok := d.Classes[name]; ok {
+				p.error(c.Name.Position, fmt.Sprintf("class %s redeclared", name))
+			}
+			d.Classes[name] = c
 
 		default:
 			p.expectedError(p.position, "declaration")

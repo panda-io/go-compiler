@@ -13,18 +13,17 @@ func (p *Parser) parseProgram() {
 	if len(m) > 0 {
 		program.Custom = append(program.Custom, m...)
 	}
-	m = p.parseAttributes()
 
 	if p.token == token.Import {
 		if len(m) > 0 {
 			p.error(m[0].Position, "import should not contain attributes")
 		}
 		p.parseImport()
-		m = p.parseAttributes()
 	}
 
 	for p.token != token.EOF {
 		modifier := p.parseModifier()
+		m = p.parseAttributes()
 		switch p.token {
 		case token.Const, token.Var:
 			v := p.parseVariable(modifier, m)
@@ -88,13 +87,30 @@ func (p *Parser) parseProgram() {
 					}
 					c.Functions[n] = f
 				}
+				for n, e := range existing.Enums {
+					if _, ok := c.Enums[n]; ok {
+						p.error(e.Name.Position, fmt.Sprintf("class member %s's is redeclared", n))
+					}
+					c.Enums[n] = e
+				}
+				for n, i := range existing.Interfaces {
+					if _, ok := c.Interfaces[n]; ok {
+						p.error(i.Name.Position, fmt.Sprintf("class member %s's is redeclared", n))
+					}
+					c.Interfaces[n] = i
+				}
+				for n, cc := range existing.Classes {
+					if _, ok := c.Classes[n]; ok {
+						p.error(cc.Name.Position, fmt.Sprintf("class member %s's is redeclared", n))
+					}
+					c.Classes[n] = cc
+				}
 			}
 			program.Classes[name] = c
 
 		default:
 			p.expectedError(p.position, "declaration")
 		}
-		m = p.parseAttributes()
 	}
 }
 
