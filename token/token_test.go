@@ -50,6 +50,19 @@ func TestOperators(t *testing.T) {
 
 	o, _ = ReadOperator([]byte("+++++"))
 	assertEqual(t, o, PlusPlus)
+
+	assertEqual(t, Assign.Precedence(), 1)
+	assertEqual(t, Question.Precedence(), 2)
+	assertEqual(t, Or.Precedence(), 3)
+	assertEqual(t, And.Precedence(), 4)
+	assertEqual(t, BitOr.Precedence(), 5)
+	assertEqual(t, BitXor.Precedence(), 6)
+	assertEqual(t, BitAnd.Precedence(), 7)
+	assertEqual(t, Equal.Precedence(), 8)
+	assertEqual(t, Less.Precedence(), 9)
+	assertEqual(t, LeftShift.Precedence(), 10)
+	assertEqual(t, Plus.Precedence(), 11)
+	assertEqual(t, Mul.Precedence(), 12)
 }
 
 func TestPosition(t *testing.T) {
