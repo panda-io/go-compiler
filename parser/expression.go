@@ -41,7 +41,7 @@ func (p *Parser) parseOperand() expression.Expression {
 		return e
 
 	case token.Base:
-		e := &expression.Base{}
+		e := &expression.Super{}
 		e.Position = p.position
 		p.next()
 		return e
@@ -109,7 +109,7 @@ func (p *Parser) parsePrimaryExpression() expression.Expression {
 
 func (p *Parser) parseUnaryExpression() expression.Expression {
 	switch p.token {
-	case token.Plus, token.Minus, token.Not, token.BitXor:
+	case token.Plus, token.Minus, token.Not, token.Complement:
 		e := &expression.Unary{}
 		e.Position = p.position
 		e.Operator = p.token
