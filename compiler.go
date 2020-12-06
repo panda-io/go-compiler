@@ -1,41 +1,52 @@
 package main
 
 import (
-	"crypto/md5"
-	"fmt"
-	"go/token"
 	"io/ioutil"
 
-	"github.com/panda-foundation/go-compiler/ast/expression"
-	"github.com/panda-foundation/go-compiler/ast/statement"
+	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/parser"
+	"github.com/panda-foundation/go-compiler/resolver"
+	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) ParseExpression(file token.File, source []byte) expression.Expression {
-	file := p.files.AddFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
-	p.scanner.SetFile(file, source)
-	p.next()
-	return p.parseExpression()
+type Compiler struct {
+	parser   *parser.Parser
+	resolver *resolver.Resolver
+	fileset  *token.FileSet
+	sources  map[string]*ast.SoureFile
 }
 
-func (p *Parser) ParseCompoundStatement(source []byte) statement.Statement {
-	file := p.files.AddFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
-	p.scanner.SetFile(file, source)
-	p.next()
-	return p.parseCompoundStatement()
+func NewCompiler(flags []string) *Compiler {
+	return &Compiler{
+		parser:   parser.NewParser(flags),
+		resolver: resolver.NewResolver(),
+		fileset:  &token.FileSet{},
+		sources:  make(map[string]*ast.SoureFile),
+	}
 }
 
-func (p *Parser) ParseBytes(source []byte) {
-	file := p.files.AddFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
-	p.parse(file, source)
-}
+//TO-DO add project config or folder as project
 
-func (p *Parser) ParseFile(fileName string) {
-	source, err := ioutil.ReadFile(fileName)
+func (c *Compiler) ParseFile(file string) {
+	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
-	file := p.files.AddFile(fileName, len(source))
-	p.parse(file, source)
+	f := c.fileset.AddFile(file, len(b))
+	c.sources[f.Name] = c.parser.ParseFile(f, b)
+}
+
+func (c *Compiler) Generate() {
+	c.fileset.Walk(c.declare)
+	c.fileset.Walk(c.resolve)
+}
+
+func (c *Compiler) declare(f *token.File) {
+	c.resolver.Declare(f, c.sources[f.Name])
+}
+
+func (c *Compiler) resolve(f *token.File) {
+	c.resolver.Resolve(f, c.sources[f.Name])
 }
 
 /*

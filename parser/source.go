@@ -2,9 +2,9 @@ package parser
 
 import (
 	"fmt"
+
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/token"
-	"strings"
 )
 
 func (p *Parser) parseSourceFile() *ast.SoureFile {
@@ -68,7 +68,7 @@ func (p *Parser) parseNamespace() string {
 	}
 	namespace := p.parseQualifiedName("")
 	p.expect(token.Semi)
-	return strings.Join(namespace, ".")
+	return namespace
 }
 
 func (p *Parser) parseUsing() []*ast.Using {
@@ -82,7 +82,7 @@ func (p *Parser) parseUsing() []*ast.Using {
 			p.next()
 			name = p.parseIdentifier()
 		}
-		u.Namespace = strings.Join(p.parseQualifiedName(name.Name), ".")
+		u.Namespace = p.parseQualifiedName(name.Name)
 		p.expect(token.Semi)
 		using = append(using, u)
 	}

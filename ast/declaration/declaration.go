@@ -12,15 +12,15 @@ type Declaration interface {
 	node.Node
 	declaration()
 	Identifier() string
+	IsPublic() bool
 }
 
 type Modifier struct {
 	Public bool
-	Static bool
 }
 
 func (m0 *Modifier) Equal(m1 *Modifier) bool {
-	return m0.Public == m1.Public && m0.Static == m1.Static
+	return m0.Public == m1.Public
 }
 
 type Attribute struct {
@@ -38,6 +38,13 @@ type Base struct {
 }
 
 func (*Base) declaration() {}
+
+func (b *Base) IsPublic() bool {
+	if b.Modifier == nil {
+		return false
+	}
+	return b.Modifier.Public
+}
 
 type Variable struct {
 	Base

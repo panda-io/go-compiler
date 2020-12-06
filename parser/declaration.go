@@ -164,10 +164,6 @@ func (p *Parser) parseModifier() *declaration.Modifier {
 		m.Public = true
 		p.next()
 	}
-	if p.token == token.Static {
-		m.Static = true
-		p.next()
-	}
 	return m
 }
 

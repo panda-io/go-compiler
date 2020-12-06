@@ -1,4 +1,4 @@
-package parser
+package resolver
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/types"
@@ -37,8 +37,7 @@ func NewObject(kind ObjectKind, name string) *Object {
 type ObjectKind int
 
 const (
-	PackageObject ObjectKind = iota
-	VariableObject
+	VariableObject ObjectKind = iota
 	ClassObject
 	InterfaceObject
 	EnumObject

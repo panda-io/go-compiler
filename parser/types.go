@@ -156,22 +156,14 @@ func (p *Parser) parseArguments() *types.Arguments {
 	return t
 }
 
-func (p *Parser) parseQualifiedName(identifier string) []string {
+func (p *Parser) parseQualifiedName(identifier string) string {
 	if identifier == "" {
 		identifier = p.parseIdentifier().Name
 	}
-	qualifiedName := []string{identifier}
+	qualifiedName := identifier
 	for p.token == token.Dot {
 		p.next()
-		qualifiedName = append(qualifiedName, p.parseIdentifier().Name)
+		qualifiedName += "." + p.parseIdentifier().Name
 	}
 	return qualifiedName
 }
-
-type TypeKind int
-
-const (
-	ClassType TypeKind = iota
-	InterfaceType
-	EnumType
-)

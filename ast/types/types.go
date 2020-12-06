@@ -23,10 +23,8 @@ type BuitinType struct {
 
 type TypeName struct {
 	Base
-	QualifiedName []string
+	QualifiedName string
 	TypeArguments *TypeArguments
-	Name          string
-	Namespace     string
 }
 
 type TypeArguments struct {

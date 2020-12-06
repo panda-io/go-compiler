@@ -1,28 +1,16 @@
 package main
 
-/*
 import (
-	"bytes"
-	"io/ioutil"
-	"os/exec"
 	"testing"
 )
 
-func TestPanda(t *testing.T) {
-	parser := NewParser(true, nil)
-	parser.ParseFile("../compiler/main.pd")
-	parser.ParseFile("../compiler/token/token.pd")
-	parser.ParseFile("../panda/collection/vector.pd")
-	p := parser.GetProgram()
+func TestVector(t *testing.T) {
+	c := NewCompiler([]string{"cpp"})
 
-	buff := bytes.NewBuffer(nil)
-	p.Print(buff)
+	c.ParseFile("../panda/console.pd")
+	c.ParseFile("../panda/collection/vector.pd")
+	c.ParseFile("./test/vector.pd")
+	c.Generate()
 
-	ioutil.WriteFile("../compiler/panda.cpp", buff.Bytes(), 0644)
-
-	cmd := exec.Command("g++", "-o", "../compiler/panda", "../compiler/panda.cpp")
-	err := cmd.Run()
-	if err != nil {
-		t.Error("compile failed:", err)
-	}
-}*/
+	t.Fail()
+}

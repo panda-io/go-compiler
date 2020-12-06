@@ -1,61 +1,93 @@
-package parser
+package resolver
 
 import (
 	"fmt"
+
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/ast/declaration"
 	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/token"
 )
 
-type Resolver struct {
-	parser   *Parser
-	global   *ast.Package
-	declared map[string]TypeKind
+/********************************
+global -> package -> class -> function -> statement
+variable
+function
+interface
+enum
+class
+*********************************/
 
-	using          []*ast.Package
-	currentPackage *ast.Package
-	currentClass   *declaration.Class
-	currentScope   *Scope // function, statement
+type Declaration struct {
+	Kind   ObjectKind
+	Public bool
 }
 
-func NewResolver(p *Parser) *Resolver {
+type Error struct {
+	Position *token.Position
+	Message  string
+}
+
+type Resolver struct {
+	declarations map[string]*Declaration
+
+	//global->package->class->function->statement
+
+	errors []*Error
+}
+
+func NewResolver() *Resolver {
 	return &Resolver{
-		parser:   p,
-		global:   p.Program(),
-		declared: make(map[string]TypeKind),
+		declarations: make(map[string]*Declaration),
 	}
 }
 
-func (r *Resolver) Resolve(p *ast.Package) {
-	r.declare(p)
-	r.resolve(p)
+func (r *Resolver) Declare(f *token.File, s *ast.SoureFile) {
+	r.declare(f, s)
 }
 
-func (r *Resolver) declare(p *ast.Package) {
-	ns := p.Namespace()
+func (r *Resolver) Resolve(f *token.File, s *ast.SoureFile) {
+	r.resolve(f, s)
+}
+
+func (r *Resolver) error(f *token.File, offset int, message string) {
+	r.errors = append(r.errors, &Error{
+		Position: f.Position(offset),
+		Message:  message,
+	})
+}
+
+func (r *Resolver) declare(f *token.File, p *ast.SoureFile) {
 	for _, m := range p.Members {
-		switch t := m.(type) {
+		d := &Declaration{}
+		d.Public = m.IsPublic()
+		switch m.(type) {
+		case *declaration.Variable:
+			d.Kind = VariableObject
+		case *declaration.Function:
+			d.Kind = FunctionObject
 		case *declaration.Enum:
-			r.declared[ns+t.Name.Name] = EnumType
+			d.Kind = EnumObject
 		case *declaration.Interface:
-			r.declared[ns+t.Name.Name] = InterfaceType
+			d.Kind = InterfaceObject
 		case *declaration.Class:
-			r.declared[ns+t.Name.Name] = ClassType
+			d.Kind = ClassObject
+		}
+		qualifiedName := m.Identifier()
+		if p.Namespace != "" {
+			qualifiedName = p.Namespace + "." + qualifiedName
+		}
+		if _, ok := r.declarations[qualifiedName]; ok {
+			r.error(f, m.GetPosition(), fmt.Sprintf("%s redeclared", m.Identifier()))
+		} else {
+			r.declarations[qualifiedName] = d
 		}
 	}
-	for _, c := range p.Children {
-		r.declare(c)
-	}
 }
 
-func (r *Resolver) resolve(p *ast.Package) {
-	r.currentPackage = p
-
-	for _, m := range p.Members {
+func (r *Resolver) resolve(f *token.File, s *ast.SoureFile) {
+	for _, m := range s.Members {
 		r.resolveMember(m)
-	}
-	for _, c := range p.Children {
-		r.resolve(c)
 	}
 }
 
@@ -77,7 +109,7 @@ func (r *Resolver) resolveType(typ types.Type) {
 		// no need to resolve for builtin type
 
 	case *types.TypeName:
-		fmt.Println("::", t.QualifiedName)
+		fmt.Println("resolve :", t.QualifiedName)
 
 	}
 }

@@ -3,7 +3,6 @@ package parser
 import (
 	"crypto/md5"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/ast/declaration"
@@ -21,14 +20,11 @@ func NewParser(flags []string) *Parser {
 	return p
 }
 
-type parserState struct {
+type Parser struct {
 	position int
 	token    token.Token
 	literal  string
-}
 
-type Parser struct {
-	parserState
 	scanner *scanner.Scanner
 }
 
@@ -50,11 +46,7 @@ func (p *Parser) ParseBytes(source []byte) *ast.SoureFile {
 	return p.parseSourceFile()
 }
 
-func (p *Parser) ParseFile(file *token.File, path string) *ast.SoureFile {
-	source, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
+func (p *Parser) ParseFile(file *token.File, source []byte) *ast.SoureFile {
 	p.setSource(file, source)
 	return p.parseSourceFile()
 }

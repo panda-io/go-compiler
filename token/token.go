@@ -39,8 +39,6 @@ const (
 	Namespace
 	Public
 	Return
-	Static
-	Super
 	Switch
 	This
 	Throw
@@ -151,8 +149,6 @@ var (
 		Namespace: "namespace",
 		Public:    "public",
 		Return:    "return",
-		Static:    "static",
-		Super:     "super",
 		Switch:    "switch",
 		This:      "this",
 		Throw:     "throw",

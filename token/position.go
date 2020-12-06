@@ -4,6 +4,8 @@ import (
 	"fmt"
 )
 
+type WalkFile func(*File)
+
 type Position struct {
 	file   *File
 	offset int
@@ -108,4 +110,10 @@ func (s *FileSet) Position(position int) *Position {
 		return f.Position(position - f.Base)
 	}
 	return nil
+}
+
+func (s *FileSet) Walk(w WalkFile) {
+	for _, f := range s.files {
+		w(f)
+	}
 }
