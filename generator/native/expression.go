@@ -1,4 +1,4 @@
-package cpp
+package native
 
 import "github.com/panda-foundation/go-compiler/token"
 

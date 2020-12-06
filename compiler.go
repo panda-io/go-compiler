@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 
 	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/generator/native"
 	"github.com/panda-foundation/go-compiler/parser"
 	"github.com/panda-foundation/go-compiler/resolver"
 	"github.com/panda-foundation/go-compiler/token"
@@ -14,6 +15,7 @@ type Compiler struct {
 	resolver *resolver.Resolver
 	fileset  *token.FileSet
 	sources  map[string]*ast.SoureFile
+	program  *ast.Program
 }
 
 func NewCompiler(flags []string) *Compiler {
@@ -36,9 +38,17 @@ func (c *Compiler) ParseFile(file string) {
 	c.sources[f.Name] = c.parser.ParseFile(f, b)
 }
 
-func (c *Compiler) Generate() {
+func (c *Compiler) Generate(file string) {
 	c.fileset.Walk(c.declare)
 	c.fileset.Walk(c.resolve)
+	//TO-DO validate
+
+	c.program = ast.NewProgram()
+	for _, s := range c.sources {
+		c.program.AddSource(s)
+	}
+	//TO-DO sort members and package
+	native.Write(c.program, c.fileset, file)
 }
 
 func (c *Compiler) declare(f *token.File) {

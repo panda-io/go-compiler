@@ -10,7 +10,7 @@ func TestVector(t *testing.T) {
 	c.ParseFile("../panda/console.pd")
 	c.ParseFile("../panda/collection/vector.pd")
 	c.ParseFile("./test/vector.pd")
-	c.Generate()
+	c.Generate("./test/main.cpp")
 
 	t.Fail()
 }
