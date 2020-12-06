@@ -21,14 +21,10 @@ func assertEqual(t *testing.T, a interface{}, b interface{}) {
 	}
 }
 
-func handleError(position int, message string) {
-	panic(message)
-}
-
 func TestBasic(t *testing.T) {
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`identifier 100 100.0 "string" 'c' @ ++ .5 .;/=.`))
 	_, tok, literal := s.Scan()
@@ -78,13 +74,13 @@ func TestBasic(t *testing.T) {
 	assertEqual(t, tok, token.IDENT)
 	assertEqual(t, literal, "newline")
 
-	assertEqual(t, s.GetFileName(), "file.pd")
+	s.Position(10)
 }
 
 func TestNumber(t *testing.T) {
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("0xabcd 0o1234 0b1010 0"))
 	_, tok, literal := s.Scan()
@@ -104,7 +100,7 @@ func TestNumber(t *testing.T) {
 func TestPreprocessor(t *testing.T) {
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, []string{"windows", "opengl"})
+	s := NewScanner([]string{"windows", "opengl"})
 
 	src := `
 	#if windows
@@ -168,7 +164,7 @@ func TestPreprocessor(t *testing.T) {
 func TestStringEscape(t *testing.T) {
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`"hello\n\r\x1b\123\u1234\U0001FFFF"`))
 	_, tok, literal := s.Scan()
@@ -179,7 +175,7 @@ func TestStringEscape(t *testing.T) {
 func TestCharEscape(t *testing.T) {
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`'c' '\x1b' '\123' '\U0001FFFF'`))
 	_, tok, literal := s.Scan()
@@ -193,7 +189,7 @@ func TestCharEscape(t *testing.T) {
 func TestUnicode(t *testing.T) {
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("\uFEFFhello\n"))
 	_, tok, literal := s.Scan()
@@ -211,7 +207,7 @@ func TestNullChar(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte{0})
 	s.Scan()
@@ -226,7 +222,7 @@ func TestInvalidChar1(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`'\abc'`))
 	s.Scan()
@@ -241,7 +237,7 @@ func TestInvalidChar2(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`'\xxx'`))
 	s.Scan()
@@ -256,7 +252,7 @@ func TestInvalidUnicode1(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("\x80\uFEFF"))
 	s.Scan()
@@ -271,7 +267,7 @@ func TestInvalidUnicode2(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`"\U00FFFFFF"`))
 	s.Scan()
@@ -286,7 +282,7 @@ func TestInvalidUnicode3(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("abc\uFEFF"))
 	_, tok, literal := s.Scan()
@@ -304,7 +300,7 @@ func TestInvalidNumber1(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("00"))
 	s.Scan()
@@ -319,7 +315,7 @@ func TestInvalidNumber2(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("0x"))
 	s.Scan()
@@ -334,7 +330,7 @@ func TestInvalidNumber3(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("0xabc.0"))
 	s.Scan()
@@ -349,7 +345,7 @@ func TestInvalidNumber4(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("100."))
 	s.Scan()
@@ -364,7 +360,7 @@ func TestInvalidNumber5(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`"\0FF"`))
 	s.Scan()
@@ -379,7 +375,7 @@ func TestInvalidString(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`"\`))
 	s.Scan()
@@ -394,7 +390,7 @@ func TestUnterminatedComment(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("/* comment"))
 	s.Scan()
@@ -409,7 +405,7 @@ func TestUnterminatedString(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`"abc`))
 	s.Scan()
@@ -424,7 +420,7 @@ func TestUnterminatedChar(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte(`'`))
 	s.
@@ -440,7 +436,7 @@ func TestUnterminatedRawString(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("`abc"))
 	s.Scan()
@@ -455,7 +451,7 @@ func TestInvalidPreprocessor0(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, []string{"flag"})
+	s := NewScanner([]string{"flag"})
 
 	s.SetFile(f, []byte("#if flag\n"))
 	s.Scan()
@@ -470,7 +466,7 @@ func TestInvalidPreprocessor1(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#100\n#end\n"))
 	s.Scan()
@@ -485,7 +481,7 @@ func TestInvalidPreprocessor2(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#other\n#end\n"))
 	s.Scan()
@@ -500,7 +496,7 @@ func TestInvalidPreprocessor3(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if flag\n#else\n#elif other_flag\n#end"))
 	s.Scan()
@@ -515,7 +511,7 @@ func TestInvalidPreprocessor4(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if flag1 flag2\n#end"))
 	s.Scan()
@@ -530,7 +526,7 @@ func TestInvalidPreprocessor5(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if flag\n#else\n#else\n#end"))
 	s.Scan()
@@ -545,7 +541,7 @@ func TestInvalidPreprocessor6(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#end"))
 	s.Scan()
@@ -560,7 +556,7 @@ func TestInvalidPreprocessor7(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if 100\n#end"))
 	s.Scan()
@@ -575,7 +571,7 @@ func TestInvalidPreprocessor8(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if flag\n"))
 	s.Scan()
@@ -590,7 +586,7 @@ func TestInvalidPreprocessor9(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if flag\n #if other_flag\n #else\n #else\n #end\n #end\n"))
 	s.Scan()
@@ -605,7 +601,7 @@ func TestInvalidPreprocessor10(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if flag\n #if other_flag\n #else\n #elif\n #end\n #end\n"))
 	s.Scan()
@@ -620,7 +616,7 @@ func TestInvalidPreprocessor11(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if flag\n#ifn other_flag\n#end\n#end\n"))
 	s.Scan()
@@ -635,7 +631,7 @@ func TestInvalidPreprocessor12(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("#if flag\n#100\n#end\n#end\n"))
 	s.Scan()
@@ -650,7 +646,7 @@ func TestInvalidToken(t *testing.T) {
 
 	fs := &token.FileSet{}
 	f := fs.AddFile("file.pd", 100)
-	s := NewScanner(handleError, nil)
+	s := NewScanner(nil)
 
 	s.SetFile(f, []byte("你好"))
 	s.Scan()

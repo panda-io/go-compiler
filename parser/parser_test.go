@@ -21,21 +21,21 @@ func assertEqual(t *testing.T, a interface{}, b interface{}) {
 
 func TestStatement(t *testing.T) {
 	p := NewParser([]string{"cpp"})
-	p.ParseCompoundStatement([]byte("{i++;}"))
-	p.ParseCompoundStatement([]byte("{;var i int = 1; var j float = 1.0; i++; j = i + 1; return i;}"))
-	p.ParseCompoundStatement([]byte("{{var i int = 0;}}"))
-	p.ParseCompoundStatement([]byte("{for(;;){break;}}"))
-	p.ParseCompoundStatement([]byte("{for{break;}}"))
-	p.ParseCompoundStatement([]byte("{for(var i = 0; i < 10; i++){break;}}"))
-	p.ParseCompoundStatement([]byte("{for(var i = 0; i < 10){ i++; }}"))
-	p.ParseCompoundStatement([]byte("{for(var item : items) { print(item); }}"))
-	p.ParseCompoundStatement([]byte("{for(var key; var value : values) { print(key); }}"))
-	p.ParseCompoundStatement([]byte("{if (a == 1) {} else if (a == 2) {} else {}}"))
-	p.ParseCompoundStatement([]byte("{if (true) {} else do_something();}"))
-	p.ParseCompoundStatement([]byte("{switch(a.b.c){case 1: do_something(); case 2:{} default:{}}}"))
-	p.ParseCompoundStatement([]byte("{try{}catch(e exception){}finally{}}"))
-	p.ParseCompoundStatement([]byte("{throw \"some message\";}"))
-	p.ParseCompoundStatement([]byte("{@\"raw source\"}"))
+	p.ParseStatements([]byte("{i++;}"))
+	p.ParseStatements([]byte("{;var i int = 1; var j float = 1.0; i++; j = i + 1; return i;}"))
+	p.ParseStatements([]byte("{{var i int = 0;}}"))
+	p.ParseStatements([]byte("{for(;;){break;}}"))
+	p.ParseStatements([]byte("{for{break;}}"))
+	p.ParseStatements([]byte("{for(var i = 0; i < 10; i++){break;}}"))
+	p.ParseStatements([]byte("{for(var i = 0; i < 10){ i++; }}"))
+	p.ParseStatements([]byte("{for(var item : items) { print(item); }}"))
+	p.ParseStatements([]byte("{for(var key; var value : values) { print(key); }}"))
+	p.ParseStatements([]byte("{if (a == 1) {} else if (a == 2) {} else {}}"))
+	p.ParseStatements([]byte("{if (true) {} else do_something();}"))
+	p.ParseStatements([]byte("{switch(a.b.c){case 1: do_something(); case 2:{} default:{}}}"))
+	p.ParseStatements([]byte("{try{}catch(e exception){}finally{}}"))
+	p.ParseStatements([]byte("{throw \"some message\";}"))
+	p.ParseStatements([]byte("{@\"raw source\"}"))
 }
 
 func TestStatementFail1(t *testing.T) {
@@ -45,7 +45,7 @@ func TestStatementFail1(t *testing.T) {
 		}
 	}()
 	p := NewParser([]string{"cpp"})
-	p.ParseCompoundStatement([]byte("{@what}"))
+	p.ParseStatements([]byte("{@what}"))
 }
 
 func TestDeclaration(t *testing.T) {
@@ -53,9 +53,8 @@ func TestDeclaration(t *testing.T) {
 	p.ParseBytes([]byte("@doc \"some package doc\" \nnamespace; var i int = 1; function print() { console.print_line(i); }"))
 	p.ParseBytes([]byte("namespace; @meta(a = true, b = \"yes\", c = 1) \npublic enum test { blue, yello, red = 10 }"))
 	p.ParseBytes([]byte("namespace; interface ia {} interface ib : ia {}"))
-	p.ParseBytes([]byte("namespace; public interface x<type> { function print(); public interface nested { function hello(); } }"))
+	p.ParseBytes([]byte("namespace; public interface x<type> { function print(); }"))
 	p.ParseBytes([]byte("namespace; public class a {} public class b<type> : a, x<type> { public var e int = 100; public function print<t>() void {} function ~b(){}}"))
-	p.ParseBytes([]byte("namespace; public class c { public class nested { public enum color { blue, green, red = 10 } public static var value int; public interface ii {}}}"))
 }
 
 func TestDeclarationFail1(t *testing.T) {
@@ -115,5 +114,5 @@ func TestNamespace(t *testing.T) {
 
 func TestExpression(t *testing.T) {
 	p := NewParser([]string{"cpp"})
-	p.ParseCompoundStatement([]byte("{ this.call_back(); var a = new vector<int>(); }"))
+	p.ParseStatements([]byte("{ this.call_back(); var a = new vector<int>(); }"))
 }

@@ -25,6 +25,8 @@ type TypeName struct {
 	Base
 	QualifiedName []string
 	TypeArguments *TypeArguments
+	Name          string
+	Namespace     string
 }
 
 type TypeArguments struct {

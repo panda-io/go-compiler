@@ -30,16 +30,11 @@ type Attribute struct {
 	Values   map[string]*expression.Literal
 }
 
-type Attributes struct {
-	Resolved []*Attribute
-	Custom   []*Attribute
-}
-
 type Base struct {
 	node.Base
-	Attributes
-	Modifier  *Modifier
-	Namespace []string
+	Attributes []*Attribute
+	Modifier   *Modifier
+	Namespace  []string
 }
 
 func (*Base) declaration() {}

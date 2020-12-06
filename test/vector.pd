@@ -2,9 +2,11 @@ namespace;
 
 using collection;
 
+var v vector<int>;
+
 function main()
 {
-    var v = new vector<int>();
+    v = new vector<int>();
     console.print_line(v.size());
     v.push(1);
     v.push(2);

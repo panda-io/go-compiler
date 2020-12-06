@@ -82,6 +82,10 @@ func TestPosition(t *testing.T) {
 	assertEqual(t, s.Position(112).file, f2)
 	assertEqual(t, s.File(1000), nil)
 	assertEqual(t, s.Position(1000), nil)
+
+	s.UpdateFile("file2.pd", 200)
+	assertEqual(t, s.base, 403)
+	assertEqual(t, s.Position(212).file, f2)
 }
 
 func TestAddSameFile(t *testing.T) {

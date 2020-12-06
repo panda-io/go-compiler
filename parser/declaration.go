@@ -11,7 +11,7 @@ import (
 func (p *Parser) parseVariable(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Variable {
 	d := &declaration.Variable{}
 	d.Modifier = modifier
-	d.Custom = attributes
+	d.Attributes = attributes
 	d.Token = p.token
 	p.next()
 	d.Name = p.parseIdentifier()
@@ -29,7 +29,7 @@ func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*dec
 	d := &declaration.Function{}
 	d.Class = class
 	d.Modifier = modifier
-	d.Custom = attributes
+	d.Attributes = attributes
 	p.next()
 	tilde := false
 	if p.token == token.Complement {
@@ -64,7 +64,7 @@ func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*dec
 func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Enum {
 	d := &declaration.Enum{}
 	d.Modifier = modifier
-	d.Custom = attributes
+	d.Attributes = attributes
 	p.next()
 	d.Name = p.parseIdentifier()
 	p.expect(token.LeftBrace)
@@ -91,7 +91,7 @@ func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declara
 func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Interface {
 	d := &declaration.Interface{}
 	d.Modifier = modifier
-	d.Custom = attributes
+	d.Attributes = attributes
 	p.next()
 	d.Name = p.parseIdentifier()
 	if p.token == token.Less {
@@ -111,14 +111,6 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
 			}
 			d.Members = append(d.Members, m)
-
-		case token.Interface:
-			m := p.parseInterface(modifier, attr)
-			if p.redeclared(m.Name.Name, d.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("interface %s redeclared", m.Name.Name))
-			}
-			d.Members = append(d.Members, m)
-
 		default:
 			p.expectedError(p.position, "declaration")
 		}
@@ -130,7 +122,7 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Class {
 	d := &declaration.Class{}
 	d.Modifier = modifier
-	d.Custom = attributes
+	d.Attributes = attributes
 	p.next()
 	d.Name = p.parseIdentifier()
 	if p.token == token.Less {
@@ -155,27 +147,6 @@ func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declar
 			m := p.parseFunction(modifier, attr, d)
 			if p.redeclared(m.Name.Name, d.Members) {
 				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
-			}
-			d.Members = append(d.Members, m)
-
-		case token.Enum:
-			m := p.parseEnum(modifier, attr)
-			if p.redeclared(m.Name.Name, d.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("enum %s redeclared", m.Name.Name))
-			}
-			d.Members = append(d.Members, m)
-
-		case token.Interface:
-			m := p.parseInterface(modifier, attr)
-			if p.redeclared(m.Name.Name, d.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("interface %s redeclared", m.Name.Name))
-			}
-			d.Members = append(d.Members, m)
-
-		case token.Class:
-			m := p.parseClass(modifier, attr)
-			if p.redeclared(m.Name.Name, d.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("class %s redeclared", m.Name.Name))
 			}
 			d.Members = append(d.Members, m)
 

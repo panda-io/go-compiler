@@ -167,3 +167,11 @@ func (p *Parser) parseQualifiedName(identifier string) []string {
 	}
 	return qualifiedName
 }
+
+type TypeKind int
+
+const (
+	ClassType TypeKind = iota
+	InterfaceType
+	EnumType
+)

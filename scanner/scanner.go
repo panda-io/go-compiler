@@ -28,27 +28,21 @@ type preprocessor struct {
 	satisfied    bool
 }
 
-type ErrorHandler func(int, string)
-
 type Scanner struct {
 	file   *token.File
 	source []byte
 
-	errorHandler ErrorHandler
-
-	flags              map[string]bool // flags for condition compiler
-	preprocessorLevel  int             // for nested flag
-	preprocessorStatus []*preprocessor
+	flags             map[string]bool // flags for condition compiler
+	preprocessorLevel int             // for nested flag
+	preprocessorStack []*preprocessor
 
 	char       rune
 	offset     int
 	readOffset int
 }
 
-func NewScanner(handler ErrorHandler, flags []string) *Scanner {
-	s := &Scanner{
-		errorHandler: handler,
-	}
+func NewScanner(flags []string) *Scanner {
+	s := &Scanner{}
 	s.flags = make(map[string]bool)
 	for _, flag := range flags {
 		s.flags[flag] = true
@@ -61,7 +55,7 @@ func (s *Scanner) SetFile(file *token.File, source []byte) {
 	s.source = source
 
 	s.preprocessorLevel = 0
-	s.preprocessorStatus = s.preprocessorStatus[:0]
+	s.preprocessorStack = s.preprocessorStack[:0]
 	s.char = ' '
 	s.offset = 0
 	s.readOffset = 0
@@ -72,9 +66,8 @@ func (s *Scanner) SetFile(file *token.File, source []byte) {
 	}
 }
 
-// GetFileName return source file name
-func (s *Scanner) GetFileName() string {
-	return s.file.Name
+func (s *Scanner) Position(offset int) *token.Position {
+	return s.file.Position(offset)
 }
 
 func (s *Scanner) next() {
@@ -115,9 +108,7 @@ func (s *Scanner) peek() byte {
 }
 
 func (s *Scanner) error(offset int, message string) {
-	if s.errorHandler != nil {
-		s.errorHandler(s.file.Base+offset, message)
-	}
+	panic(fmt.Sprintf("error: %s \n %s \n", s.file.Position(offset).String(), message))
 }
 
 func (s *Scanner) scanComment() string {
@@ -338,43 +329,43 @@ func (s *Scanner) scanPreprossesor() (int, token.Token, string) {
 	literal := s.scanIdentifier()
 	if literal == preprocessorIf {
 		s.preprocessorLevel++
-		s.preprocessorStatus = append(s.preprocessorStatus, &preprocessor{
+		s.preprocessorStack = append(s.preprocessorStack, &preprocessor{
 			currentBlock: preprocessorIf,
 			satisfied:    false,
 		})
 
 		result := s.scanPreprossesorExpression()
 		if result {
-			s.preprocessorStatus[s.preprocessorLevel-1].satisfied = true
+			s.preprocessorStack[s.preprocessorLevel-1].satisfied = true
 		} else {
 			s.skipPreprossesor()
 		}
 	} else if literal == preprocessorElseIf {
-		if s.preprocessorLevel == 0 || s.preprocessorStatus[s.preprocessorLevel-1].currentBlock == preprocessorElse {
+		if s.preprocessorLevel == 0 || s.preprocessorStack[s.preprocessorLevel-1].currentBlock == preprocessorElse {
 			s.error(s.offset, "unexpected #elif")
-		} else if s.preprocessorStatus[s.preprocessorLevel-1].satisfied {
+		} else if s.preprocessorStack[s.preprocessorLevel-1].satisfied {
 			s.skipPreprossesor()
 		} else {
 			if s.scanPreprossesorExpression() {
-				s.preprocessorStatus[s.preprocessorLevel-1].satisfied = true
+				s.preprocessorStack[s.preprocessorLevel-1].satisfied = true
 			} else {
 				s.skipPreprossesor()
 			}
 		}
-		s.preprocessorStatus[s.preprocessorLevel-1].currentBlock = preprocessorElseIf
+		s.preprocessorStack[s.preprocessorLevel-1].currentBlock = preprocessorElseIf
 	} else if literal == preprocessorElse {
-		if s.preprocessorLevel == 0 || s.preprocessorStatus[s.preprocessorLevel-1].currentBlock == preprocessorElse {
+		if s.preprocessorLevel == 0 || s.preprocessorStack[s.preprocessorLevel-1].currentBlock == preprocessorElse {
 			s.error(s.offset, "unexpected #else")
-		} else if s.preprocessorStatus[s.preprocessorLevel-1].satisfied {
+		} else if s.preprocessorStack[s.preprocessorLevel-1].satisfied {
 			s.skipPreprossesor()
 		}
-		s.preprocessorStatus[s.preprocessorLevel-1].currentBlock = preprocessorElse
+		s.preprocessorStack[s.preprocessorLevel-1].currentBlock = preprocessorElse
 	} else if literal == preprocessorEnd {
 		if s.preprocessorLevel == 0 {
 			s.error(s.offset, "unexpected #end")
 		}
 		s.preprocessorLevel--
-		s.preprocessorStatus = s.preprocessorStatus[:s.preprocessorLevel]
+		s.preprocessorStack = s.preprocessorStack[:s.preprocessorLevel]
 	} else {
 		s.error(s.offset, "unexpected preprocessor: "+literal)
 	}
@@ -425,7 +416,7 @@ func (s *Scanner) skipPreprossesor() {
 
 			if literal == preprocessorIf {
 				s.preprocessorLevel++
-				s.preprocessorStatus = append(s.preprocessorStatus, &preprocessor{
+				s.preprocessorStack = append(s.preprocessorStack, &preprocessor{
 					currentBlock: preprocessorIf,
 					satisfied:    false,
 				})
@@ -436,10 +427,10 @@ func (s *Scanner) skipPreprossesor() {
 					s.char = '#'
 					break
 				}
-				if s.preprocessorStatus[s.preprocessorLevel-1].currentBlock == preprocessorElse {
+				if s.preprocessorStack[s.preprocessorLevel-1].currentBlock == preprocessorElse {
 					s.error(s.offset, "unexpected #elif")
 				}
-				s.preprocessorStatus[s.preprocessorLevel-1].currentBlock = preprocessorElseIf
+				s.preprocessorStack[s.preprocessorLevel-1].currentBlock = preprocessorElseIf
 			} else if literal == preprocessorElse {
 				if s.preprocessorLevel == level {
 					s.offset = offset
@@ -447,10 +438,10 @@ func (s *Scanner) skipPreprossesor() {
 					s.char = '#'
 					break
 				}
-				if s.preprocessorStatus[s.preprocessorLevel-1].currentBlock == preprocessorElse {
+				if s.preprocessorStack[s.preprocessorLevel-1].currentBlock == preprocessorElse {
 					s.error(s.offset, "unexpected #else")
 				}
-				s.preprocessorStatus[s.preprocessorLevel-1].currentBlock = preprocessorElse
+				s.preprocessorStack[s.preprocessorLevel-1].currentBlock = preprocessorElse
 			} else if literal == preprocessorEnd {
 				if s.preprocessorLevel == level {
 					s.offset = offset
@@ -459,7 +450,7 @@ func (s *Scanner) skipPreprossesor() {
 					break
 				}
 				s.preprocessorLevel--
-				s.preprocessorStatus = s.preprocessorStatus[:s.preprocessorLevel]
+				s.preprocessorStack = s.preprocessorStack[:s.preprocessorLevel]
 			} else {
 				s.error(s.offset, "unexpected preprocessor: "+literal)
 			}
@@ -496,7 +487,7 @@ func (s *Scanner) Scan() (position int, t token.Token, literal string) {
 		s.next()
 	}
 
-	position = s.offset + s.file.Base
+	position = s.offset
 
 	t = token.ILLEGAL
 	if s.isLetter(s.char) {

@@ -22,6 +22,14 @@ type File struct {
 	lines []int
 }
 
+func NewFile(filename string, size int) *File {
+	return &File{
+		Name:  filename,
+		Size:  size,
+		lines: []int{0},
+	}
+}
+
 func (f *File) AddLine(offset int) {
 	f.lines = append(f.lines, offset)
 }
@@ -61,15 +69,29 @@ func (s *FileSet) AddFile(filename string, size int) *File {
 			panic(fmt.Sprintf("file %s already added \n", filename))
 		}
 	}
-	f := &File{
-		Name:  filename,
-		Size:  size,
-		Base:  s.base,
-		lines: []int{0},
-	}
+	f := NewFile(filename, size)
+	f.Base = s.base
 	s.base += size + 1
 	s.files = append(s.files, f)
 	return f
+}
+
+func (s *FileSet) UpdateFile(filename string, size int) bool {
+	found := false
+	for _, f := range s.files {
+		if f.Name == filename {
+			found = true
+			f.Size = size
+		}
+	}
+	if found {
+		s.base = 0
+		for _, f := range s.files {
+			f.Base = s.base
+			s.base += f.Size + 1
+		}
+	}
+	return found
 }
 
 func (s *FileSet) File(position int) *File {
