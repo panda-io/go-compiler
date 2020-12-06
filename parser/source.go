@@ -66,7 +66,7 @@ func (p *Parser) parseNamespace() string {
 		p.next()
 		return ""
 	}
-	namespace := p.parseQualifiedName("")
+	namespace := p.parseName("")
 	p.expect(token.Semi)
 	return namespace
 }
@@ -82,7 +82,7 @@ func (p *Parser) parseUsing() []*ast.Using {
 			p.next()
 			name = p.parseIdentifier()
 		}
-		u.Namespace = p.parseQualifiedName(name.Name)
+		u.Namespace = p.parseName(name.Name)
 		p.expect(token.Semi)
 		using = append(using, u)
 	}

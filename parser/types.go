@@ -19,7 +19,7 @@ func (p *Parser) parseType() types.Type {
 func (p *Parser) parseTypeName() *types.TypeName {
 	t := &types.TypeName{}
 	t.Position = p.position
-	t.QualifiedName = p.parseQualifiedName("")
+	t.Name = p.parseName("")
 	if p.token == token.Less {
 		t.TypeArguments = p.parseTypeArguments()
 	}
@@ -156,7 +156,7 @@ func (p *Parser) parseArguments() *types.Arguments {
 	return t
 }
 
-func (p *Parser) parseQualifiedName(identifier string) string {
+func (p *Parser) parseName(identifier string) string {
 	if identifier == "" {
 		identifier = p.parseIdentifier().Name
 	}

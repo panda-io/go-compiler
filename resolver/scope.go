@@ -4,6 +4,9 @@ import (
 	"github.com/panda-foundation/go-compiler/ast/types"
 )
 
+//TO-DO scope check
+// use scope when start compound, if, for, switch, case, function
+
 type Scope struct {
 	Outer   *Scope
 	Objects map[string]*Object

@@ -6,7 +6,7 @@ var v vector<int>;
 
 function main()
 {
-    v = new vector<int>();
+    v = create_vector();
     console.print_line(v.size());
     v.push(1);
     v.push(2);
@@ -14,4 +14,9 @@ function main()
     var x = v.pop();
     console.print_line(x);
     console.print_line(v.size());
+}
+
+function create_vector() vector<int> 
+{
+    return new vector<int>();
 }

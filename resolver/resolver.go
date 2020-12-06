@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/ast/declaration"
@@ -31,6 +32,7 @@ type Error struct {
 type Resolver struct {
 	declarations map[string]*Declaration
 
+	//TO-DO scope
 	//global->package->class->function->statement
 
 	errors []*Error
@@ -87,41 +89,145 @@ func (r *Resolver) declare(f *token.File, p *ast.SoureFile) {
 
 func (r *Resolver) resolve(f *token.File, s *ast.SoureFile) {
 	for _, m := range s.Members {
-		r.resolveMember(m)
+		r.resolveMember(f, m, s)
 	}
 }
 
-func (r *Resolver) resolveMember(d declaration.Declaration) {
+func (r *Resolver) resolveMember(f *token.File, d declaration.Declaration, s *ast.SoureFile) {
 	switch m := d.(type) {
 	case *declaration.Variable:
-		r.resolveType(m.Type)
-
+		r.resolveType(f, m.Type, s)
+		// TO-DO validate const expr
 	case *declaration.Function:
+		if m.TypeParameters != nil {
+			r.resolveTypeParameters(f, m.TypeParameters, s)
+		}
+		if m.Parameters != nil {
+			r.resolveParameters(f, m.Parameters, s)
+		}
+		if m.ReturnType != nil {
+			r.resolveType(f, m.ReturnType, s)
+		}
+		// TO-DO resolve statements // local declaration //call, primary :: implement it with scope ?
 	case *declaration.Enum:
+		// TO-DO validate const expr
 	case *declaration.Interface:
+		if m.TypeParameters != nil {
+			r.resolveTypeParameters(f, m.TypeParameters, s)
+		}
+		r.resolveParents(f, m.Parents, s)
+		for _, mm := range m.Members {
+			r.resolveMember(f, mm, s)
+		}
 	case *declaration.Class:
+		if m.TypeParameters != nil {
+			r.resolveTypeParameters(f, m.TypeParameters, s)
+		}
+		r.resolveParents(f, m.Parents, s)
+		for _, mm := range m.Members {
+			r.resolveMember(f, mm, s)
+		}
 	}
 }
 
-func (r *Resolver) resolveType(typ types.Type) {
-	switch t := typ.(type) {
-	case *types.BuitinType:
-		// no need to resolve for builtin type
-
-	case *types.TypeName:
-		fmt.Println("resolve :", t.QualifiedName)
-
+func (r *Resolver) resolveParents(f *token.File, ts []*types.TypeName, s *ast.SoureFile) {
+	for _, t := range ts {
+		r.resolveTypeName(f, t, s)
 	}
 }
 
-// TO-DO validate conflict in using
+func (r *Resolver) resolveParameters(f *token.File, t *types.Parameters, s *ast.SoureFile) {
+	for _, arg := range t.Parameters {
+		if typeParameter, ok := arg.Type.(*types.TypeName); ok {
+			r.resolveTypeName(f, typeParameter, s)
+		}
+	}
+}
 
-// resolveType
-// resolveCompoundStatement
-// resolveExpression
+func (r *Resolver) resolveTypeParameters(f *token.File, t *types.TypeParameters, s *ast.SoureFile) {
+	for _, arg := range t.Parameters {
+		if typeParameter, ok := arg.Type.(*types.TypeName); ok {
+			r.resolveTypeName(f, typeParameter, s)
+		}
+	}
+}
 
-// use scope when start compound, if, for, switch, case, function
+func (r *Resolver) resolveType(f *token.File, typ types.Type, s *ast.SoureFile) {
+	if t, ok := typ.(*types.TypeName); ok {
+		r.resolveTypeName(f, t, s)
+		if t.TypeArguments != nil {
+			r.resolveTypeArguments(f, t.TypeArguments, s)
+		}
+	}
+}
 
-//TO-DO
-//invalid recursive type
-//ambiguous type (namespace conflict)
+func (r *Resolver) resolveTypeArguments(f *token.File, t *types.TypeArguments, s *ast.SoureFile) {
+	for _, arg := range t.Arguments {
+		if typeArgument, ok := arg.(*types.TypeName); ok {
+			r.resolveTypeName(f, typeArgument, s)
+		}
+	}
+}
+
+func (r *Resolver) resolveTypeName(f *token.File, t *types.TypeName, s *ast.SoureFile) {
+	names := r.findQualifiedName(f, t, s)
+	if len(names) == 0 {
+		r.error(f, t.GetPosition(), fmt.Sprintf("%s undefined", t.Name))
+	} else if len(names) > 1 {
+		r.error(f, t.GetPosition(), fmt.Sprintf("ambiguous type %s", t.Name))
+	} else {
+		t.QualifiedName = names[0]
+		fmt.Println("qualified:", names[0])
+	}
+}
+
+func (r *Resolver) findQualifiedName(f *token.File, name *types.TypeName, s *ast.SoureFile) []string {
+	names := []string{}
+	// search qualified name directly
+	if _, ok := r.declarations[name.Name]; ok {
+		names = append(names, name.Name)
+	}
+	// search by using
+	for _, u := range s.Using {
+		if u.Alias == "" {
+			n := u.Namespace + "." + name.Name
+			if d, ok := r.declarations[n]; ok {
+				if d.Kind == ClassObject || d.Kind == EnumObject || d.Kind == InterfaceObject {
+					names = append(names, n)
+				} else {
+					r.error(f, name.GetPosition(), fmt.Sprintf("%s can not be a type", name.Name))
+				}
+			}
+		} else {
+			if strings.HasPrefix(name.Name, u.Alias+".") {
+				n := strings.Replace(name.Name, u.Alias, u.Namespace, 1)
+				if d, ok := r.declarations[n]; ok {
+					if d.Kind == ClassObject || d.Kind == EnumObject || d.Kind == InterfaceObject {
+						names = append(names, n)
+					} else {
+						r.error(f, name.GetPosition(), fmt.Sprintf("%s can not be a type", name.Name))
+					}
+				}
+			}
+		}
+	}
+	// search same package
+	if !strings.Contains(name.Name, ".") {
+		for _, m := range s.Members {
+			if m.Identifier() == name.Name {
+				n := name.Name
+				if s.Namespace != "" {
+					n = s.Namespace + "." + n
+				}
+				if d, ok := r.declarations[n]; ok {
+					if d.Kind == ClassObject || d.Kind == EnumObject || d.Kind == InterfaceObject {
+						names = append(names, n)
+					} else {
+						r.error(f, name.GetPosition(), fmt.Sprintf("%s can not be a type", name.Name))
+					}
+				}
+			}
+		}
+	}
+	return names
+}
