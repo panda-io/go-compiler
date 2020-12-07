@@ -30,7 +30,9 @@ type Error struct {
 }
 
 type Resolver struct {
-	declarations map[string]*Declaration
+	declarations  map[string]*Declaration
+	globalScope   *Scope
+	packageScopes map[string]*Scope
 
 	//TO-DO scope
 	//global->package->class->function->statement
@@ -40,7 +42,9 @@ type Resolver struct {
 
 func NewResolver() *Resolver {
 	return &Resolver{
-		declarations: make(map[string]*Declaration),
+		declarations:  make(map[string]*Declaration),
+		globalScope:   &Scope{},
+		packageScopes: make(map[string]*Scope),
 	}
 }
 
@@ -65,9 +69,9 @@ func (r *Resolver) declare(f *token.File, p *ast.SoureFile) {
 		d.Public = m.IsPublic()
 		switch m.(type) {
 		case *declaration.Variable:
-			d.Kind = VariableObject
+			continue
 		case *declaration.Function:
-			d.Kind = FunctionObject
+			continue
 		case *declaration.Enum:
 			d.Kind = EnumObject
 		case *declaration.Interface:
@@ -219,12 +223,8 @@ func (r *Resolver) findQualifiedName(f *token.File, name *types.TypeName, s *ast
 				if s.Namespace != "" {
 					n = s.Namespace + "." + n
 				}
-				if d, ok := r.declarations[n]; ok {
-					if d.Kind == ClassObject || d.Kind == EnumObject || d.Kind == InterfaceObject {
-						names = append(names, n)
-					} else {
-						r.error(f, name.GetPosition(), fmt.Sprintf("%s can not be a type", name.Name))
-					}
+				if _, ok := r.declarations[n]; ok {
+					names = append(names, n)
 				}
 			}
 		}

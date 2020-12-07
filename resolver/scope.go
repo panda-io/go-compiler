@@ -17,7 +17,12 @@ func NewScope(outer *Scope) *Scope {
 }
 
 func (s *Scope) Find(name string) *Object {
-	return s.Objects[name]
+	if obj, ok := s.Objects[name]; ok {
+		return obj
+	} else if s.Outer != nil {
+		return s.Outer.Find(name)
+	}
+	return nil
 }
 
 func (s *Scope) Insert(obj *Object) (alt *Object) {

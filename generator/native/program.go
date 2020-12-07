@@ -13,15 +13,35 @@ import (
 
 const (
 	attributeName = "cpp"
+	tabSize       = 4
+)
+
+var (
+	indents = []byte("        ")
 )
 
 //TO-DO use global position
 
-func Write(program *ast.Program, fileset *token.FileSet, file string) {
-	buffer := bytes.NewBuffer(nil)
+type cppAttribute struct {
+	replace  string
+	operator bool
+}
 
-	writeIncludes(program, fileset, buffer)
-	writeForwardDeclaration(program, fileset, buffer)
+type writer struct {
+	fileset       *token.FileSet
+	buffer        *bytes.Buffer
+	cppAttributes map[string]*cppAttribute
+}
+
+func Write(program *ast.Program, fileset *token.FileSet, file string) {
+	w := &writer{
+		fileset:       fileset,
+		buffer:        bytes.NewBuffer(nil),
+		cppAttributes: make(map[string]*cppAttribute),
+	}
+
+	writeIncludes(program, w)
+	writeForwardDeclaration(program, w)
 	//p.PrintForwardDeclaration(buffer)
 	//buffer.WriteString("\n")
 	//p.PrintDeclaration(buffer)
@@ -29,83 +49,81 @@ func Write(program *ast.Program, fileset *token.FileSet, file string) {
 	//p.PrintImplementation(buffer)
 
 	//TO-DO print main at the last
-	err := ioutil.WriteFile(file, buffer.Bytes(), 0644)
+	err := ioutil.WriteFile(file, w.buffer.Bytes(), 0644)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func writeIncludes(program *ast.Program, fileset *token.FileSet, buffer *bytes.Buffer) {
-	includes := []string{"<cinttypes>"}
-	includes = append(includes, collectPackageIncludes(program.Global, fileset)...)
+func writeIncludes(program *ast.Program, w *writer) {
+	includes := []string{"<cinttypes>", "<cuchar>"}
+	includes = append(includes, collectPackageIncludes(program.Global, w)...)
 	for _, pkg := range program.Packages {
-		includes = append(includes, collectPackageIncludes(pkg, fileset)...)
+		includes = append(includes, collectPackageIncludes(pkg, w)...)
 	}
 	unique := make(map[string]bool)
 	for _, include := range includes {
 		unique[include] = true
 	}
 	for include := range unique {
-		buffer.WriteString(fmt.Sprintf("#include %s\n", include))
+		w.buffer.WriteString(fmt.Sprintf("#include %s\n", include))
 	}
-	buffer.WriteString("\n")
+	w.buffer.WriteString("\n")
 }
 
-func collectPackageIncludes(p *ast.Package, fileset *token.FileSet) []string {
+func collectPackageIncludes(p *ast.Package, w *writer) []string {
 	includes := []string{}
 	for i := len(p.Attributes) - 1; i >= 0; i-- {
 		attr := p.Attributes[i]
 		if attr.Name == attributeName {
 			if name, ok := attr.Values["include"]; ok {
 				if len(attr.Values) > 1 {
-					error(fileset, attr.Position, "extra data except include")
+					error(w.fileset.Position(attr.Position), "extra data except include")
 				} else {
 					if name.Type == token.STRING {
 						includes = append(includes, name.Value[1:len(name.Value)-1])
 					} else {
-						error(fileset, attr.Position, "include path must be string")
+						error(w.fileset.Position(attr.Position), "include path must be string")
 					}
 				}
 				p.Attributes[i] = p.Attributes[len(p.Attributes)-1]
 				p.Attributes = p.Attributes[:len(p.Attributes)-1]
 			} else {
-				error(fileset, attr.Position, "invalid cpp attribute for package")
+				error(w.fileset.Position(attr.Position), "invalid cpp attribute for package")
 			}
 		}
 	}
 	return includes
 }
 
-func writeForwardDeclaration(program *ast.Program, fileset *token.FileSet, buffer *bytes.Buffer) {
-	writePackageForwardDeclaration(program.Global, fileset, buffer)
+func writeForwardDeclaration(program *ast.Program, w *writer) {
+	writePackageForwardDeclaration(program.Global, w)
 	for _, pkg := range program.Packages {
-		writePackageForwardDeclaration(pkg, fileset, buffer)
+		writePackageForwardDeclaration(pkg, w)
 	}
 }
 
-func writePackageForwardDeclaration(p *ast.Package, fileset *token.FileSet, buffer *bytes.Buffer) {
+func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 	namespace := []string{}
 	if p.Namespace != "" {
 		namespace = strings.Split(p.Namespace, ".")
 		for _, n := range namespace {
-			buffer.WriteString("namespace " + n + "\n{\n")
+			w.buffer.WriteString("namespace " + n + "\n{\n")
 		}
 	}
-
 	for _, m := range p.Members {
 		switch t := m.(type) {
 		case *declaration.Enum:
-			buffer.WriteString("enum class " + t.Name.Name + ";\n")
+			w.buffer.WriteString("enum class " + t.Name.Name + ";\n")
 		case *declaration.Interface:
-			buffer.WriteString("class " + t.Name.Name + ";\n")
+			w.buffer.WriteString("class " + t.Name.Name + ";\n")
 		case *declaration.Class:
-			buffer.WriteString("class " + t.Name.Name + ";\n")
+			w.buffer.WriteString("class " + t.Name.Name + ";\n")
 		}
 	}
-
 	if p.Namespace != "" {
 		for range namespace {
-			buffer.WriteString("}\n")
+			w.buffer.WriteString("}\n")
 		}
 	}
 }
@@ -177,6 +195,15 @@ func (p *Program) PrintImplementation(buffer *bytes.Buffer) {
 }
 */
 
-func error(fileset *token.FileSet, offset int, message string) {
-	panic(fmt.Sprintf("error: %s \n %s \n", fileset.Position(offset).String(), message))
+func error(position *token.Position, message string) {
+	panic(fmt.Sprintf("error: %s \n %s \n", position.String(), message))
+}
+
+func writeIndent(indent int, w *writer) {
+	if indent > len(indents) {
+		for i := indent - len(indents); i > -1; i-- {
+			indents = append(indents, byte(' '))
+		}
+	}
+	w.buffer.Write(indents[:indent])
 }

@@ -197,6 +197,7 @@ func (p *Parser) parseSwitchStatement() *statement.Switch {
 func (p *Parser) parseCaseStatement() *statement.Case {
 	s := &statement.Case{}
 	s.Position = p.position
+	s.Token = p.token
 	if p.token == token.Case {
 		p.next()
 		s.Case = p.parseExpression()

@@ -4,6 +4,7 @@ import (
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/token"
 )
 
 type Statement interface {
@@ -81,8 +82,9 @@ type Switch struct {
 
 type Case struct {
 	Base
-	Case expression.Expression
-	Body Statement
+	Token token.Token
+	Case  expression.Expression
+	Body  Statement
 }
 
 type For struct {
