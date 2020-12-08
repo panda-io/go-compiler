@@ -192,6 +192,7 @@ func writePackageImplement(p *ast.Package, w *writer) {
 		switch t := m.(type) {
 		case *declaration.Variable:
 			writeVariable(t, w)
+			w.buffer.WriteString(";\n")
 
 		case *declaration.Function:
 			writeFunction(t, w)

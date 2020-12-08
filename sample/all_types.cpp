@@ -1,6 +1,6 @@
+#include <cinttypes>
 #include <cuchar>
 #include <string>
-#include <cinttypes>
 
 enum class color;
 
@@ -22,7 +22,10 @@ int32_t add(int32_t a, int32_t b);
 
 enum class color
 {
-            };
+    red,
+    green = 10,
+    blue
+};
 
 class must_do
 {

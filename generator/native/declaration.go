@@ -30,8 +30,14 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 		w.buffer.WriteString("enum class " + t.Identifier() + "\n")
 		writeIndent(indent, w)
 		w.buffer.WriteString("{\n")
-		for _, m := range t.Members {
-			writeDeclaration(m, indent+tabSize, w)
+		for i, m := range t.Members {
+			writeIndent(indent+tabSize, w)
+			writeVariable(m.(*declaration.Variable), w)
+			if i == len(t.Members)-1 {
+				w.buffer.WriteString("\n")
+			} else {
+				w.buffer.WriteString(",\n")
+			}
 		}
 		w.buffer.WriteString("};\n")
 
@@ -84,15 +90,15 @@ func writeClass(c *declaration.Class, w *writer) {
 }
 
 func writeVariable(v *declaration.Variable, w *writer) {
-	writeType(v.Type, w)
-	w.buffer.WriteString(" ")
+	if v.Type != nil {
+		writeType(v.Type, w)
+		w.buffer.WriteString(" ")
+	}
 	w.buffer.WriteString(v.Identifier())
 	if v.Value != nil {
 		w.buffer.WriteString(" = ")
 		writeExpression(v.Value, w)
 	}
-	w.buffer.WriteString(";\n")
-
 }
 
 func writeFunction(f *declaration.Function, w *writer) {
