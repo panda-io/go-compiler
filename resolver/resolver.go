@@ -56,6 +56,12 @@ func (r *Resolver) Resolve(f *token.File, s *ast.SoureFile) {
 	r.resolve(f, s)
 }
 
+func (r *Resolver) PrintErrors() {
+	for _, e := range r.errors {
+		fmt.Printf("error: %s \n %s \n", e.Position.String(), e.Message)
+	}
+}
+
 func (r *Resolver) error(f *token.File, offset int, message string) {
 	r.errors = append(r.errors, &Error{
 		Position: f.Position(offset),
@@ -93,14 +99,14 @@ func (r *Resolver) declare(f *token.File, p *ast.SoureFile) {
 
 func (r *Resolver) resolve(f *token.File, s *ast.SoureFile) {
 	for _, m := range s.Members {
-		r.resolveMember(f, m, s)
+		r.resolveMember(f, m, s, nil)
 	}
 }
 
-func (r *Resolver) resolveMember(f *token.File, d declaration.Declaration, s *ast.SoureFile) {
+func (r *Resolver) resolveMember(f *token.File, d declaration.Declaration, s *ast.SoureFile, t *types.TypeParameters) {
 	switch m := d.(type) {
 	case *declaration.Variable:
-		r.resolveType(f, m.Type, s)
+		r.resolveType(f, m.Type, s, t)
 		// TO-DO validate const expr
 	case *declaration.Function:
 		if m.ClassName == "" {
@@ -115,90 +121,115 @@ func (r *Resolver) resolveMember(f *token.File, d declaration.Declaration, s *as
 			}
 		}
 		if m.TypeParameters != nil {
-			r.resolveTypeParameters(f, m.TypeParameters, s)
+			r.resolveTypeParameters(f, m.TypeParameters, s, t)
 		}
 		if m.Parameters != nil {
-			r.resolveParameters(f, m.Parameters, s)
+			//TO-DO merge class and function type parameters
+			tp := t
+			if tp == nil {
+				if m.TypeParameters != nil {
+					tp = m.TypeParameters
+				}
+			} else if m.TypeParameters != nil {
+				tp = &types.TypeParameters{}
+				tp.Parameters = t.Parameters
+				tp.Parameters = append(tp.Parameters, m.TypeParameters.Parameters...)
+			}
+			r.resolveParameters(f, m.Parameters, s, tp)
 		}
 		if m.ReturnType != nil {
-			r.resolveType(f, m.ReturnType, s)
+			r.resolveType(f, m.ReturnType, s, t)
 		}
 		// TO-DO resolve statements // local declaration //call, primary :: implement it with scope ?
 	case *declaration.Enum:
 		// TO-DO validate const expr
 	case *declaration.Interface:
 		if m.TypeParameters != nil {
-			r.resolveTypeParameters(f, m.TypeParameters, s)
+			r.resolveTypeParameters(f, m.TypeParameters, s, t)
 		}
-		r.resolveParents(f, m.Parents, s)
+		r.resolveParents(f, m.Parents, s, t)
 		for _, mm := range m.Members {
-			r.resolveMember(f, mm, s)
+			r.resolveMember(f, mm, s, m.TypeParameters)
 		}
 	case *declaration.Class:
 		if m.TypeParameters != nil {
-			r.resolveTypeParameters(f, m.TypeParameters, s)
+			r.resolveTypeParameters(f, m.TypeParameters, s, t)
 		}
-		r.resolveParents(f, m.Parents, s)
+		r.resolveParents(f, m.Parents, s, t)
 		for _, mm := range m.Members {
-			r.resolveMember(f, mm, s)
+			r.resolveMember(f, mm, s, m.TypeParameters)
 		}
 	}
 }
 
-func (r *Resolver) resolveParents(f *token.File, ts []*types.TypeName, s *ast.SoureFile) {
-	for _, t := range ts {
-		r.resolveTypeName(f, t, s)
+func (r *Resolver) resolveParents(f *token.File, parents []*types.TypeName, s *ast.SoureFile, t *types.TypeParameters) {
+	for _, p := range parents {
+		r.resolveTypeName(f, p, s, t)
 	}
 }
 
-func (r *Resolver) resolveParameters(f *token.File, t *types.Parameters, s *ast.SoureFile) {
+func (r *Resolver) resolveParameters(f *token.File, tn *types.Parameters, s *ast.SoureFile, t *types.TypeParameters) {
+	for _, arg := range tn.Parameters {
+		if typeParameter, ok := arg.Type.(*types.TypeName); ok {
+			r.resolveTypeName(f, typeParameter, s, t)
+		}
+	}
+}
+
+func (r *Resolver) resolveTypeParameters(f *token.File, t *types.TypeParameters, s *ast.SoureFile, parent *types.TypeParameters) {
 	for _, arg := range t.Parameters {
 		if typeParameter, ok := arg.Type.(*types.TypeName); ok {
-			r.resolveTypeName(f, typeParameter, s)
+			if parent != nil {
+				for _, p := range parent.Parameters {
+					if p.Name == typeParameter.Name {
+						r.error(f, typeParameter.GetPosition(), fmt.Sprintf("generic type %s conflict with class template", typeParameter.Name))
+					}
+				}
+			}
+			r.resolveTypeName(f, typeParameter, s, nil)
 		}
 	}
 }
 
-func (r *Resolver) resolveTypeParameters(f *token.File, t *types.TypeParameters, s *ast.SoureFile) {
-	for _, arg := range t.Parameters {
-		if typeParameter, ok := arg.Type.(*types.TypeName); ok {
-			r.resolveTypeName(f, typeParameter, s)
+func (r *Resolver) resolveType(f *token.File, typ types.Type, s *ast.SoureFile, t *types.TypeParameters) {
+	if tn, ok := typ.(*types.TypeName); ok {
+		r.resolveTypeName(f, tn, s, t)
+		if tn.TypeArguments != nil {
+			r.resolveTypeArguments(f, tn.TypeArguments, s, t)
 		}
 	}
 }
 
-func (r *Resolver) resolveType(f *token.File, typ types.Type, s *ast.SoureFile) {
-	if t, ok := typ.(*types.TypeName); ok {
-		r.resolveTypeName(f, t, s)
-		if t.TypeArguments != nil {
-			r.resolveTypeArguments(f, t.TypeArguments, s)
-		}
-	}
-}
-
-func (r *Resolver) resolveTypeArguments(f *token.File, t *types.TypeArguments, s *ast.SoureFile) {
-	for _, arg := range t.Arguments {
+func (r *Resolver) resolveTypeArguments(f *token.File, args *types.TypeArguments, s *ast.SoureFile, t *types.TypeParameters) {
+	for _, arg := range args.Arguments {
 		if typeArgument, ok := arg.(*types.TypeName); ok {
-			r.resolveTypeName(f, typeArgument, s)
+			r.resolveTypeName(f, typeArgument, s, t)
 		}
 	}
 }
 
-func (r *Resolver) resolveTypeName(f *token.File, t *types.TypeName, s *ast.SoureFile) {
-	names := r.findQualifiedName(f, t, s)
+func (r *Resolver) resolveTypeName(f *token.File, tn *types.TypeName, s *ast.SoureFile, t *types.TypeParameters) {
+	names := r.findQualifiedName(f, tn, s, t)
 	if len(names) == 0 {
-		r.error(f, t.GetPosition(), fmt.Sprintf("%s undefined", t.Name))
+		r.error(f, t.GetPosition(), fmt.Sprintf("%s undefined", tn.Name))
 	} else if len(names) > 1 {
-		r.error(f, t.GetPosition(), fmt.Sprintf("ambiguous type %s", t.Name))
+		r.error(f, t.GetPosition(), fmt.Sprintf("ambiguous type %s", tn.Name))
 	} else {
-		t.QualifiedName = names[0]
-		fmt.Println("qualified:", names[0])
+		tn.QualifiedName = names[0]
 	}
 }
 
-func (r *Resolver) findQualifiedName(f *token.File, name *types.TypeName, s *ast.SoureFile) []string {
+func (r *Resolver) findQualifiedName(f *token.File, name *types.TypeName, s *ast.SoureFile, t *types.TypeParameters) []string {
 	names := []string{}
-	// search qualified name directly
+	// search in type parameters
+	if t != nil {
+		for _, p := range t.Parameters {
+			if name.Name == p.Name {
+				names = append(names, name.Name)
+			}
+		}
+	}
+	// search as qualified name directly
 	if _, ok := r.declarations[name.Name]; ok {
 		names = append(names, name.Name)
 	}
@@ -208,7 +239,7 @@ func (r *Resolver) findQualifiedName(f *token.File, name *types.TypeName, s *ast
 			n := u.Namespace + "." + name.Name
 			if d, ok := r.declarations[n]; ok {
 				if d.Kind == ClassObject || d.Kind == EnumObject || d.Kind == InterfaceObject {
-					names = append(names, n)
+					names = r.addQualifiedName(names, n)
 				} else {
 					r.error(f, name.GetPosition(), fmt.Sprintf("%s can not be a type", name.Name))
 				}
@@ -218,7 +249,7 @@ func (r *Resolver) findQualifiedName(f *token.File, name *types.TypeName, s *ast
 				n := strings.Replace(name.Name, u.Alias, u.Namespace, 1)
 				if d, ok := r.declarations[n]; ok {
 					if d.Kind == ClassObject || d.Kind == EnumObject || d.Kind == InterfaceObject {
-						names = append(names, n)
+						names = r.addQualifiedName(names, n)
 					} else {
 						r.error(f, name.GetPosition(), fmt.Sprintf("%s can not be a type", name.Name))
 					}
@@ -235,10 +266,24 @@ func (r *Resolver) findQualifiedName(f *token.File, name *types.TypeName, s *ast
 					n = s.Namespace + "." + n
 				}
 				if _, ok := r.declarations[n]; ok {
-					names = append(names, n)
+					names = r.addQualifiedName(names, n)
 				}
 			}
 		}
+	}
+	return names
+}
+
+func (r *Resolver) addQualifiedName(names []string, name string) []string {
+	found := false
+	for _, n := range names {
+		if n == name {
+			found = true
+			break
+		}
+	}
+	if !found {
+		names = append(names, name)
 	}
 	return names
 }

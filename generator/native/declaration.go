@@ -23,9 +23,8 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 			}
 		}
 		w.buffer.WriteString(t.Identifier())
-		w.buffer.WriteString("(")
 		writeType(t.Parameters, w)
-		w.buffer.WriteString(");\n")
+		w.buffer.WriteString(";\n")
 
 	case *declaration.Enum:
 		w.buffer.WriteString("enum class " + t.Identifier() + "\n")
@@ -97,6 +96,10 @@ func writeVariable(v *declaration.Variable, w *writer) {
 }
 
 func writeFunction(f *declaration.Function, w *writer) {
+	if f.Body == nil {
+		// only declare, replace with cpp function
+		return
+	}
 	if f.TypeParameters != nil {
 		writeType(f.TypeParameters, w)
 	}
@@ -112,8 +115,7 @@ func writeFunction(f *declaration.Function, w *writer) {
 		w.buffer.WriteString(f.ClassName + "::")
 	}
 	w.buffer.WriteString(f.Identifier())
-	w.buffer.WriteString("(")
 	writeType(f.Parameters, w)
-	w.buffer.WriteString(")\n")
+	w.buffer.WriteString("\n")
 	writeStatement(f.Body, 0, w)
 }

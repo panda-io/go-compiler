@@ -1,6 +1,8 @@
 package native
 
 import (
+	"strings"
+
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/token"
@@ -41,7 +43,7 @@ func writeType(t types.Type, w *writer) {
 		w.buffer.WriteString(cppTypes[v.Token])
 
 	case *types.TypeName:
-		w.buffer.WriteString(v.QualifiedName)
+		w.buffer.WriteString(strings.ReplaceAll(v.QualifiedName, ".", "::"))
 		if v.TypeArguments != nil {
 			writeType(v.TypeArguments, w)
 		}
@@ -76,15 +78,15 @@ func writeType(t types.Type, w *writer) {
 	case *types.Parameters:
 		w.buffer.WriteString("(")
 		if v != nil {
-			for i, arg := range v.Parameters {
+			for i, param := range v.Parameters {
 				if i != 0 {
 					w.buffer.WriteString(", ")
 				}
-				writeType(arg.Type, w)
+				writeType(param.Type, w)
 				if v.Ellipsis && i == len(v.Parameters)-1 {
 					w.buffer.WriteString("...")
 				}
-				w.buffer.WriteString(" " + arg.Name)
+				w.buffer.WriteString(" " + param.Name)
 			}
 		}
 		w.buffer.WriteString(")")

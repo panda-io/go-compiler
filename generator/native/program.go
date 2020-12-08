@@ -41,11 +41,8 @@ func Write(program *ast.Program, fileset *token.FileSet, file string) {
 	}
 
 	writeIncludes(program, w)
-	w.buffer.WriteString("\n")
 	writeForwardDeclarations(program, w)
-	w.buffer.WriteString("\n")
 	writeDeclarations(program, w)
-	w.buffer.WriteString("\n")
 	writeImplements(program, w)
 
 	//TO-DO print main at the last
@@ -56,7 +53,7 @@ func Write(program *ast.Program, fileset *token.FileSet, file string) {
 }
 
 func writeIncludes(program *ast.Program, w *writer) {
-	includes := []string{"<cinttypes>", "<cuchar>"}
+	includes := []string{"<cinttypes>", "<cuchar>", "<string>"}
 	includes = append(includes, collectPackageIncludes(program.Global, w)...)
 	for _, pkg := range program.Packages {
 		includes = append(includes, collectPackageIncludes(pkg, w)...)
@@ -111,13 +108,26 @@ func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 			w.buffer.WriteString("namespace " + n + "\n{\n")
 		}
 	}
+	total := 0
 	for _, m := range p.Members {
 		switch t := m.(type) {
 		case *declaration.Enum:
+			if total > 0 {
+				w.buffer.WriteString("\n")
+			}
+			total++
 			w.buffer.WriteString("enum class " + t.Name.Name + ";\n")
 		case *declaration.Interface:
+			if total > 0 {
+				w.buffer.WriteString("\n")
+			}
+			total++
 			w.buffer.WriteString("class " + t.Name.Name + ";\n")
 		case *declaration.Class:
+			if total > 0 {
+				w.buffer.WriteString("\n")
+			}
+			total++
 			w.buffer.WriteString("class " + t.Name.Name + ";\n")
 		}
 	}
@@ -126,6 +136,7 @@ func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 			w.buffer.WriteString("}\n")
 		}
 	}
+	w.buffer.WriteString("\n")
 }
 
 func writeDeclarations(program *ast.Program, w *writer) {
@@ -145,8 +156,13 @@ func writePackageDeclaration(p *ast.Package, w *writer) {
 	}
 	//TO-DO sort class declaration by inheiritance
 	// get max inheiritance level, then print by level. (later check level and save it)
+	total := 0
 	for _, m := range p.Members {
 		if _, ok := m.(*declaration.Variable); !ok {
+			if total > 0 {
+				w.buffer.WriteString("\n")
+			}
+			total++
 			writeDeclaration(m, 0, w)
 		}
 	}

@@ -43,6 +43,8 @@ func (c *Compiler) Generate(file string) {
 	c.fileset.Walk(c.resolve)
 	//TO-DO validate
 
+	c.resolver.PrintErrors()
+
 	c.program = ast.NewProgram()
 	for _, s := range c.sources {
 		c.program.AddSource(s)

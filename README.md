@@ -224,5 +224,9 @@
 - variable declaration can only use const expression for initialization
 
 ### **roadmap**
+- reflection
+- serlize
+  - binary
+-------------------------
 - coroutine
 - new object(){a = 1, b = 2, c = 3}

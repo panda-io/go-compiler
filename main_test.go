@@ -14,3 +14,12 @@ func TestVector(t *testing.T) {
 
 	t.Fail()
 }
+
+func TestSample(t *testing.T) {
+	c := NewCompiler([]string{"cpp"})
+
+	c.ParseFile("./sample/all_types.pd")
+	c.Generate("./sample/all_types.cpp")
+
+	t.Fail()
+}
