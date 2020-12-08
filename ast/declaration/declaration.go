@@ -61,12 +61,12 @@ func (v *Variable) Identifier() string {
 type Function struct {
 	Base
 	Name           *expression.Identifier
+	QualifinedName string
 	TypeParameters *types.TypeParameters
 	Parameters     *types.Parameters
 	ReturnType     types.Type
 	Body           *statement.Compound
-
-	Class *Class
+	ClassName      string
 }
 
 func (f *Function) Identifier() string {

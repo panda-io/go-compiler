@@ -41,12 +41,12 @@ func Write(program *ast.Program, fileset *token.FileSet, file string) {
 	}
 
 	writeIncludes(program, w)
-	writeForwardDeclaration(program, w)
-	//p.PrintForwardDeclaration(buffer)
-	//buffer.WriteString("\n")
-	//p.PrintDeclaration(buffer)
-	//buffer.WriteString("\n")
-	//p.PrintImplementation(buffer)
+	w.buffer.WriteString("\n")
+	writeForwardDeclarations(program, w)
+	w.buffer.WriteString("\n")
+	writeDeclarations(program, w)
+	w.buffer.WriteString("\n")
+	writeImplements(program, w)
 
 	//TO-DO print main at the last
 	err := ioutil.WriteFile(file, w.buffer.Bytes(), 0644)
@@ -96,7 +96,7 @@ func collectPackageIncludes(p *ast.Package, w *writer) []string {
 	return includes
 }
 
-func writeForwardDeclaration(program *ast.Program, w *writer) {
+func writeForwardDeclarations(program *ast.Program, w *writer) {
 	writePackageForwardDeclaration(program.Global, w)
 	for _, pkg := range program.Packages {
 		writePackageForwardDeclaration(pkg, w)
@@ -128,72 +128,68 @@ func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 	}
 }
 
-/*
-func (p *Program) PrintDeclaration(buffer *bytes.Buffer) {
-	if p.PackageName != "" {
-		buffer.WriteString("namespace " + p.PackageName + "\n{\n")
+func writeDeclarations(program *ast.Program, w *writer) {
+	writePackageDeclaration(program.Global, w)
+	for _, pkg := range program.Packages {
+		writePackageDeclaration(pkg, w)
 	}
+}
 
-	for _, v := range p.Children {
-		v.PrintDeclaration(buffer)
+func writePackageDeclaration(p *ast.Package, w *writer) {
+	namespace := []string{}
+	if p.Namespace != "" {
+		namespace = strings.Split(p.Namespace, ".")
+		for _, n := range namespace {
+			w.buffer.WriteString("namespace " + n + "\n{\n")
+		}
 	}
-
-	//to-do sort class declaration by inheiritance
+	//TO-DO sort class declaration by inheiritance
 	// get max inheiritance level, then print by level. (later check level and save it)
-	for _, v := range p.Functions {
-		v.PrintDeclaration(buffer, 0)
-		buffer.WriteString("\n")
+	for _, m := range p.Members {
+		if _, ok := m.(*declaration.Variable); !ok {
+			writeDeclaration(m, 0, w)
+		}
 	}
-
-	for _, v := range p.Enums {
-		v.Print(buffer, 0)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range p.Interfaces {
-		v.Print(buffer, 0)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range p.Classes {
-		v.PrintDeclaration(buffer, 0)
-		buffer.WriteString("\n")
-	}
-
-	if p.PackageName != "" {
-		buffer.WriteString("\n}\n")
+	if p.Namespace != "" {
+		for range namespace {
+			w.buffer.WriteString("}\n")
+		}
 	}
 }
 
-func (p *Program) PrintImplementation(buffer *bytes.Buffer) {
-	if p.PackageName != "" {
-		buffer.WriteString("namespace " + p.PackageName + "\n{\n")
-	}
-
-	for _, v := range p.Children {
-		v.PrintImplementation(buffer)
-	}
-
-	for _, v := range p.Values {
-		v.Print(buffer, 0)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range p.Functions {
-		v.PrintImplementation(buffer, 0)
-		buffer.WriteString("\n")
-	}
-
-	for _, v := range p.Classes {
-		v.PrintImplementation(buffer, 0)
-		buffer.WriteString("\n")
-	}
-
-	if p.PackageName != "" {
-		buffer.WriteString("\n}\n")
+func writeImplements(program *ast.Program, w *writer) {
+	writePackageImplement(program.Global, w)
+	for _, pkg := range program.Packages {
+		writePackageImplement(pkg, w)
 	}
 }
-*/
+
+func writePackageImplement(p *ast.Package, w *writer) {
+	namespace := []string{}
+	if p.Namespace != "" {
+		namespace = strings.Split(p.Namespace, ".")
+		for _, n := range namespace {
+			w.buffer.WriteString("namespace " + n + "\n{\n")
+		}
+	}
+	for _, m := range p.Members {
+		switch t := m.(type) {
+		case *declaration.Variable:
+			writeVariable(t, w)
+
+		case *declaration.Function:
+			writeFunction(t, w)
+
+		case *declaration.Class:
+			writeClass(t, w)
+		}
+	}
+	if p.Namespace != "" {
+		for range namespace {
+			w.buffer.WriteString("}\n")
+		}
+	}
+}
 
 func error(position *token.Position, message string) {
 	panic(fmt.Sprintf("error: %s \n %s \n", position.String(), message))

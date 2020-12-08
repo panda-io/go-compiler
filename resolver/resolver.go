@@ -103,6 +103,17 @@ func (r *Resolver) resolveMember(f *token.File, d declaration.Declaration, s *as
 		r.resolveType(f, m.Type, s)
 		// TO-DO validate const expr
 	case *declaration.Function:
+		if m.ClassName == "" {
+			if s.Namespace != "" {
+				m.QualifinedName = s.Namespace + "." + m.Name.Name
+			}
+		} else {
+			if s.Namespace == "" {
+				m.QualifinedName = m.ClassName + "." + m.Name.Name
+			} else {
+				m.QualifinedName = s.Namespace + "." + m.ClassName + "." + m.Name.Name
+			}
+		}
 		if m.TypeParameters != nil {
 			r.resolveTypeParameters(f, m.TypeParameters, s)
 		}

@@ -1,6 +1,7 @@
 package native
 
 import (
+	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -40,59 +41,67 @@ func writeType(t types.Type, w *writer) {
 		w.buffer.WriteString(cppTypes[v.Token])
 
 	case *types.TypeName:
-		//TO-DO
+		w.buffer.WriteString(v.QualifiedName)
+		if v.TypeArguments != nil {
+			writeType(v.TypeArguments, w)
+		}
 
 	case *types.TypeArguments:
-		//TO-DO
+		w.buffer.WriteString("<")
+		for i, arg := range v.Arguments {
+			if i != 0 {
+				w.buffer.WriteString(", ")
+			}
+			writeType(arg, w)
+			if i == v.Ellipsis {
+				w.buffer.WriteString("...")
+			}
+		}
+		w.buffer.WriteString(">")
 
 	case *types.TypeParameters:
-		//TO-DO
-
-	case *types.TypeParameter:
-		//TO-DO
+		w.buffer.WriteString("template <")
+		for i, t := range v.Parameters {
+			if i > 0 {
+				w.buffer.WriteString(", ")
+			}
+			if v.Ellipsis && i == len(v.Parameters)-1 {
+				w.buffer.WriteString("class ... " + t.Name)
+			} else {
+				w.buffer.WriteString("class " + t.Name)
+			}
+		}
+		w.buffer.WriteString(">\n")
 
 	case *types.Parameters:
-		//TO-DO
-
-	case *types.Parameter:
-		//TO-DO
+		w.buffer.WriteString("(")
+		if v != nil {
+			for i, arg := range v.Parameters {
+				if i != 0 {
+					w.buffer.WriteString(", ")
+				}
+				writeType(arg.Type, w)
+				if v.Ellipsis && i == len(v.Parameters)-1 {
+					w.buffer.WriteString("...")
+				}
+				w.buffer.WriteString(" " + arg.Name)
+			}
+		}
+		w.buffer.WriteString(")")
 
 	case *types.Arguments:
-		//TO-DO
-	}
-}
-
-/*
-type Scalar struct {
-	Start int
-	Token Token
-}
-func (x *Scalar) Print(buffer *bytes.Buffer) {
-	x.Token.Print(buffer)
-}
-
-type EllipsisLit struct {
-	Start int  // position of "..."
-	Expr  Expr // ellipsis element type (parameter lists only); or nil
-}
-
-func (x *EllipsisLit) Print(buffer *bytes.Buffer) {
-	buffer.WriteString("...")
-	x.Expr.Print(buffer)
-}
-
-type GenericLit struct {
-	Start int    // < position
-	Types []Expr // <int, int> <T>
-}
-
-func (x *GenericLit) Print(buffer *bytes.Buffer) {
-	buffer.WriteString("<")
-	for i, v := range x.Types {
-		if i != 0 {
-			buffer.WriteString(", ")
+		w.buffer.WriteString("(")
+		if v != nil {
+			for i, arg := range v.Arguments {
+				if i != 0 {
+					w.buffer.WriteString(", ")
+				}
+				writeExpression(arg.(expression.Expression), w)
+				if i == v.Ellipsis {
+					w.buffer.WriteString("...")
+				}
+			}
 		}
-		v.Print(buffer)
+		w.buffer.WriteString(")")
 	}
-	buffer.WriteString(">")
-}*/
+}

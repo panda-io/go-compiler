@@ -25,23 +25,23 @@ func (p *Parser) parseVariable(modifier *declaration.Modifier, attributes []*dec
 	return d
 }
 
-func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*declaration.Attribute, class *declaration.Class) *declaration.Function {
+func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*declaration.Attribute, className string) *declaration.Function {
 	d := &declaration.Function{}
-	d.Class = class
+	d.ClassName = className
 	d.Modifier = modifier
 	d.Attributes = attributes
 	p.next()
-	tilde := false
+	complement := false
 	if p.token == token.Complement {
-		if class == nil {
+		if d.ClassName == "" {
 			p.error(p.position, "'~' is not allow outside class as function name")
 		}
-		tilde = true
+		complement = true
 		p.next()
 	}
 	d.Name = p.parseIdentifier()
-	if tilde {
-		if d.Name.Name != class.Name.Name {
+	if complement {
+		if d.Name.Name != d.ClassName {
 			p.error(p.position, "invalid destructor name")
 		}
 		d.Name.Name = "~" + d.Name.Name
@@ -106,7 +106,7 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Function:
-			m := p.parseFunction(modifier, attr, nil)
+			m := p.parseFunction(modifier, attr, d.Name.Name)
 			if p.redeclared(m.Name.Name, d.Members) {
 				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
 			}
@@ -144,7 +144,7 @@ func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declar
 			d.Members = append(d.Members, m)
 
 		case token.Function:
-			m := p.parseFunction(modifier, attr, d)
+			m := p.parseFunction(modifier, attr, d.Name.Name)
 			if p.redeclared(m.Name.Name, d.Members) {
 				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
 			}

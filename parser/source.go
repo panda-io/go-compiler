@@ -25,7 +25,7 @@ func (p *Parser) parseSourceFile() *ast.SoureFile {
 			s.Members = append(s.Members, m)
 
 		case token.Function:
-			m := p.parseFunction(modifier, attr, nil)
+			m := p.parseFunction(modifier, attr, "")
 			if p.redeclared(m.Name.Name, s.Members) {
 				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
 			}
