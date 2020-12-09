@@ -23,7 +23,7 @@ func writeExpression(e expression.Expression, w *writer) {
 
 		case token.CHAR:
 			// char32_t
-			w.buffer.WriteString(t.Value)
+			w.buffer.WriteString("U" + t.Value)
 
 		case token.BOOL, token.Void, token.NULL:
 			w.buffer.WriteString(t.Value)

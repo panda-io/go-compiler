@@ -40,9 +40,13 @@ func Write(program *ast.Program, fileset *token.FileSet, file string) {
 		cppAttributes: make(map[string]*cppAttribute),
 	}
 
+	w.buffer.WriteString("// --------------------------------       includes       --------------------------------\n")
 	writeIncludes(program, w)
+	w.buffer.WriteString("// -------------------------------- forward declarations --------------------------------\n")
 	writeForwardDeclarations(program, w)
+	w.buffer.WriteString("// --------------------------------     declarations     --------------------------------\n")
 	writeDeclarations(program, w)
+	w.buffer.WriteString("// --------------------------------      implements      --------------------------------\n")
 	writeImplements(program, w)
 
 	//TO-DO print main at the last
@@ -108,27 +112,29 @@ func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 			w.buffer.WriteString("namespace " + n + "\n{\n")
 		}
 	}
-	total := 0
+	first := true
 	for _, m := range p.Members {
 		switch t := m.(type) {
 		case *declaration.Enum:
-			if total > 0 {
+			if !first {
 				w.buffer.WriteString("\n")
 			}
-			total++
 			w.buffer.WriteString("enum class " + t.Name.Name + ";\n")
+			first = false
+
 		case *declaration.Interface:
-			if total > 0 {
+			if !first {
 				w.buffer.WriteString("\n")
 			}
-			total++
 			w.buffer.WriteString("class " + t.Name.Name + ";\n")
+			first = false
+
 		case *declaration.Class:
-			if total > 0 {
+			if !first {
 				w.buffer.WriteString("\n")
 			}
-			total++
 			w.buffer.WriteString("class " + t.Name.Name + ";\n")
+			first = false
 		}
 	}
 	if p.Namespace != "" {
@@ -156,21 +162,18 @@ func writePackageDeclaration(p *ast.Package, w *writer) {
 	}
 	//TO-DO sort class declaration by inheiritance
 	// get max inheiritance level, then print by level. (later check level and save it)
-	total := 0
-	for _, m := range p.Members {
-		if _, ok := m.(*declaration.Variable); !ok {
-			if total > 0 {
-				w.buffer.WriteString("\n")
-			}
-			total++
-			writeDeclaration(m, 0, w)
+	for i, m := range p.Members {
+		if i > 0 {
+			w.buffer.WriteString("\n")
 		}
+		writeDeclaration(m, 0, w)
 	}
 	if p.Namespace != "" {
 		for range namespace {
 			w.buffer.WriteString("}\n")
 		}
 	}
+	w.buffer.WriteString("\n")
 }
 
 func writeImplements(program *ast.Program, w *writer) {
@@ -188,17 +191,22 @@ func writePackageImplement(p *ast.Package, w *writer) {
 			w.buffer.WriteString("namespace " + n + "\n{\n")
 		}
 	}
+	first := true
 	for _, m := range p.Members {
 		switch t := m.(type) {
-		case *declaration.Variable:
-			writeVariable(t, w)
-			w.buffer.WriteString(";\n")
-
 		case *declaration.Function:
+			if !first {
+				w.buffer.WriteString("\n")
+			}
 			writeFunction(t, w)
+			first = false
 
 		case *declaration.Class:
+			if !first {
+				w.buffer.WriteString("\n")
+			}
 			writeClass(t, w)
+			first = false
 		}
 	}
 	if p.Namespace != "" {

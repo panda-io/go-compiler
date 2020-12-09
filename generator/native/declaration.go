@@ -2,11 +2,41 @@ package native
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/declaration"
+	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/token"
 )
 
 func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 	writeIndent(indent, w)
 	switch t := d.(type) {
+	case *declaration.Variable:
+		writeType(t.Type, w)
+		w.buffer.WriteString(" ")
+		w.buffer.WriteString(t.Identifier())
+		if t.Value != nil {
+			w.buffer.WriteString(" = ")
+			writeExpression(t.Value, w)
+		} else if b, ok := t.Type.(*types.BuitinType); ok {
+			switch b.Token {
+			case token.Int8, token.Int16, token.Int32, token.Int64,
+				token.Uint8, token.Uint16, token.Uint32, token.Uint64,
+				token.SByte, token.Short, token.Int, token.Long,
+				token.Byte, token.Ushort, token.Uint, token.Ulong,
+				token.Float32, token.Float64, token.Float, token.Double:
+				w.buffer.WriteString(" = 0")
+
+			case token.Char:
+				w.buffer.WriteString(" = U''")
+
+			case token.Bool:
+				w.buffer.WriteString(" = false")
+
+			case token.String:
+				w.buffer.WriteString(` = ""`)
+			}
+		}
+		w.buffer.WriteString(";\n")
+
 	case *declaration.Function:
 		if t.TypeParameters != nil {
 			writeType(t.TypeParameters, w)
@@ -32,7 +62,12 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 		w.buffer.WriteString("{\n")
 		for i, m := range t.Members {
 			writeIndent(indent+tabSize, w)
-			writeVariable(m.(*declaration.Variable), w)
+			v := m.(*declaration.Variable)
+			w.buffer.WriteString(v.Identifier())
+			if v.Value != nil {
+				w.buffer.WriteString(" = ")
+				writeExpression(v.Value, w)
+			}
 			if i == len(t.Members)-1 {
 				w.buffer.WriteString("\n")
 			} else {
@@ -82,22 +117,15 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 }
 
 func writeClass(c *declaration.Class, w *writer) {
+	first := true
 	for _, m := range c.Members {
 		if f, ok := m.(*declaration.Function); ok {
+			if !first {
+				w.buffer.WriteString("\n")
+			}
 			writeFunction(f, w)
+			first = false
 		}
-	}
-}
-
-func writeVariable(v *declaration.Variable, w *writer) {
-	if v.Type != nil {
-		writeType(v.Type, w)
-		w.buffer.WriteString(" ")
-	}
-	w.buffer.WriteString(v.Identifier())
-	if v.Value != nil {
-		w.buffer.WriteString(" = ")
-		writeExpression(v.Value, w)
 	}
 }
 

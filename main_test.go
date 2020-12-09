@@ -20,6 +20,4 @@ func TestSample(t *testing.T) {
 
 	c.ParseFile("./sample/all_types.pd")
 	c.Generate("./sample/all_types.cpp")
-
-	t.Fail()
 }

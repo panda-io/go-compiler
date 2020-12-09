@@ -35,7 +35,7 @@ public function print<T>(t T)
     @"std::cout << t"
 }
 
-@custom(b = true, c = 'c', i = 1, f = 3.14, s = "some string")
+@custom(b = true, ch = 'c', i = 1, pi = 3.14, s = "some string")
 public function print_line<T>(t T)
 {
     @"std::cout << t << std::endl"
@@ -61,7 +61,7 @@ public interface must_do
 
 public class empty
 {
-    var value int;
+    var value int = 100;
 
     public function empty()
     {
