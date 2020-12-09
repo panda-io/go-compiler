@@ -1,3 +1,4 @@
+@cpp(include = "<iostream>")
 namespace;
 
 public const b bool = true;
@@ -90,10 +91,8 @@ public class base_class
 
 public class derive_class : base_class, must_do
 {
-    // all function will be virtual, can be override
     public function print()
     {
-        base.print();
     }
 }
 

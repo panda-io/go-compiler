@@ -54,6 +54,9 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 		}
 		w.buffer.WriteString(t.Identifier())
 		writeType(t.Parameters, w)
+		if t.ClassName != "" && t.Body == nil {
+			w.buffer.WriteString(" = 0")
+		}
 		w.buffer.WriteString(";\n")
 
 	case *declaration.Enum:
@@ -131,7 +134,7 @@ func writeClass(c *declaration.Class, w *writer) {
 
 func writeFunction(f *declaration.Function, w *writer) {
 	if f.Body == nil {
-		// only declare, replace with cpp function
+		// TO-DO only declare, replace with cpp function
 		return
 	}
 	if f.TypeParameters != nil {

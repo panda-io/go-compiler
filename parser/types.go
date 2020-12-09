@@ -27,7 +27,7 @@ func (p *Parser) parseTypeName() *types.TypeName {
 }
 
 func (p *Parser) parseTypeArguments() *types.TypeArguments {
-	t := &types.TypeArguments{}
+	t := &types.TypeArguments{Ellipsis: -1}
 	t.Position = p.position
 	t.Ellipsis = -1
 	p.next() // skip <
@@ -129,7 +129,7 @@ func (p *Parser) parseParameter() *types.Parameter {
 }
 
 func (p *Parser) parseArguments() *types.Arguments {
-	t := &types.Arguments{}
+	t := &types.Arguments{Ellipsis: -1}
 	t.Position = p.position
 	p.expect(token.LeftParen)
 	if p.token == token.RightParen {

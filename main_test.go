@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os/exec"
 	"testing"
 )
 
@@ -20,4 +21,9 @@ func TestSample(t *testing.T) {
 
 	c.ParseFile("./sample/all_types.pd")
 	c.Generate("./sample/all_types.cpp")
+	cmd := exec.Command("g++", "-o", "./sample/all_types", "./sample/all_types.cpp")
+	err := cmd.Run()
+	if err != nil {
+		t.Error(err)
+	}
 }

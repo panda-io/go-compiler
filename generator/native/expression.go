@@ -22,7 +22,6 @@ func writeExpression(e expression.Expression, w *writer) {
 			w.buffer.WriteString(t.Value)
 
 		case token.CHAR:
-			// char32_t
 			w.buffer.WriteString("U" + t.Value)
 
 		case token.BOOL, token.Void, token.NULL:
@@ -45,7 +44,7 @@ func writeExpression(e expression.Expression, w *writer) {
 
 	case *expression.MemberAccess:
 		writeExpression(t.Parent, w)
-		w.buffer.WriteString(".")
+		w.buffer.WriteString("->")
 		writeExpression(t.Member, w)
 
 	case *expression.Subscripting:
@@ -55,29 +54,15 @@ func writeExpression(e expression.Expression, w *writer) {
 		w.buffer.WriteString("]")
 
 	case *expression.Invocation:
-		//TO-DO
-		/*
-					x.Func.Print(buffer)
-			buffer.WriteString("(")
-			for i, v := range x.Args {
-				if i != 0 {
-					buffer.WriteString(", ")
-				}
-				v.Print(buffer)
-			}
-			buffer.WriteString(")")*/
+		writeExpression(t.Function, w)
+		writeType(t.Arguments, w)
 
 	case *expression.New:
-		//TO-DO
-		/*
-					buffer.WriteString("std::make_shared<//TO-DO>(")
-			for i, v := range x.Args {
-				if i != 0 {
-					buffer.WriteString(", ")
-					v.Print(buffer)
-				}
-			}
-			buffer.WriteString(")")*/
+		//TO-DO some builtin type we don't use share pointer, eg task, method, any
+		w.buffer.WriteString("std::make_shared<")
+		writeType(t.Type, w)
+		w.buffer.WriteString(">")
+		writeType(t.Arguments, w)
 
 	case *expression.Increment:
 		writeExpression(t.Expression, w)

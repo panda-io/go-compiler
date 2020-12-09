@@ -1,4 +1,5 @@
 // --------------------------------       includes       --------------------------------
+#include <iostream>
 #include <cinttypes>
 #include <cuchar>
 #include <string>
@@ -81,7 +82,7 @@ enum class color
 class must_do
 {
 public:
-    virtual void print();
+    virtual void print() = 0;
 };
 
 class empty
@@ -112,13 +113,13 @@ int32_t main();
 template <class T>
 void print(T t)
 {
-    "std::cout << t";
+    std::cout << t;
 }
 
 template <class T>
 void print_line(T t)
 {
-    "std::cout << t << std::endl";
+    std::cout << t << std::endl;
 }
 
 int32_t add(int32_t a, int32_t b)
@@ -136,23 +137,22 @@ empty::~empty()
 
 base_class::base_class(int32_t value)
 {
-    this.value = value;
-    ;
+    this->value = value;
+    print("constructor with 1 param");
 }
 
 void base_class::destroy()
 {
-    ;
+    print("destructor");
 }
 
 void derive_class::print()
 {
-    ;
 }
 
 int32_t main()
 {
-    ;
-    ;
+    print(string_v);
+    print_line(add(1, 1));
     return 0;
 }

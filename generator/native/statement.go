@@ -11,7 +11,7 @@ func writeStatement(s statement.Statement, indent int, w *writer) {
 		w.buffer.WriteString(";")
 
 	case *statement.Raw:
-		w.buffer.WriteString(t.Source)
+		w.buffer.WriteString(t.Source[1 : len(t.Source)-1])
 
 	case *statement.Expression:
 		writeExpression(t.Expression, w)
