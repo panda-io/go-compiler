@@ -8,6 +8,8 @@ import (
 //invalid recursive type // invalid inheritance
 //validate if access able
 //match type
+//template function, not virtual
+//return abstract class is not allowed
 
 /********************************
 - constant expressions

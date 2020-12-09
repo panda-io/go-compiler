@@ -1,7 +1,7 @@
 @cpp(include = "<iostream>")
 namespace;
 
-public const b bool = true;
+const b bool = true;
 const c char = 'a'; // alias utf-code u32
 
 var sbyte_v sbyte = 1; // alias i8
@@ -28,21 +28,13 @@ var f32_v f32;
 var f64_v f64;
 
 var string_v string = "hello world\n";
-var string_v_raw string = `hello \n
-    world\n`;
+var string_v_raw string = `"hello world"`;
 
-public function print<T>(t T)
-{
-    @"std::cout << t"
-}
-
-@custom(b = true, ch = 'c', i = 1, pi = 3.14, s = "some string")
 public function print_line<T>(t T)
 {
     @"std::cout << t << std::endl"
 }
 
-@doc("add_function")
 function add(a int, b int) int
 {
     return a + b;
@@ -55,15 +47,13 @@ enum color
     blue
 }
 
-public interface must_do
+public interface printer
 {
     function print() void; // void can be ommited
 }
 
 public class empty
 {
-    var value int = 100;
-
     public function empty()
     {
     }
@@ -80,25 +70,36 @@ public class base_class
     public function base_class(value int)
     {
         this.value = value;
-        print("constructor with 1 param");
+        print_line("base class constructor");
     }
 
-    public function destroy()
+    public function ~base_class()
     {
-        print("destructor");
+        print_line("base class destructor");
     }
 }
 
-public class derive_class : base_class, must_do
+public class derive_class : base_class, printer
 {
+    public function derive_class(value int)
+    {
+        //base(value);
+        print_line("derive class constructor");
+    }
+
+    public function ~derive_class()
+    {
+        print_line("derive class destructor");
+    }
+
     public function print()
     {
+        print_line(this.value);
     }
 }
 
 public function main() int
 {
-    print(string_v);
     print_line(add(1, 1));
     return 0;
 }

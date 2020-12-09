@@ -80,6 +80,10 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 		w.buffer.WriteString("};\n")
 
 	case *declaration.Interface:
+		if t.TypeParameters != nil {
+			writeType(t.TypeParameters, w)
+			writeIndent(indent, w)
+		}
 		w.buffer.WriteString("class " + t.Identifier())
 		if len(t.Parents) > 0 {
 			w.buffer.WriteString(" : public ")
@@ -99,6 +103,10 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 		w.buffer.WriteString("};\n")
 
 	case *declaration.Class:
+		if t.TypeParameters != nil {
+			writeType(t.TypeParameters, w)
+			writeIndent(indent, w)
+		}
 		w.buffer.WriteString("class " + t.Identifier())
 		if len(t.Parents) > 0 {
 			w.buffer.WriteString(" : public ")
@@ -112,6 +120,22 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 		w.buffer.WriteString("\n")
 		writeIndent(indent, w)
 		w.buffer.WriteString("{\npublic:\n")
+		hasDefaultConstructor := false
+		for _, m := range t.Members {
+			if f, ok := m.(*declaration.Function); ok {
+				if f.Identifier() == t.Identifier() {
+					if f.Parameters == nil || len(f.Parameters.Parameters) == 0 {
+						hasDefaultConstructor = true
+						break
+					}
+				}
+			}
+		}
+		//TO-DO sort and add destructor
+		if !hasDefaultConstructor {
+			writeIndent(indent+tabSize, w)
+			w.buffer.WriteString(t.Identifier() + "();\n")
+		}
 		for _, m := range t.Members {
 			writeDeclaration(m, indent+tabSize, w)
 		}
@@ -121,6 +145,21 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 
 func writeClass(c *declaration.Class, w *writer) {
 	first := true
+	hasDefaultConstructor := false
+	for _, m := range c.Members {
+		if f, ok := m.(*declaration.Function); ok {
+			if f.Identifier() == c.Identifier() {
+				if f.Parameters == nil || len(f.Parameters.Parameters) == 0 {
+					hasDefaultConstructor = true
+					break
+				}
+			}
+		}
+	}
+	if !hasDefaultConstructor {
+		w.buffer.WriteString(c.Identifier() + "::" + c.Identifier() + "()\n{\n}\n")
+		first = false
+	}
 	for _, m := range c.Members {
 		if f, ok := m.(*declaration.Function); ok {
 			if !first {

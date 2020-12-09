@@ -7,7 +7,7 @@
 // -------------------------------- forward declarations --------------------------------
 enum class color;
 
-class must_do;
+class printer;
 
 class empty;
 
@@ -62,10 +62,7 @@ double f64_v = 0;
 
 std::string string_v = "hello world\n";
 
-std::string string_v_raw = "hello \\n\n    world\\n";
-
-template <class T>
-void print(T t);
+std::string string_v_raw = "\"hello world\"";
 
 template <class T>
 void print_line(T t);
@@ -79,7 +76,7 @@ enum class color
     blue
 };
 
-class must_do
+class printer
 {
 public:
     virtual void print() = 0;
@@ -88,7 +85,6 @@ public:
 class empty
 {
 public:
-    int32_t value = 100;
     empty();
     virtual ~empty();
 };
@@ -96,26 +92,24 @@ public:
 class base_class
 {
 public:
+    base_class();
     int32_t value = 1;
     base_class(int32_t value);
-    virtual void destroy();
+    virtual ~base_class();
 };
 
-class derive_class : public base_class, must_do
+class derive_class : public base_class, printer
 {
 public:
+    derive_class();
+    derive_class(int32_t value);
+    virtual ~derive_class();
     virtual void print();
 };
 
 int32_t main();
 
 // --------------------------------      implements      --------------------------------
-template <class T>
-void print(T t)
-{
-    std::cout << t;
-}
-
 template <class T>
 void print_line(T t)
 {
@@ -135,24 +129,43 @@ empty::~empty()
 {
 }
 
+base_class::base_class()
+{
+}
+
 base_class::base_class(int32_t value)
 {
     this->value = value;
-    print("constructor with 1 param");
+    print_line("base class constructor");
 }
 
-void base_class::destroy()
+base_class::~base_class()
 {
-    print("destructor");
+    print_line("base class destructor");
+}
+
+derive_class::derive_class()
+{
+}
+
+derive_class::derive_class(int32_t value)
+{
+    print_line("derive class constructor");
+}
+
+derive_class::~derive_class()
+{
+    print_line("derive class destructor");
 }
 
 void derive_class::print()
 {
+    print_line(this->value);
 }
 
 int32_t main()
 {
-    print(string_v);
     print_line(add(1, 1));
     return 0;
 }
+

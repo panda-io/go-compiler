@@ -8,7 +8,6 @@ import (
 func writeStatement(s statement.Statement, indent int, w *writer) {
 	switch t := s.(type) {
 	case *statement.Empty:
-		w.buffer.WriteString(";")
 
 	case *statement.Raw:
 		w.buffer.WriteString(t.Source[1 : len(t.Source)-1])

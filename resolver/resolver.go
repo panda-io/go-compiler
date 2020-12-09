@@ -211,9 +211,9 @@ func (r *Resolver) resolveTypeArguments(f *token.File, args *types.TypeArguments
 func (r *Resolver) resolveTypeName(f *token.File, tn *types.TypeName, s *ast.SoureFile, t *types.TypeParameters) {
 	names := r.findQualifiedName(f, tn, s, t)
 	if len(names) == 0 {
-		r.error(f, t.GetPosition(), fmt.Sprintf("%s undefined", tn.Name))
+		r.error(f, tn.GetPosition(), fmt.Sprintf("%s undefined", tn.Name))
 	} else if len(names) > 1 {
-		r.error(f, t.GetPosition(), fmt.Sprintf("ambiguous type %s", tn.Name))
+		r.error(f, tn.GetPosition(), fmt.Sprintf("ambiguous type %s", tn.Name))
 	} else {
 		tn.QualifiedName = names[0]
 	}

@@ -126,12 +126,18 @@ func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 			if !first {
 				w.buffer.WriteString("\n")
 			}
+			if t.TypeParameters != nil {
+				writeType(t.TypeParameters, w)
+			}
 			w.buffer.WriteString("class " + t.Name.Name + ";\n")
 			first = false
 
 		case *declaration.Class:
 			if !first {
 				w.buffer.WriteString("\n")
+			}
+			if t.TypeParameters != nil {
+				writeType(t.TypeParameters, w)
 			}
 			w.buffer.WriteString("class " + t.Name.Name + ";\n")
 			first = false
@@ -142,7 +148,9 @@ func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 			w.buffer.WriteString("}\n")
 		}
 	}
-	w.buffer.WriteString("\n")
+	if !first || p.Namespace != "" {
+		w.buffer.WriteString("\n")
+	}
 }
 
 func writeDeclarations(program *ast.Program, w *writer) {
@@ -214,10 +222,9 @@ func writePackageImplement(p *ast.Package, w *writer) {
 			w.buffer.WriteString("}\n")
 		}
 	}
-}
-
-func error(position *token.Position, message string) {
-	panic(fmt.Sprintf("error: %s \n %s \n", position.String(), message))
+	if !first || p.Namespace != "" {
+		w.buffer.WriteString("\n")
+	}
 }
 
 func writeIndent(indent int, w *writer) {
@@ -227,4 +234,8 @@ func writeIndent(indent int, w *writer) {
 		}
 	}
 	w.buffer.Write(indents[:indent])
+}
+
+func error(position *token.Position, message string) {
+	panic(fmt.Sprintf("error: %s \n %s \n", position.String(), message))
 }
