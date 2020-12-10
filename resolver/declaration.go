@@ -11,7 +11,9 @@ func (r *Resolver) resolveDeclaration(d declaration.Declaration, typeParams *typ
 		r.resolveVariable(m, typeParams)
 
 	case *declaration.Function:
+		r.currentScope = NewScope(nil)
 		r.resolveFunction(m, typeParams)
+		r.currentScope = nil
 
 	case *declaration.Enum:
 		// TO-DO validate const expr

@@ -1,6 +1,8 @@
 package resolver
 
 import (
+	"fmt"
+
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/types"
 )
@@ -10,19 +12,23 @@ func (r *Resolver) resolveExpression(e expression.Expression, typeParams *types.
 	case *expression.Literal:
 
 	case *expression.Identifier:
-		//TO-DO ???
+		//TO-DO ??? // should resolve before here
+		fmt.Println("TO-DO")
 
 	case *expression.This:
-		//TO-DO ???
+		//TO-DO ??? // should resolve before here
+		fmt.Println("TO-DO")
 
 	case *expression.Super:
-		//TO-DO ???
+		//TO-DO ??? // should resolve before here
+		fmt.Println("TO-DO")
 
 	case *expression.Parentheses:
 		r.resolveExpression(expr.Expression, typeParams)
 
 	case *expression.MemberAccess:
-		//TO-DO ???
+		//TO-DO ??? // should resolve before here
+		fmt.Println("TO-DO")
 
 	case *expression.Subscripting:
 		r.resolveExpression(expr.Parent, typeParams)

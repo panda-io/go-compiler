@@ -24,6 +24,9 @@ import (
 	- values declared as const
 *********************************/
 
+//TO-DO match type (int, float, string ... with unary, binary)
+// match number, string...
+
 func (r *Resolver) constExpression(e expression.Expression) bool {
 	switch t := e.(type) {
 
