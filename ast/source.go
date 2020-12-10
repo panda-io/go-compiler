@@ -9,7 +9,7 @@ type Using struct {
 	Namespace string
 }
 
-type SoureFile struct {
+type Source struct {
 	Namespace  string
 	Attributes []*declaration.Attribute
 	Using      []*Using

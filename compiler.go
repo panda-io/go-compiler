@@ -14,7 +14,7 @@ type Compiler struct {
 	parser   *parser.Parser
 	resolver *resolver.Resolver
 	fileset  *token.FileSet
-	sources  map[string]*ast.SoureFile
+	sources  map[string]*ast.Source
 	program  *ast.Program
 }
 
@@ -23,7 +23,7 @@ func NewCompiler(flags []string) *Compiler {
 		parser:   parser.NewParser(flags),
 		resolver: resolver.NewResolver(),
 		fileset:  &token.FileSet{},
-		sources:  make(map[string]*ast.SoureFile),
+		sources:  make(map[string]*ast.Source),
 	}
 }
 
@@ -43,14 +43,18 @@ func (c *Compiler) Generate(file string) {
 	c.fileset.Walk(c.resolve)
 	//TO-DO validate
 
-	c.resolver.PrintErrors()
+	count := c.resolver.Errors()
 
-	c.program = ast.NewProgram()
-	for _, s := range c.sources {
-		c.program.AddSource(s)
+	if count == 0 {
+		c.program = ast.NewProgram()
+		for _, s := range c.sources {
+			c.program.AddSource(s)
+		}
+		//TO-DO sort members and package
+		native.Write(c.program, c.fileset, file)
+	} else {
+		panic("errors found")
 	}
-	//TO-DO sort members and package
-	native.Write(c.program, c.fileset, file)
 }
 
 func (c *Compiler) declare(f *token.File) {

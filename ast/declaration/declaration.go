@@ -13,6 +13,7 @@ type Declaration interface {
 	declaration()
 	Identifier() string
 	IsPublic() bool
+	SetQualifiedName(string)
 }
 
 type Modifier struct {
@@ -32,12 +33,16 @@ type Attribute struct {
 
 type Base struct {
 	node.Base
-	Attributes []*Attribute
-	Modifier   *Modifier
-	Namespace  []string
+	Attributes     []*Attribute
+	Modifier       *Modifier
+	QualifinedName string
 }
 
 func (*Base) declaration() {}
+
+func (b *Base) SetQualifiedName(qualifinedName string) {
+	b.QualifinedName = qualifinedName
+}
 
 func (b *Base) IsPublic() bool {
 	if b.Modifier == nil {
@@ -61,7 +66,6 @@ func (v *Variable) Identifier() string {
 type Function struct {
 	Base
 	Name           *expression.Identifier
-	QualifinedName string
 	TypeParameters *types.TypeParameters
 	Parameters     *types.Parameters
 	ReturnType     types.Type

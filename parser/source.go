@@ -7,8 +7,8 @@ import (
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseSourceFile() *ast.SoureFile {
-	s := &ast.SoureFile{}
+func (p *Parser) parseSourceFile() *ast.Source {
+	s := &ast.Source{}
 	s.Attributes = p.parseAttributes()
 	s.Namespace = p.parseNamespace()
 	s.Using = p.parseUsing()

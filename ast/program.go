@@ -21,7 +21,7 @@ func NewProgram() *Program {
 	}
 }
 
-func (p *Program) AddSource(s *SoureFile) {
+func (p *Program) AddSource(s *Source) {
 	if s.Namespace == "" {
 		if p.Global == nil {
 			p.Global = &Package{}
