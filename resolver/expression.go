@@ -2,7 +2,9 @@ package resolver
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/types"
 )
@@ -69,7 +71,7 @@ func (r *Resolver) resolveExpression(e expression.Expression, typeParams *types.
 
 func (r *Resolver) findObjectsFromImportScope(name string) []*Object {
 	objects := []*Object{}
-	object := r.globalScope.Find(name)
+	object := r.packageScopes[ast.Global].Find(name)
 	if object != nil {
 		objects = append(objects, object)
 	}
@@ -84,22 +86,31 @@ func (r *Resolver) findObjectsFromImportScope(name string) []*Object {
 // parent can be interface, enum, class, namespace
 func (r *Resolver) resolveMemberAccess(e *expression.MemberAccess, typeParams *types.TypeParameters) {
 	//TO-DO ??? // should resolve before here
+	// can be parent: []  ()
 	accessChain := []*expression.MemberAccess{e}
 	if p, ok := e.Parent.(*expression.MemberAccess); ok {
 		accessChain = append(accessChain, p)
 		e = p
 	}
-	var namespaceScope *NamespaceScope
+
 	var object *Object
 	first := accessChain[len(accessChain)-1]
 	switch p := first.Parent.(type) {
 	case *expression.This:
-		first.ParentIsNamespace = false
 	case *expression.Super:
-		first.ParentIsNamespace = false
 		//TO-DO check parent scope
 	case *expression.Identifier:
-
+		object = r.currentScope.Find(p.Name)
+		if object == nil {
+			object = r.packageScopes[r.source.Namespace].Find(p.Name)
+		}
+		if object == nil {
+			for _, i := range r.source.Imports {
+				if i.Alias == p.Name {
+					first.FullNamespace = strings.Replace(i.Namespace, ".", "::", -1)
+				}
+			}
+		}
+		// TO-DO continue validate type
 	}
-
 }

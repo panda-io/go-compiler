@@ -47,8 +47,8 @@ func (n *NamespaceScope) AddScope(qualifiedName string, scope *Scope) {
 		if n.children[names[0]] == nil {
 			n.children[names[0]] = NewNamespaceScope()
 		}
-		names = names[1:]
 		n = n.children[names[0]]
+		names = names[1:]
 		if len(names) == 0 {
 			n.scope = scope
 		}

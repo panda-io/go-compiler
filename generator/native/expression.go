@@ -43,8 +43,12 @@ func writeExpression(e expression.Expression, w *writer) {
 		w.buffer.WriteString(")")
 
 	case *expression.MemberAccess:
-		writeExpression(t.Parent, w)
-		w.buffer.WriteString("->")
+		if t.FullNamespace == "" {
+			writeExpression(t.Parent, w)
+			w.buffer.WriteString("->")
+		} else {
+			w.buffer.WriteString(t.FullNamespace + "::")
+		}
 		writeExpression(t.Member, w)
 
 	case *expression.Subscripting:

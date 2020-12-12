@@ -58,7 +58,6 @@ func Write(program *ast.Program, fileset *token.FileSet, file string) {
 
 func writeIncludes(program *ast.Program, w *writer) {
 	includes := []string{"<cinttypes>", "<cuchar>", "<string>"}
-	includes = append(includes, collectPackageIncludes(program.Packages[ast.Global], w)...)
 	for _, pkg := range program.Packages {
 		includes = append(includes, collectPackageIncludes(pkg, w)...)
 	}
@@ -98,7 +97,6 @@ func collectPackageIncludes(p *ast.Package, w *writer) []string {
 }
 
 func writeForwardDeclarations(program *ast.Program, w *writer) {
-	writePackageForwardDeclaration(program.Packages[ast.Global], w)
 	for _, pkg := range program.Packages {
 		writePackageForwardDeclaration(pkg, w)
 	}
@@ -106,7 +104,7 @@ func writeForwardDeclarations(program *ast.Program, w *writer) {
 
 func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 	namespace := []string{}
-	if p.Namespace != "" {
+	if p.Namespace != ast.Global {
 		namespace = strings.Split(p.Namespace, ".")
 		for _, n := range namespace {
 			w.buffer.WriteString("namespace " + n + "\n{\n")
@@ -154,7 +152,6 @@ func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 }
 
 func writeDeclarations(program *ast.Program, w *writer) {
-	writePackageDeclaration(program.Packages[ast.Global], w)
 	for _, pkg := range program.Packages {
 		writePackageDeclaration(pkg, w)
 	}
@@ -162,7 +159,7 @@ func writeDeclarations(program *ast.Program, w *writer) {
 
 func writePackageDeclaration(p *ast.Package, w *writer) {
 	namespace := []string{}
-	if p.Namespace != "" {
+	if p.Namespace != ast.Global {
 		namespace = strings.Split(p.Namespace, ".")
 		for _, n := range namespace {
 			w.buffer.WriteString("namespace " + n + "\n{\n")
@@ -185,7 +182,6 @@ func writePackageDeclaration(p *ast.Package, w *writer) {
 }
 
 func writeImplements(program *ast.Program, w *writer) {
-	writePackageImplement(program.Packages[ast.Global], w)
 	for _, pkg := range program.Packages {
 		writePackageImplement(pkg, w)
 	}
@@ -193,7 +189,7 @@ func writeImplements(program *ast.Program, w *writer) {
 
 func writePackageImplement(p *ast.Package, w *writer) {
 	namespace := []string{}
-	if p.Namespace != "" {
+	if p.Namespace != ast.Global {
 		namespace = strings.Split(p.Namespace, ".")
 		for _, n := range namespace {
 			w.buffer.WriteString("namespace " + n + "\n{\n")
