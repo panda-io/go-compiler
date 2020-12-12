@@ -43,8 +43,9 @@ type Parentheses struct {
 
 type MemberAccess struct {
 	Base
-	Parent Expression
-	Member *Identifier
+	Parent            Expression
+	Member            *Identifier
+	ParentIsNamespace bool
 }
 
 type Subscripting struct {

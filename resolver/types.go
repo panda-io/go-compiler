@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/types"
 )
 
@@ -63,9 +64,14 @@ func (r *Resolver) resolveTypeName(typeName *types.TypeName, typParams *types.Ty
 	}
 }
 
-//TO-DO
-func (r *Resolver) resolveArguments(args *types.Arguments, typParams *types.TypeParameters) {
-	//TO-DO
+func (r *Resolver) resolveArguments(args *types.Arguments, typeParams *types.TypeParameters) {
+	for _, arg := range args.Arguments {
+		if expr, ok := arg.(expression.Expression); ok {
+			r.resolveExpression(expr, typeParams)
+		} else {
+			r.error(arg.GetPosition(), "invalid argument")
+		}
+	}
 }
 
 func (r *Resolver) findQualifiedName(typeName *types.TypeName, typeParams *types.TypeParameters) []string {
@@ -80,16 +86,11 @@ func (r *Resolver) findQualifiedName(typeName *types.TypeName, typeParams *types
 	}
 	// search as qualified name directly
 	names = r.checkQualifiedName(typeName, names, typeName.Name)
-	// search by using
-	for _, u := range r.source.Using {
-		if u.Alias == "" {
-			n := u.Namespace + "." + typeName.Name
+	// search by imports
+	for _, u := range r.source.Imports {
+		if strings.HasPrefix(typeName.Name, u.Alias+".") {
+			n := strings.Replace(typeName.Name, u.Alias, u.Namespace, 1)
 			names = r.checkQualifiedName(typeName, names, n)
-		} else {
-			if strings.HasPrefix(typeName.Name, u.Alias+".") {
-				n := strings.Replace(typeName.Name, u.Alias, u.Namespace, 1)
-				names = r.checkQualifiedName(typeName, names, n)
-			}
 		}
 	}
 	// search same package

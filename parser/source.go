@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/token"
@@ -11,7 +12,7 @@ func (p *Parser) parseSourceFile() *ast.Source {
 	s := &ast.Source{}
 	s.Attributes = p.parseAttributes()
 	s.Namespace = p.parseNamespace()
-	s.Using = p.parseUsing()
+	s.Imports = p.parseImports()
 
 	for p.token != token.EOF {
 		attr := p.parseAttributes()
@@ -71,11 +72,11 @@ func (p *Parser) parseNamespace() string {
 	return namespace
 }
 
-func (p *Parser) parseUsing() []*ast.Using {
-	using := []*ast.Using{}
-	for p.token == token.Using {
-		p.expect(token.Using)
-		u := &ast.Using{}
+func (p *Parser) parseImports() []*ast.Import {
+	imports := []*ast.Import{}
+	for p.token == token.Import {
+		p.expect(token.Import)
+		u := &ast.Import{}
 		name := p.parseIdentifier()
 		if p.token == token.Assign {
 			u.Alias = name.Name
@@ -83,8 +84,12 @@ func (p *Parser) parseUsing() []*ast.Using {
 			name = p.parseIdentifier()
 		}
 		u.Namespace = p.parseName(name.Name)
+		if u.Alias == "" {
+			names := strings.Split(u.Namespace, ".")
+			u.Alias = names[len(names)-1]
+		}
 		p.expect(token.Semi)
-		using = append(using, u)
+		imports = append(imports, u)
 	}
-	return using
+	return imports
 }

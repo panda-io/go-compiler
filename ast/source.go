@@ -4,7 +4,7 @@ import (
 	"github.com/panda-foundation/go-compiler/ast/declaration"
 )
 
-type Using struct {
+type Import struct {
 	Alias     string
 	Namespace string
 }
@@ -12,6 +12,6 @@ type Using struct {
 type Source struct {
 	Namespace  string
 	Attributes []*declaration.Attribute
-	Using      []*Using
+	Imports    []*Import
 	Members    []declaration.Declaration
 }

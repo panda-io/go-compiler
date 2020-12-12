@@ -34,6 +34,7 @@ const (
 	For
 	Function
 	If
+	Import
 	Interface
 	New
 	Namespace
@@ -43,7 +44,6 @@ const (
 	This
 	Throw
 	Try
-	Using
 	Var
 	keywordEnd
 
@@ -144,6 +144,7 @@ var (
 		For:       "for",
 		Function:  "function",
 		If:        "if",
+		Import:    "import",
 		Interface: "interface",
 		New:       "new",
 		Namespace: "namespace",
@@ -153,7 +154,6 @@ var (
 		This:      "this",
 		Throw:     "throw",
 		Try:       "try",
-		Using:     "using",
 		Var:       "var",
 
 		Bool:    "bool",

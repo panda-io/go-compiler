@@ -11,9 +11,7 @@ func (r *Resolver) resolveDeclaration(d declaration.Declaration, typeParams *typ
 		r.resolveVariable(m, typeParams)
 
 	case *declaration.Function:
-		r.currentScope = NewScope(nil)
 		r.resolveFunction(m, typeParams)
-		r.currentScope = nil
 
 	case *declaration.Enum:
 		// TO-DO validate const expr
@@ -58,6 +56,11 @@ func (r *Resolver) resolveFunction(function *declaration.Function, typeParams *t
 	if function.TypeParameters != nil {
 		r.resolveTypeParameters(function.TypeParameters, typeParams)
 	}
+	if function.ReturnType != nil {
+		r.resolveType(function.ReturnType, typeParams)
+	}
+
+	r.currentScope = r.currentScope.OpenScope()
 	if function.Parameters != nil {
 		tp := typeParams
 		if tp == nil {
@@ -68,16 +71,10 @@ func (r *Resolver) resolveFunction(function *declaration.Function, typeParams *t
 		}
 		r.resolveParameters(function.Parameters, tp)
 	}
-	if function.ReturnType != nil {
-		r.resolveType(function.ReturnType, typeParams)
-	}
-
-	// TO-DO resolve statements // local declaration //call, primary :: implement it with scope ?
-	// resolve function body
 	if function.Body != nil {
-		r.currentScope = r.currentScope.OpenScope()
 		r.resolveStatement(function.Body, typeParams)
 	}
+	r.currentScope = r.currentScope.CloseScope()
 }
 
 func (r *Resolver) resolveParents(parents []*types.TypeName, typeParams *types.TypeParameters) {

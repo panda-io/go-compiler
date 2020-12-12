@@ -1,8 +1,8 @@
 // --------------------------------       includes       --------------------------------
-#include <iostream>
 #include <cinttypes>
 #include <cuchar>
 #include <string>
+#include <iostream>
 
 // -------------------------------- forward declarations --------------------------------
 enum class color;

@@ -12,31 +12,36 @@ func (r *Resolver) resolveExpression(e expression.Expression, typeParams *types.
 	case *expression.Literal:
 
 	case *expression.Identifier:
-		//TO-DO ??? // should resolve before here
-		fmt.Println("TO-DO")
+		if r.currentScope.Find(expr.Name) == nil {
+			objects := r.findObjectsFromImportScope(expr.Name)
+			if len(objects) == 0 {
+				r.error(expr.Position, fmt.Sprintf("%s undefined", expr.Name))
+			} else if len(objects) > 1 {
+				r.error(expr.Position, fmt.Sprintf("ambiguous variable %s", expr.Name))
+			}
+		}
 
 	case *expression.This:
-		//TO-DO ??? // should resolve before here
-		fmt.Println("TO-DO")
+		r.error(expr.Position, "error use of keyword this")
 
 	case *expression.Super:
-		//TO-DO ??? // should resolve before here
-		fmt.Println("TO-DO")
+		r.error(expr.Position, "error use of keyword base")
 
 	case *expression.Parentheses:
 		r.resolveExpression(expr.Expression, typeParams)
 
 	case *expression.MemberAccess:
-		//TO-DO ??? // should resolve before here
-		fmt.Println("TO-DO")
+		r.resolveMemberAccess(expr, typeParams)
 
 	case *expression.Subscripting:
 		r.resolveExpression(expr.Parent, typeParams)
 		r.resolveExpression(expr.Element, typeParams)
+		//TO-DO check operator overload
 
 	case *expression.Invocation:
 		r.resolveExpression(expr.Function, typeParams)
 		r.resolveArguments(expr.Arguments, typeParams)
+		//TO-DO check type match, check if function exist
 
 	case *expression.New:
 		r.resolveType(expr.Type, typeParams)
@@ -60,4 +65,41 @@ func (r *Resolver) resolveExpression(e expression.Expression, typeParams *types.
 		r.resolveExpression(expr.First, typeParams)
 		r.resolveExpression(expr.Second, typeParams)
 	}
+}
+
+func (r *Resolver) findObjectsFromImportScope(name string) []*Object {
+	objects := []*Object{}
+	object := r.globalScope.Find(name)
+	if object != nil {
+		objects = append(objects, object)
+	}
+	for _, importScope := range r.importsScopes {
+		if object = importScope.Find(name); object != nil {
+			objects = append(objects, object)
+		}
+	}
+	return objects
+}
+
+// parent can be interface, enum, class, namespace
+func (r *Resolver) resolveMemberAccess(e *expression.MemberAccess, typeParams *types.TypeParameters) {
+	//TO-DO ??? // should resolve before here
+	accessChain := []*expression.MemberAccess{e}
+	if p, ok := e.Parent.(*expression.MemberAccess); ok {
+		accessChain = append(accessChain, p)
+		e = p
+	}
+	var namespaceScope *NamespaceScope
+	var object *Object
+	first := accessChain[len(accessChain)-1]
+	switch p := first.Parent.(type) {
+	case *expression.This:
+		first.ParentIsNamespace = false
+	case *expression.Super:
+		first.ParentIsNamespace = false
+		//TO-DO check parent scope
+	case *expression.Identifier:
+
+	}
+
 }

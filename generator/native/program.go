@@ -58,7 +58,7 @@ func Write(program *ast.Program, fileset *token.FileSet, file string) {
 
 func writeIncludes(program *ast.Program, w *writer) {
 	includes := []string{"<cinttypes>", "<cuchar>", "<string>"}
-	includes = append(includes, collectPackageIncludes(program.Global, w)...)
+	includes = append(includes, collectPackageIncludes(program.Packages[ast.Global], w)...)
 	for _, pkg := range program.Packages {
 		includes = append(includes, collectPackageIncludes(pkg, w)...)
 	}
@@ -98,7 +98,7 @@ func collectPackageIncludes(p *ast.Package, w *writer) []string {
 }
 
 func writeForwardDeclarations(program *ast.Program, w *writer) {
-	writePackageForwardDeclaration(program.Global, w)
+	writePackageForwardDeclaration(program.Packages[ast.Global], w)
 	for _, pkg := range program.Packages {
 		writePackageForwardDeclaration(pkg, w)
 	}
@@ -154,7 +154,7 @@ func writePackageForwardDeclaration(p *ast.Package, w *writer) {
 }
 
 func writeDeclarations(program *ast.Program, w *writer) {
-	writePackageDeclaration(program.Global, w)
+	writePackageDeclaration(program.Packages[ast.Global], w)
 	for _, pkg := range program.Packages {
 		writePackageDeclaration(pkg, w)
 	}
@@ -185,7 +185,7 @@ func writePackageDeclaration(p *ast.Package, w *writer) {
 }
 
 func writeImplements(program *ast.Program, w *writer) {
-	writePackageImplement(program.Global, w)
+	writePackageImplement(program.Packages[ast.Global], w)
 	for _, pkg := range program.Packages {
 		writePackageImplement(pkg, w)
 	}
