@@ -10,8 +10,13 @@ func TestVector(t *testing.T) {
 
 	c.ParseFile("../panda/console.pd")
 	//c.ParseFile("../panda/collection/vector.pd")
-	c.ParseFile("./test/vector.pd")
-	c.Generate("./test/main.cpp")
+	c.ParseFile("./sample/vector.pd")
+	c.Generate("./sample/vector.cpp")
+	cmd := exec.Command("g++", "-o", "./sample/vector", "./sample/vector.cpp")
+	err := cmd.Run()
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestSample(t *testing.T) {

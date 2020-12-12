@@ -1,6 +1,6 @@
 namespace;
 
-import collection;
+import console;
 
 //var v vector<int>;
 
