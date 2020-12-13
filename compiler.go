@@ -41,7 +41,7 @@ func (c *Compiler) ParseFile(file string) {
 func (c *Compiler) Generate(file string) {
 	c.fileset.Walk(c.declare)
 	c.fileset.Walk(c.resolve)
-	c.resolver.PrepareScope()
+
 	//TO-DO validate
 
 	count := c.resolver.Errors()

@@ -25,9 +25,6 @@ func NewProgram() *Program {
 }
 
 func (p *Program) AddSource(s *Source) {
-	if s.Namespace == "" {
-		s.Namespace = Global
-	}
 	if _, ok := p.Packages[s.Namespace]; !ok {
 		p.Packages[s.Namespace] = &Package{
 			Namespace: s.Namespace,

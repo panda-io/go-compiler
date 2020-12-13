@@ -65,7 +65,7 @@ func (p *Parser) parseNamespace() string {
 	p.expect(token.Namespace)
 	if p.token == token.Semi {
 		p.next()
-		return ""
+		return ast.Global
 	}
 	namespace := p.parseName("")
 	p.expect(token.Semi)

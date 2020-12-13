@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/ast/declaration"
@@ -17,11 +16,10 @@ type Error struct {
 type Resolver struct {
 	declarations map[string]*Object
 
-	packageScopes  map[string]*Scope
-	classScopes    map[string]*Scope
-	importsScopes  map[string]*Scope
-	currentScope   *Scope
-	namespaceScope *NamespaceScope
+	packageScopes map[string]*Scope
+	classScopes   map[string]*Scope
+	importsScopes map[string]*Scope
+	currentScope  *Scope
 
 	file   *token.File
 	source *ast.Source
@@ -29,46 +27,12 @@ type Resolver struct {
 	errors []*Error
 }
 
-//TO-DO member name cannot be namespace name
-type NamespaceScope struct {
-	scope    *Scope
-	children map[string]*NamespaceScope
-}
-
-func NewNamespaceScope() *NamespaceScope {
-	return &NamespaceScope{
-		children: make(map[string]*NamespaceScope),
-	}
-}
-
-func (n *NamespaceScope) AddScope(qualifiedName string, scope *Scope) {
-	names := strings.Split(qualifiedName, ".")
-	for len(names) > 0 {
-		if n.children[names[0]] == nil {
-			n.children[names[0]] = NewNamespaceScope()
-		}
-		n = n.children[names[0]]
-		names = names[1:]
-		if len(names) == 0 {
-			n.scope = scope
-		}
-	}
-}
-
 func NewResolver() *Resolver {
 	return &Resolver{
-		declarations:   make(map[string]*Object),
-		packageScopes:  map[string]*Scope{ast.Global: NewScope(nil)},
-		classScopes:    make(map[string]*Scope),
-		importsScopes:  make(map[string]*Scope),
-		namespaceScope: NewNamespaceScope(),
-	}
-}
-
-func (r *Resolver) PrepareScope() {
-	r.namespaceScope.scope = r.packageScopes[ast.Global]
-	for n, s := range r.packageScopes {
-		r.namespaceScope.AddScope(n, s)
+		declarations:  make(map[string]*Object),
+		packageScopes: map[string]*Scope{ast.Global: NewScope(nil)},
+		classScopes:   make(map[string]*Scope),
+		importsScopes: make(map[string]*Scope),
 	}
 }
 
@@ -77,7 +41,7 @@ func (r *Resolver) Declare(f *token.File, s *ast.Source) {
 	r.source = s
 
 	if r.packageScopes[r.source.Namespace] == nil {
-		r.packageScopes[r.source.Namespace] = NewScope(r.packageScopes[ast.Global])
+		r.packageScopes[r.source.Namespace] = NewScope(nil)
 	}
 	for _, m := range r.source.Members {
 		d := &Object{}
@@ -158,7 +122,7 @@ func (r *Resolver) Resolve(f *token.File, s *ast.Source) {
 	}
 
 	for _, m := range r.source.Members {
-		r.resolveDeclaration(m, nil)
+		r.resolveDeclaration(m)
 	}
 
 	for k := range r.importsScopes {

@@ -8,8 +8,8 @@ import (
 func TestVector(t *testing.T) {
 	c := NewCompiler([]string{"cpp"})
 
-	c.ParseFile("../panda/console.pd")
-	//c.ParseFile("../panda/collection/vector.pd")
+	c.ParseFile("../panda/core/console.pd")
+	c.ParseFile("../panda/collection/vector.pd")
 	c.ParseFile("./sample/vector.pd")
 	c.Generate("./sample/vector.cpp")
 	cmd := exec.Command("g++", "-o", "./sample/vector", "./sample/vector.cpp")

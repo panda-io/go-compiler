@@ -5,39 +5,39 @@ import (
 	"github.com/panda-foundation/go-compiler/ast/types"
 )
 
-func (r *Resolver) resolveDeclaration(d declaration.Declaration, typeParams *types.TypeParameters) {
+func (r *Resolver) resolveDeclaration(d declaration.Declaration) {
 	switch m := d.(type) {
 	case *declaration.Variable:
-		r.resolveVariable(m, typeParams)
+		r.resolveVariable(m, nil)
 
 	case *declaration.Function:
-		r.resolveFunction(m, typeParams)
+		r.resolveFunction(m, nil)
 
 	case *declaration.Enum:
 		// TO-DO validate const expr
 
 	case *declaration.Interface:
 		if m.TypeParameters != nil {
-			r.resolveTypeParameters(m.TypeParameters, typeParams)
+			r.resolveTypeParameters(m.TypeParameters, nil)
 		}
-		r.resolveParents(m.Parents, typeParams)
+		r.resolveParents(m.Parents, nil)
 		for _, f := range m.Members {
 			r.resolveFunction(f.(*declaration.Function), m.TypeParameters)
 		}
 
 	case *declaration.Class:
 		if m.TypeParameters != nil {
-			r.resolveTypeParameters(m.TypeParameters, typeParams)
+			r.resolveTypeParameters(m.TypeParameters, nil)
 		}
-		r.resolveParents(m.Parents, typeParams)
+		r.resolveParents(m.Parents, nil)
 		r.currentScope = r.classScopes[m.QualifinedName]
 		for _, member := range m.Members {
 			switch memberType := member.(type) {
 			case *declaration.Variable:
-				r.resolveVariable(memberType, typeParams)
+				r.resolveVariable(memberType, m.TypeParameters)
 
 			case *declaration.Function:
-				r.resolveFunction(memberType, typeParams)
+				r.resolveFunction(memberType, m.TypeParameters)
 			}
 		}
 		r.currentScope = nil

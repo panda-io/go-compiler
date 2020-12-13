@@ -1,13 +1,13 @@
 namespace;
 
 import console;
+import collection;
 
-//var v vector<int>;
+var v collection.vector<int>;
 
 function main() int
 {
     console.write_line("hello world");
-    /*
     v = create_vector();
     console.write_line(v.size());
     v.push(1);
@@ -16,12 +16,10 @@ function main() int
     var x = v.pop();
     console.write_line(x);
     console.write_line(v.size());
-    */
     return 0;
 }
 
-/*
-function create_vector() vector<int> 
+function create_vector() collection.vector<int> 
 {
-    return new vector<int>();
-}*/
+    return new collection.vector<int>();
+}

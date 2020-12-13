@@ -53,8 +53,8 @@ func (r *Resolver) resolveTypeArguments(args *types.TypeArguments, typParams *ty
 	}
 }
 
-func (r *Resolver) resolveTypeName(typeName *types.TypeName, typParams *types.TypeParameters) {
-	names := r.findQualifiedName(typeName, typParams)
+func (r *Resolver) resolveTypeName(typeName *types.TypeName, typeParams *types.TypeParameters) {
+	names := r.findQualifiedName(typeName, typeParams)
 	if len(names) == 0 {
 		r.error(typeName.GetPosition(), fmt.Sprintf("%s undefined", typeName.Name))
 	} else if len(names) > 1 {
