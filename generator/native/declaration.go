@@ -10,7 +10,14 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 	writeIndent(indent, w)
 	switch t := d.(type) {
 	case *declaration.Variable:
+		_, isTypeName := t.Type.(*types.TypeName)
+		if isTypeName {
+			w.buffer.WriteString("std::shared_ptr<")
+		}
 		writeType(t.Type, w)
+		if isTypeName {
+			w.buffer.WriteString(">")
+		}
 		w.buffer.WriteString(" ")
 		w.buffer.WriteString(t.Identifier())
 		if t.Value != nil {

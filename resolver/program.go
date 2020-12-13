@@ -68,7 +68,7 @@ func (r *Resolver) Declare(f *token.File, s *ast.Source) {
 		// register declaration
 		if d.Kind == EnumObject || d.Kind == InterfaceObject || d.Kind == ClassObject {
 			qualifiedName := m.Identifier()
-			if r.source.Namespace != "" {
+			if r.source.Namespace != ast.Global {
 				qualifiedName = r.source.Namespace + "." + qualifiedName
 			}
 			m.SetQualifiedName(qualifiedName)

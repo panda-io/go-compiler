@@ -1,9 +1,10 @@
 // --------------------------------       includes       --------------------------------
-#include <cinttypes>
 #include <cuchar>
 #include <string>
-#include <vector>
+#include <memory>
 #include <iostream>
+#include <vector>
+#include <cinttypes>
 
 // -------------------------------- forward declarations --------------------------------
 namespace collection
@@ -18,6 +19,15 @@ namespace console
 }
 
 // --------------------------------     declarations     --------------------------------
+namespace console
+{
+template <class type>
+void write(std::shared_ptr<type> value);
+
+template <class type>
+void write_line(std::shared_ptr<type> value);
+}
+
 namespace collection
 {
 template <class type>
@@ -31,35 +41,41 @@ public:
     virtual bool empty() = 0;
     virtual void reserve(int32_t size) = 0;
     virtual void shrink() = 0;
-    virtual type get(int32_t position) = 0;
-    virtual type set(int32_t position, type value) = 0;
-    virtual type front() = 0;
-    virtual type back() = 0;
-    virtual void fill(int32_t size, type value) = 0;
-    virtual void push(type value) = 0;
-    virtual type pop() = 0;
-    virtual void insert(int32_t position, type value) = 0;
+    virtual std::shared_ptr<type> get(int32_t position) = 0;
+    virtual std::shared_ptr<type> set(int32_t position, std::shared_ptr<type> value) = 0;
+    virtual std::shared_ptr<type> front() = 0;
+    virtual std::shared_ptr<type> back() = 0;
+    virtual void fill(int32_t size, std::shared_ptr<type> value) = 0;
+    virtual void push(std::shared_ptr<type> value) = 0;
+    virtual std::shared_ptr<type> pop() = 0;
+    virtual void insert(int32_t position, std::shared_ptr<type> value) = 0;
     virtual void erase(int32_t position) = 0;
     virtual void clear() = 0;
 };
 }
 
-collection::vector<int32_t> v;
+std::shared_ptr<collection::vector<int32_t>> v;
 
 int32_t main();
 
-collection::vector<int32_t> create_vector();
+std::shared_ptr<collection::vector<int32_t>> create_vector();
 
+// --------------------------------      implements      --------------------------------
 namespace console
 {
 template <class type>
-void write(type value);
-
-template <class type>
-void write_line(type value);
+void write(std::shared_ptr<type> value)
+{
+    std::cout << value;;
 }
 
-// --------------------------------      implements      --------------------------------
+template <class type>
+void write_line(std::shared_ptr<type> value)
+{
+    std::cout << value << std::endl;;
+}
+}
+
 namespace collection
 {
 vector::vector()
@@ -97,23 +113,8 @@ int32_t main()
     return 0;
 }
 
-collection::vector<int32_t> create_vector()
+std::shared_ptr<collection::vector<int32_t>> create_vector()
 {
-    return std::make_shared<collection::vector<int32_t>>();
-}
-
-namespace console
-{
-template <class type>
-void write(type value)
-{
-    std::cout << value;;
-}
-
-template <class type>
-void write_line(type value)
-{
-    std::cout << value << std::endl;;
-}
+    return std::make_shared<std::shared_ptr<collection::vector<int32_t>>>();
 }
 

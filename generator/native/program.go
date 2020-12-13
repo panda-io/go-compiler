@@ -57,7 +57,7 @@ func Write(program *ast.Program, fileset *token.FileSet, file string) {
 }
 
 func writeIncludes(program *ast.Program, w *writer) {
-	includes := []string{"<cinttypes>", "<cuchar>", "<string>"}
+	includes := []string{"<cinttypes>", "<cuchar>", "<string>", "<memory>"}
 	for _, pkg := range program.Packages {
 		includes = append(includes, collectPackageIncludes(pkg, w)...)
 	}

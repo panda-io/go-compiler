@@ -2,6 +2,7 @@
 #include <cinttypes>
 #include <cuchar>
 #include <string>
+#include <memory>
 #include <iostream>
 
 // -------------------------------- forward declarations --------------------------------

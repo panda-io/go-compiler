@@ -84,7 +84,7 @@ func (r *Resolver) findQualifiedName(typeName *types.TypeName, typeParams *types
 			}
 		}
 	}
-	// search as qualified name directly
+	// search global
 	names = r.checkQualifiedName(typeName, names, typeName.Name)
 	// search by imports
 	for _, u := range r.source.Imports {
