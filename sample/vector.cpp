@@ -1,22 +1,20 @@
 // --------------------------------       includes       --------------------------------
-#include <cinttypes>
 #include <cuchar>
 #include <string>
 #include <memory>
 #include <iostream>
 #include <vector>
+#include <cinttypes>
 
 // -------------------------------- forward declarations --------------------------------
-
 namespace console
 {
 }
 
 namespace collection
 {
-template <class type>
-class vector;
 }
+
 
 // --------------------------------     declarations     --------------------------------
 namespace console
@@ -30,28 +28,6 @@ void write_line(type value);
 
 namespace collection
 {
-template <class type>
-class vector
-{
-public:
-    vector();
-    virtual int32_t size() = 0;
-    virtual void resize(int32_t size) = 0;
-    virtual int32_t capacity() = 0;
-    virtual bool empty() = 0;
-    virtual void reserve(int32_t size) = 0;
-    virtual void shrink() = 0;
-    virtual std::shared_ptr<type> get(int32_t position) = 0;
-    virtual std::shared_ptr<type> set(int32_t position, type value) = 0;
-    virtual std::shared_ptr<type> front() = 0;
-    virtual std::shared_ptr<type> back() = 0;
-    virtual void fill(int32_t size, type value) = 0;
-    virtual void push(type value) = 0;
-    virtual std::shared_ptr<type> pop() = 0;
-    virtual void insert(int32_t position, type value) = 0;
-    virtual void erase(int32_t position) = 0;
-    virtual void clear() = 0;
-};
 }
 
 std::shared_ptr<collection::vector<int32_t>> v;
@@ -78,26 +54,6 @@ void write_line(type value)
 
 namespace collection
 {
-template <class type>
-vector<type>::vector()
-{
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 int32_t main()

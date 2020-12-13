@@ -1,12 +1,13 @@
 package native
 
 import (
+	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/ast/declaration"
 	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
+func writeDeclaration(p *ast.Package, d declaration.Declaration, indent int, w *writer) {
 	writeIndent(indent, w)
 	switch t := d.(type) {
 	case *declaration.Variable:
@@ -112,11 +113,14 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 		writeIndent(indent, w)
 		w.buffer.WriteString("{\npublic:\n")
 		for _, m := range t.Members {
-			writeDeclaration(m, indent+tabSize, w)
+			writeDeclaration(p, m, indent+tabSize, w)
 		}
 		w.buffer.WriteString("};\n")
 
 	case *declaration.Class:
+		if w.replaceClasses[p.Namespace+"."+t.Identifier()] != nil {
+			break
+		}
 		if t.TypeParameters != nil {
 			writeType(t.TypeParameters, w)
 			writeIndent(indent, w)
@@ -151,7 +155,7 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 			w.buffer.WriteString(t.Identifier() + "();\n")
 		}
 		for _, m := range t.Members {
-			writeDeclaration(m, indent+tabSize, w)
+			writeDeclaration(p, m, indent+tabSize, w)
 		}
 		w.buffer.WriteString("};\n")
 	}

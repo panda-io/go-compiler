@@ -1,9 +1,9 @@
 // --------------------------------       includes       --------------------------------
+#include <cinttypes>
+#include <cuchar>
 #include <string>
 #include <memory>
 #include <iostream>
-#include <cinttypes>
-#include <cuchar>
 
 // -------------------------------- forward declarations --------------------------------
 enum class color;
