@@ -2,6 +2,7 @@ package native
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/statement"
+	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
@@ -16,7 +17,23 @@ func writeStatement(s statement.Statement, indent int, w *writer) {
 		writeExpression(t.Expression, w)
 
 	case *statement.Declaration:
-		//TO-DO
+		if t.Type == nil {
+			w.buffer.WriteString("auto")
+		} else {
+			_, isTypeName := t.Type.(*types.TypeName)
+			if isTypeName {
+				w.buffer.WriteString("std::shared_ptr<")
+			}
+			writeType(t.Type, w)
+			if isTypeName {
+				w.buffer.WriteString(">")
+			}
+		}
+		w.buffer.WriteString(" " + t.Name.Name)
+		if t.Value != nil {
+			w.buffer.WriteString(" = ")
+			writeExpression(t.Value, w)
+		}
 
 	case *statement.Return:
 		w.buffer.WriteString("return")

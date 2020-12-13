@@ -55,7 +55,14 @@ func writeDeclaration(d declaration.Declaration, indent int, w *writer) {
 			if t.ReturnType == nil {
 				w.buffer.WriteString("void ")
 			} else {
+				_, isTypeName := t.ReturnType.(*types.TypeName)
+				if isTypeName {
+					w.buffer.WriteString("std::shared_ptr<")
+				}
 				writeType(t.ReturnType, w)
+				if isTypeName {
+					w.buffer.WriteString(">")
+				}
 				w.buffer.WriteString(" ")
 			}
 		}
@@ -164,7 +171,14 @@ func writeClass(c *declaration.Class, w *writer) {
 		}
 	}
 	if !hasDefaultConstructor {
-		w.buffer.WriteString(c.Identifier() + "::" + c.Identifier() + "()\n{\n}\n")
+		if c.TypeParameters != nil {
+			writeType(c.TypeParameters, w)
+		}
+		w.buffer.WriteString(c.Identifier())
+		if c.TypeParameters != nil {
+			writeTypeArguments(c.TypeParameters, w)
+		}
+		w.buffer.WriteString("::" + c.Identifier() + "()\n{\n}\n")
 		first = false
 	}
 	for _, m := range c.Members {
@@ -172,13 +186,13 @@ func writeClass(c *declaration.Class, w *writer) {
 			if !first {
 				w.buffer.WriteString("\n")
 			}
-			writeFunction(f, w)
+			writeFunction(f, c, w)
 			first = false
 		}
 	}
 }
 
-func writeFunction(f *declaration.Function, w *writer) {
+func writeFunction(f *declaration.Function, c *declaration.Class, w *writer) {
 	if f.Body == nil {
 		// TO-DO only declare, replace with cpp function
 		return
@@ -186,16 +200,33 @@ func writeFunction(f *declaration.Function, w *writer) {
 	if f.TypeParameters != nil {
 		writeType(f.TypeParameters, w)
 	}
+	if c != nil && c.TypeParameters != nil {
+		writeType(c.TypeParameters, w)
+	}
 	if !(f.ClassName != "" && (f.Identifier() == f.ClassName || f.Identifier() == "~"+f.ClassName)) {
 		if f.ReturnType == nil {
 			w.buffer.WriteString("void ")
 		} else {
+			_, isTypeName := f.ReturnType.(*types.TypeName)
+			if isTypeName {
+				w.buffer.WriteString("std::shared_ptr<")
+			}
 			writeType(f.ReturnType, w)
+			if isTypeName {
+				w.buffer.WriteString(">")
+			}
 			w.buffer.WriteString(" ")
 		}
 	}
 	if f.ClassName != "" {
-		w.buffer.WriteString(f.ClassName + "::")
+		if c != nil && c.TypeParameters != nil {
+			writeType(c.TypeParameters, w)
+		}
+		w.buffer.WriteString(f.ClassName)
+		if c.TypeParameters != nil {
+			writeTypeArguments(c.TypeParameters, w)
+		}
+		w.buffer.WriteString("::")
 	}
 	w.buffer.WriteString(f.Identifier())
 	writeType(f.Parameters, w)

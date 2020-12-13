@@ -202,7 +202,7 @@ func writePackageImplement(p *ast.Package, w *writer) {
 			if !first {
 				w.buffer.WriteString("\n")
 			}
-			writeFunction(t, w)
+			writeFunction(t, nil, w)
 			first = false
 
 		case *declaration.Class:

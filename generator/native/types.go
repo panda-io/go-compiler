@@ -107,3 +107,18 @@ func writeType(t types.Type, w *writer) {
 		w.buffer.WriteString(")")
 	}
 }
+
+func writeTypeArguments(t *types.TypeParameters, w *writer) {
+	w.buffer.WriteString("<")
+	for i, p := range t.Parameters {
+		if i > 0 {
+			w.buffer.WriteString(", ")
+		}
+		if t.Ellipsis && i == len(t.Parameters)-1 {
+			w.buffer.WriteString(p.Name + "...")
+		} else {
+			w.buffer.WriteString(p.Name)
+		}
+	}
+	w.buffer.WriteString(">")
+}
