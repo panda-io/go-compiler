@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 
 	"github.com/panda-foundation/go-compiler/ast"
-	"github.com/panda-foundation/go-compiler/generator/native"
 	"github.com/panda-foundation/go-compiler/parser"
 	"github.com/panda-foundation/go-compiler/resolver"
 	"github.com/panda-foundation/go-compiler/token"
@@ -52,7 +51,7 @@ func (c *Compiler) Generate(file string) {
 			c.program.AddSource(s)
 		}
 		//TO-DO sort members and package
-		native.Write(c.program, c.fileset, file)
+		//native.Write(c.program, c.fileset, file)
 	} else {
 		panic("errors found")
 	}

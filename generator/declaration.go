@@ -1,4 +1,4 @@
-package native
+package generator
 
 import (
 	"github.com/panda-foundation/go-compiler/ast"

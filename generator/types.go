@@ -1,4 +1,4 @@
-package native
+package generator
 
 import (
 	"strings"
@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	cppTypes = [...]string{
+	llvmTypes = [...]string{
 		token.Bool:    "bool",
 		token.Char:    "char32_t",
 		token.Int8:    "int8_t",
