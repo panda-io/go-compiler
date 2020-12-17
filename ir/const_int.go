@@ -44,25 +44,22 @@ func NewBool(x bool) *Int {
 //         0b[01]+
 //    * oct integer literal
 //         0o[0-7]
-func NewIntFromString(typ *IntType, s string) (*Int, error) {
+func NewIntFromString(typ *IntType, s string) *Int {
 	// Boolean literal.
 	switch s {
 	case "true":
 		if !typ.Equal(I1) {
-			return nil, fmt.Errorf("invalid boolean type; expected i1, got %T", typ)
+			panic(fmt.Errorf("invalid boolean type; expected i1, got %T", typ))
 		}
-		return True, nil
+		return True
 	case "false":
 		if !typ.Equal(I1) {
-			return nil, fmt.Errorf("invalid boolean type; expected i1, got %T", typ)
+			panic(fmt.Errorf("invalid boolean type; expected i1, got %T", typ))
 		}
-		return False, nil
+		return False
 	}
 	x, _ := (&big.Int{}).SetString(s, 0)
-	if x == nil {
-		return nil, fmt.Errorf("unable to parse integer constant %q", s)
-	}
-	return &Int{Typ: typ, X: x}, nil
+	return &Int{Typ: typ, X: x}
 }
 
 // String returns the LLVM syntax representation of the constant as a type-value

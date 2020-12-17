@@ -1,5 +1,6 @@
 package generator
 
+/*
 import (
 	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/ast/types"
@@ -123,14 +124,13 @@ func writeStatement(s statement.Statement, indent int, w *writer) {
 		writeStatement(t.Body, indent+tabSize, w)
 
 	case *statement.Foreach:
-		/* TO-DO
 		WriteIndent(buffer, indent)
 		buffer.WriteString("for (")
 		s.Init.Print(buffer, 0)
 		buffer.WriteString(" : ")
 		s.Iterator.Print(buffer)
 		buffer.WriteString(" )\n")
-		s.Body.Print(buffer, indent)*/
+		s.Body.Print(buffer, indent)
 
 	case *statement.Compound:
 		writeIndent(indent, w)
@@ -143,4 +143,4 @@ func writeStatement(s statement.Statement, indent int, w *writer) {
 		writeIndent(indent, w)
 		w.buffer.WriteString("}\n")
 	}
-}
+}*/

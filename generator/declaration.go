@@ -1,5 +1,6 @@
 package generator
 
+/*
 import (
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/ast/declaration"
@@ -237,3 +238,4 @@ func writeFunction(f *declaration.Function, c *declaration.Class, w *writer) {
 	w.buffer.WriteString("\n")
 	writeStatement(f.Body, 0, w)
 }
+*/

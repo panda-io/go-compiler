@@ -1,5 +1,6 @@
 package generator
 
+/*
 import (
 	"strconv"
 
@@ -95,3 +96,4 @@ func writeExpression(e expression.Expression, w *writer) {
 		writeExpression(t.Second, w)
 	}
 }
+*/

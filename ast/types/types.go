@@ -2,19 +2,20 @@ package types
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
 type Type interface {
 	node.Node
-	types()
+	GenerateIR() ir.Value
 }
 
 type Base struct {
 	node.Base
 }
 
-func (*Base) types() {}
+func (*Base) GenerateIR() ir.Value { return nil }
 
 type BuitinType struct {
 	Base

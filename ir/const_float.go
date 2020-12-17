@@ -40,32 +40,24 @@ func NewFloat(typ *FloatType, x float64) *Float {
 //
 //    * fraction floating-point literal
 //         [+-]? [0-9]+ [.] [0-9]*
-func NewFloatFromString(typ *FloatType, s string) (*Float, error) {
+func NewFloatFromString(typ *FloatType, s string) *Float {
 	const base = 10
 	switch typ.Kind {
 	case FloatKindFloat:
 		const precision = 24
-		x, _, err := big.ParseFloat(s, base, precision, big.ToNearestEven)
-		if err != nil {
-			return nil, err
-		}
-		c := &Float{
+		x, _, _ := big.ParseFloat(s, base, precision, big.ToNearestEven)
+		return &Float{
 			Typ: typ,
 			X:   x,
 		}
-		return c, nil
 
 	case FloatKindDouble:
 		const precision = 53
-		x, _, err := big.ParseFloat(s, base, precision, big.ToNearestEven)
-		if err != nil {
-			return nil, err
-		}
-		c := &Float{
+		x, _, _ := big.ParseFloat(s, base, precision, big.ToNearestEven)
+		return &Float{
 			Typ: typ,
 			X:   x,
 		}
-		return c, nil
 
 	default:
 		panic(fmt.Errorf("support for floating-point kind %v not yet implemented", typ.Kind))

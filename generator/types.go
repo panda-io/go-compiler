@@ -1,5 +1,6 @@
 package generator
 
+/*
 import (
 	"strings"
 
@@ -122,3 +123,4 @@ func writeTypeArguments(t *types.TypeParameters, w *writer) {
 	}
 	w.buffer.WriteString(">")
 }
+*/
