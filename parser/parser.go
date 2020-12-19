@@ -37,7 +37,7 @@ func (p *Parser) ParseExpression(source []byte) expression.Expression {
 func (p *Parser) ParseStatements(source []byte) statement.Statement {
 	file := token.NewFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
 	p.setSource(file, source)
-	return p.parseCompoundStatement()
+	return p.parseBlockStatement()
 }
 
 func (p *Parser) ParseBytes(source []byte) *ast.Source {

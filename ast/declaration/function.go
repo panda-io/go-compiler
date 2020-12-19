@@ -4,6 +4,7 @@ import (
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Function struct {
@@ -12,10 +13,9 @@ type Function struct {
 	TypeParameters *types.TypeParameters
 	Parameters     *types.Parameters
 	ReturnType     types.Type
-	Body           *statement.Compound
+	Body           *statement.Block
 	ClassName      string
 }
 
-func (f *Function) Identifier() string {
-	return f.Name.Name
+func (c *Function) GenerateIR(*ir.Module) {
 }

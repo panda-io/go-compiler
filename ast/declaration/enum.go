@@ -2,6 +2,7 @@ package declaration
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/expression"
+	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Enum struct {
@@ -10,6 +11,5 @@ type Enum struct {
 	Members []Declaration
 }
 
-func (e *Enum) Identifier() string {
-	return e.Name.Name
+func (c *Enum) GenerateIR(*ir.Module) {
 }

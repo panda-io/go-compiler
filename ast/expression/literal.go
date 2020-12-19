@@ -1,7 +1,7 @@
 package expression
 
 import (
-	"github.com/panda-foundation/go-compiler/ir"
+	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
@@ -11,7 +11,11 @@ type Literal struct {
 	Value string
 }
 
-func (e *Literal) GenerateIR() ir.Value {
+func (e *Literal) GenerateIR(c *node.Context) {
+	//TO-DO
+}
+
+/*
 	switch e.Type {
 	case token.STRING:
 		//TO-DO
@@ -31,16 +35,4 @@ func (e *Literal) GenerateIR() ir.Value {
 	case token.IDENT:
 		//TO-DO
 	}
-	return nil
-}
-
-func (e *Literal) IsConstant() bool {
-	switch e.Type {
-	case token.IDENT:
-		//TO-DO
-		return false
-
-	default:
-		return true
-	}
-}
+	return nil*/

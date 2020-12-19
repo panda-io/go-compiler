@@ -2,14 +2,16 @@ package statement
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/node"
-	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Statement interface {
 	node.Node
-	GenerateIR() ir.Value
+	GenerateIR(*node.Context)
 }
 
 type Base struct {
 	node.Base
+}
+
+func (*Base) GenerateIR(*node.Context) {
 }

@@ -1,20 +1,12 @@
 package expression
 
-import (
-	"github.com/panda-foundation/go-compiler/ir"
-)
+import "github.com/panda-foundation/go-compiler/ast/node"
 
 type Identifier struct {
 	Base
 	Name string
 }
 
-func (e *Identifier) GenerateIR() ir.Value {
+func (e *Identifier) GenerateIR(c *node.Context) {
 	//TO-DO
-	return nil
-}
-
-func (e *Identifier) IsConstant() bool {
-	//TO-DO search scope
-	return false
 }

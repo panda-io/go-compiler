@@ -1,8 +1,6 @@
 package expression
 
-import (
-	"github.com/panda-foundation/go-compiler/ir"
-)
+import "github.com/panda-foundation/go-compiler/ast/node"
 
 type Subscripting struct {
 	Base
@@ -10,12 +8,6 @@ type Subscripting struct {
 	Element Expression
 }
 
-func (e *Subscripting) GenerateIR() ir.Value {
+func (e *Subscripting) GenerateIR(c *node.Context) {
 	//TO-DO
-	return nil
-}
-
-func (e *Subscripting) IsConstant() bool {
-	//TO-DO search scope
-	return false
 }

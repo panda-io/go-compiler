@@ -1,8 +1,6 @@
 package expression
 
-import (
-	"github.com/panda-foundation/go-compiler/ir"
-)
+import "github.com/panda-foundation/go-compiler/ast/node"
 
 type MemberAccess struct {
 	Base
@@ -11,12 +9,6 @@ type MemberAccess struct {
 	FullNamespace string
 }
 
-func (e *MemberAccess) GenerateIR() ir.Value {
+func (e *MemberAccess) GenerateIR(c *node.Context) {
 	//TO-DO
-	return nil
-}
-
-func (e *MemberAccess) IsConstant() bool {
-	//TO-DO search scope
-	return false
 }

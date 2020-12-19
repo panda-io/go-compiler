@@ -1,14 +1,11 @@
 package statement
 
-import "github.com/panda-foundation/go-compiler/ir"
+import "github.com/panda-foundation/go-compiler/ast/node"
 
 type Block struct {
 	Base
 	Statements []Statement
 }
 
-func (e *Block) GenerateIR() ir.Value {
-	//block := ir.NewBlock("")
-
-	return nil
+func (c *Block) GenerateIR(*node.Context) {
 }

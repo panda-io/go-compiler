@@ -1,18 +1,12 @@
 package expression
 
-import (
-	"github.com/panda-foundation/go-compiler/ir"
-)
+import "github.com/panda-foundation/go-compiler/ast/node"
 
 type Parentheses struct {
 	Base
 	Expression Expression
 }
 
-func (e *Parentheses) GenerateIR() ir.Value {
-	return e.Expression.GenerateIR()
-}
-
-func (e *Parentheses) IsConstant() bool {
-	return e.Expression.IsConstant()
+func (e *Parentheses) GenerateIR(c *node.Context) {
+	//TO-DO
 }

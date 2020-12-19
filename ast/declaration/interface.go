@@ -3,6 +3,7 @@ package declaration
 import (
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Interface struct {
@@ -13,6 +14,5 @@ type Interface struct {
 	Members        []Declaration
 }
 
-func (i *Interface) Identifier() string {
-	return i.Name.Name
+func (c *Interface) GenerateIR(*ir.Module) {
 }

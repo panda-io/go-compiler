@@ -88,7 +88,7 @@ func (r *Resolver) resolveStatement(stmt statement.Statement, typeParams *types.
 		r.resolveStatement(current.Body, typeParams)
 		r.currentScope = r.currentScope.CloseScope()
 
-	case *statement.Compound:
+	case *statement.Block:
 		r.currentScope = r.currentScope.OpenScope()
 		for _, s := range current.Statements {
 			r.resolveStatement(s, typeParams)

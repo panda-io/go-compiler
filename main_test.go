@@ -30,3 +30,9 @@ func TestSample(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestBasic(t *testing.T) {
+	c := NewCompiler(nil)
+
+	c.ParseFile("./sample/basic.pd")
+}

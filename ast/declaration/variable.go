@@ -3,6 +3,7 @@ package declaration
 import (
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
@@ -14,6 +15,5 @@ type Variable struct {
 	Value expression.Expression
 }
 
-func (v *Variable) Identifier() string {
-	return v.Name.Name
+func (c *Variable) GenerateIR(*ir.Module) {
 }

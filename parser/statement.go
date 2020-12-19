@@ -39,19 +39,8 @@ func (p *Parser) parseStatement() statement.Statement {
 		p.expect(token.Semi)
 		return s
 
-	case token.META:
-		s := &statement.Raw{}
-		s.Position = p.position
-		p.next()
-		if p.token != token.STRING {
-			p.expectedError(p.position, "raw source (string)")
-		}
-		s.Source = p.literal
-		p.next()
-		return s
-
 	case token.LeftBrace:
-		return p.parseCompoundStatement()
+		return p.parseBlockStatement()
 
 	case token.If:
 		return p.parseIfStatement()
@@ -121,8 +110,8 @@ func (p *Parser) parseDeclarationStatement(consumeSemi bool) *statement.Declarat
 	return s
 }
 
-func (p *Parser) parseCompoundStatement() *statement.Compound {
-	s := &statement.Compound{}
+func (p *Parser) parseBlockStatement() *statement.Block {
+	s := &statement.Block{}
 	s.Position = p.position
 	p.next()
 	for p.token != token.RightBrace {

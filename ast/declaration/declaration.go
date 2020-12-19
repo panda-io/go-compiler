@@ -8,8 +8,9 @@ import (
 
 type Declaration interface {
 	node.Node
+	GenerateIR(*ir.Module)
+	Identifier() string
 	SetQualifiedName(string)
-	GenerateIR() ir.Value
 }
 
 type Modifier struct {
@@ -32,9 +33,14 @@ type Base struct {
 	node.Base
 	Attributes     []*Attribute
 	Modifier       *Modifier
+	Name           *expression.Identifier
 	QualifinedName string
 }
 
 func (b *Base) SetQualifiedName(qualifinedName string) {
 	b.QualifinedName = qualifinedName
+}
+
+func (b *Base) Identifier() string {
+	return b.Name.Name
 }

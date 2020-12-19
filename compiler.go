@@ -5,24 +5,22 @@ import (
 
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/parser"
-	"github.com/panda-foundation/go-compiler/resolver"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
 type Compiler struct {
-	parser   *parser.Parser
-	resolver *resolver.Resolver
-	fileset  *token.FileSet
-	sources  map[string]*ast.Source
-	program  *ast.Program
+	parser  *parser.Parser
+	fileset *token.FileSet
+	sources map[string]*ast.Source
+	program *ast.Program
 }
 
 func NewCompiler(flags []string) *Compiler {
 	return &Compiler{
-		parser:   parser.NewParser(flags),
-		resolver: resolver.NewResolver(),
-		fileset:  &token.FileSet{},
-		sources:  make(map[string]*ast.Source),
+		parser:  parser.NewParser(flags),
+		fileset: &token.FileSet{},
+		sources: make(map[string]*ast.Source),
+		program: ast.NewProgram(),
 	}
 }
 
@@ -34,35 +32,17 @@ func (c *Compiler) ParseFile(file string) {
 		panic(err)
 	}
 	f := c.fileset.AddFile(file, len(b))
-	c.sources[f.Name] = c.parser.ParseFile(f, b)
+	s := c.parser.ParseFile(f, b)
+	c.sources[f.Name] = s
+	c.program.AddSource(s)
 }
 
 func (c *Compiler) Generate(file string) {
-	c.fileset.Walk(c.declare)
-	c.fileset.Walk(c.resolve)
-
-	//TO-DO validate
-
-	count := c.resolver.Errors()
-
-	if count == 0 {
-		c.program = ast.NewProgram()
-		for _, s := range c.sources {
-			c.program.AddSource(s)
-		}
-		//TO-DO sort members and package
-		//native.Write(c.program, c.fileset, file)
-	} else {
-		panic("errors found")
+	content := c.program.Packages[ast.Global].GenerateIR()
+	err := ioutil.WriteFile(file, []byte(content), 0644)
+	if err != nil {
+		panic(err)
 	}
-}
-
-func (c *Compiler) declare(f *token.File) {
-	c.resolver.Declare(f, c.sources[f.Name])
-}
-
-func (c *Compiler) resolve(f *token.File) {
-	c.resolver.Resolve(f, c.sources[f.Name])
 }
 
 /*

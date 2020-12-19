@@ -54,7 +54,7 @@ func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*dec
 		d.ReturnType = p.parseType()
 	}
 	if p.token == token.LeftBrace {
-		d.Body = p.parseCompoundStatement()
+		d.Body = p.parseBlockStatement()
 	} else if p.token == token.Semi {
 		p.next()
 	}

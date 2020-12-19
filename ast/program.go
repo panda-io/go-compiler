@@ -1,18 +1,8 @@
 package ast
 
-import (
-	"github.com/panda-foundation/go-compiler/ast/declaration"
-)
-
 const (
 	Global = "global"
 )
-
-type Package struct {
-	Namespace  string
-	Attributes []*declaration.Attribute
-	Members    []declaration.Declaration
-}
 
 type Program struct {
 	Packages map[string]*Package
@@ -33,4 +23,8 @@ func (p *Program) AddSource(s *Source) {
 	pkg := p.Packages[s.Namespace]
 	pkg.Attributes = append(pkg.Attributes, s.Attributes...)
 	pkg.Members = append(pkg.Members, s.Members...)
+}
+
+func (p *Program) Reset() {
+	p.Packages = make(map[string]*Package)
 }
