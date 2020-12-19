@@ -1,7 +1,6 @@
 package declaration
 
 import (
-	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/ir"
@@ -9,7 +8,6 @@ import (
 
 type Function struct {
 	Base
-	Name           *expression.Identifier
 	TypeParameters *types.TypeParameters
 	Parameters     *types.Parameters
 	ReturnType     types.Type

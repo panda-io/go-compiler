@@ -35,4 +35,5 @@ func TestBasic(t *testing.T) {
 	c := NewCompiler(nil)
 
 	c.ParseFile("./sample/basic.pd")
+	c.Generate("./sample/basic.ll")
 }

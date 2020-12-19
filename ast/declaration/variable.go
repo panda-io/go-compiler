@@ -10,7 +10,6 @@ import (
 type Variable struct {
 	Base
 	Token token.Token
-	Name  *expression.Identifier
 	Type  types.Type
 	Value expression.Expression
 }
