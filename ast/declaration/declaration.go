@@ -3,12 +3,11 @@ package declaration
 import (
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/node"
-	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Declaration interface {
 	node.Node
-	GenerateIR(*ir.Module)
+	GenerateIR(*node.Context)
 	Identifier() string
 	SetQualifiedName(string)
 }

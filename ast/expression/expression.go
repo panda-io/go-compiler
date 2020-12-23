@@ -2,6 +2,7 @@ package expression
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/ir"
 )
 
 /*
@@ -21,7 +22,7 @@ type Expression interface {
 	//Type() *ExpressionType //TO-DO
 	//TypeName() string //TO-DO
 	//IsConstant() bool
-	GenerateIR(*node.Context)
+	GenerateIR(*node.Context) ir.Value
 }
 
 type Base struct {

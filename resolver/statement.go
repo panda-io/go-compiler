@@ -1,5 +1,6 @@
 package resolver
 
+/*
 import (
 	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/ast/types"
@@ -96,3 +97,4 @@ func (r *Resolver) resolveStatement(stmt statement.Statement, typeParams *types.
 		r.currentScope = r.currentScope.CloseScope()
 	}
 }
+*/

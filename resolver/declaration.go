@@ -1,5 +1,6 @@
 package resolver
 
+/*
 import (
 	"github.com/panda-foundation/go-compiler/ast/declaration"
 	"github.com/panda-foundation/go-compiler/ast/types"
@@ -88,4 +89,4 @@ func (r *Resolver) resolveParents(parents []*types.TypeName, typeParams *types.T
 	if total > 1 {
 		r.error(parents[0].GetPosition(), "class can not inherit more than 1 class")
 	}
-}
+}*/

@@ -7,5 +7,8 @@ type Block struct {
 	Statements []Statement
 }
 
-func (c *Block) GenerateIR(*node.Context) {
+func (b *Block) GenerateIR(c *node.Context) {
+	for _, stmt := range b.Statements {
+		stmt.GenerateIR(c)
+	}
 }

@@ -1,8 +1,8 @@
 package declaration
 
 import (
+	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ast/types"
-	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Interface struct {
@@ -12,5 +12,5 @@ type Interface struct {
 	Members        []Declaration
 }
 
-func (c *Interface) GenerateIR(*ir.Module) {
+func (c *Interface) GenerateIR(*node.Context) {
 }

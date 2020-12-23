@@ -1,5 +1,6 @@
 package resolver
 
+/*
 import (
 	"fmt"
 	"strings"
@@ -123,3 +124,4 @@ func (r *Resolver) checkQualifiedName(typeName *types.TypeName, names []string, 
 	}
 	return names
 }
+*/

@@ -38,15 +38,7 @@ func (m *Module) String() string {
 // syntax to w.
 func (m *Module) WriteTo(w io.Writer) (n int64, err error) {
 	fw := &FmtWriter{w: w}
-	/*
-		// Assign global IDs.
-		if err := m.AssignGlobalIDs(); err != nil {
-			panic(fmt.Errorf("unable to assign globals IDs of module; %v", err))
-		}
-		// Assign metadata IDs.
-		if err := m.AssignMetadataIDs(); err != nil {
-			panic(fmt.Errorf("unable to assign metadata IDs of module; %v", err))
-		}*/
+
 	// Type definitions.
 	if len(m.TypeDefs) > 0 && fw.size > 0 {
 		fw.Fprint("\n")
@@ -76,81 +68,6 @@ func (m *Module) WriteTo(w io.Writer) (n int64, err error) {
 	}
 	return fw.size, fw.err
 }
-
-/*
-// ### [ Helper functions ] ####################################################
-
-// AssignGlobalIDs assigns IDs to unnamed global variables.
-func (m *Module) AssignGlobalIDs() error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	id := int64(0)
-	setName := func(n namedVar) error {
-		if n.IsUnnamed() {
-			if n.ID() != 0 && id != n.ID() {
-				want := id
-				got := n.ID()
-				return errors.Errorf("invalid global ID, expected %s, got %s", enc.GlobalID(want), enc.GlobalID(got))
-			}
-			n.SetID(id)
-			id++
-		}
-		return nil
-	}
-	// Assign global IDs to unnamed global variables.
-	for _, n := range m.Globals {
-		if err := setName(n); err != nil {
-			return errors.WithStack(err)
-		}
-	}
-	// Assign global IDs to unnamed functions.
-	for _, n := range m.Funcs {
-		if err := setName(n); err != nil {
-			return errors.WithStack(err)
-		}
-	}
-	return nil
-}
-
-// AssignMetadataIDs assigns metadata IDs to the unnamed metadata definitions of
-// the module.
-func (m *Module) AssignMetadataIDs() error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	// Index used IDs.
-	used := make(map[int64]bool)
-	for _, md := range m.MetadataDefs {
-		id := md.ID()
-		if id != -1 {
-			if _, ok := used[id]; ok {
-				return errors.Errorf("metadata ID %s already in use", enc.MetadataID(id))
-			}
-			used[id] = true
-		}
-	}
-	// nextID returns the next unused metdata ID.
-	curID := int64(-1)
-	nextID := func() int64 {
-		for {
-			curID++
-			if !used[curID] {
-				return curID
-			}
-		}
-	}
-	// Assign IDs to unnamed metadata definitions.
-	for _, md := range m.MetadataDefs {
-		id := md.ID()
-		if id != -1 {
-			// Metadata definition already has ID.
-			continue
-		}
-		newID := nextID()
-		md.SetID(newID)
-	}
-	return nil
-}
-*/
 
 // --- [ Functions ] -----------------------------------------------------------
 

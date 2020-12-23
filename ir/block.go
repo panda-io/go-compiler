@@ -34,6 +34,10 @@ func NewBlock(name string) *Block {
 	return block
 }
 
+func (block *Block) AddInstruction(inst Instruction) {
+	block.Insts = append(block.Insts, inst)
+}
+
 // String returns the LLVM syntax representation of the basic block as a
 // type-value pair.
 func (block *Block) String() string {

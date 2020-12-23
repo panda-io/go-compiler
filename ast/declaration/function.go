@@ -1,9 +1,9 @@
 package declaration
 
 import (
+	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/ast/types"
-	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Function struct {
@@ -15,5 +15,10 @@ type Function struct {
 	ClassName      string
 }
 
-func (c *Function) GenerateIR(*ir.Module) {
+func (f *Function) GenerateIR(c *node.Context) {
+	function := c.Module.NewFunc(f.Name.Name, types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c)...)
+	c.Block = function.NewBlock("")
+	if f.Body != nil {
+		f.Body.GenerateIR(c)
+	}
 }

@@ -2,7 +2,7 @@ package ast
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/declaration"
-	"github.com/panda-foundation/go-compiler/ir"
+	"github.com/panda-foundation/go-compiler/ast/node"
 )
 
 type Package struct {
@@ -11,10 +11,9 @@ type Package struct {
 	Members    []declaration.Declaration
 }
 
-func (p *Package) GenerateIR() string {
-	m := ir.NewModule()
+func (p *Package) GenerateIR(c *node.Context) string {
 	for _, member := range p.Members {
-		member.GenerateIR(m)
+		member.GenerateIR(c)
 	}
-	return m.String()
+	return c.Module.String()
 }

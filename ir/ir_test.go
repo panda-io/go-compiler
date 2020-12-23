@@ -32,25 +32,66 @@ func TestIR(t *testing.T) {
 	m := NewModule()
 
 	// Create an external function declaration and append it to the module.
-	//
-	//    int abs(int x);
+	// int abs(int x);
 	abs := m.NewFunc("abs", I32, NewParam(I32))
 	seed := m.NewGlobalDef("seed", zero)
 
 	rand := m.NewFunc("rand", I32)
 	entry := rand.NewBlock("")
-	tmp1 := entry.NewLoad(I32, seed)
-	tmp2 := entry.NewMul(tmp1, a)
-	tmp3 := entry.NewAdd(tmp2, c)
-	entry.NewStore(tmp3, seed)
-	tmp4 := entry.NewCall(abs, tmp3)
-	entry.NewRet(tmp4)
+	tmp1 := NewLoad(I32, seed)
+	entry.AddInstruction(tmp1)
+	tmp2 := NewMul(tmp1, a)
+	entry.AddInstruction(tmp2)
+	tmp3 := NewAdd(tmp2, c)
+	entry.AddInstruction(tmp3)
+	tmp4 := NewStore(tmp3, seed)
+	entry.AddInstruction(tmp4)
+	tmp5 := NewCall(abs, tmp3)
+	entry.AddInstruction(tmp5)
+	entry.Term = NewRet(tmp5)
 
-	/*
-		main := m.NewFunc("main", I32)
-		entry = main.NewBlock("")
-		tmp5 := entry.NewCall(rand)
-	*/
+	fmt.Println(m)
+
+	t.Fail()
+}
+
+/*******
+@seed = global i32 0
+
+declare i32 @abs(i32 %x)
+
+define i32 @rand() {
+0:
+	%1 = load i32, i32* @seed
+	%2 = mul i32 %1, 22695477
+	%3 = add i32 %2, 1
+	store i32 %3, i32* @seed
+	%4 = call i32 @abs(i32 %3)
+	ret i32 %4
+}
+**************/
+
+func TestAdd(t *testing.T) {
+	// Create a new LLVM IR module.
+	m := NewModule()
+
+	funcAdd := m.NewFunc("add", I32,
+		NewParam(I32),
+		NewParam(I32),
+	)
+	addBlock := funcAdd.NewBlock("")
+	tmp1 := NewAdd(funcAdd.Params[0], funcAdd.Params[1])
+	addBlock.AddInstruction(tmp1)
+	addBlock.Term = NewRet(tmp1)
+
+	funcMain := m.NewFunc(
+		"main",
+		I32,
+	) // omit parameters
+	mainBlock := funcMain.NewBlock("")
+	tmp2 := NewCall(funcAdd, NewInt(I32, 1), NewInt(I32, 2))
+	mainBlock.AddInstruction(tmp2)
+	mainBlock.Term = NewRet(tmp2)
 
 	fmt.Println(m)
 

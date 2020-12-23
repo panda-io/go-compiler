@@ -1,6 +1,9 @@
 package expression
 
-import "github.com/panda-foundation/go-compiler/ast/node"
+import (
+	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/ir"
+)
 
 type Conditional struct {
 	Base
@@ -9,6 +12,7 @@ type Conditional struct {
 	Second    Expression
 }
 
-func (e *Conditional) GenerateIR(c *node.Context) {
+func (e *Conditional) GenerateIR(c *node.Context) ir.Value {
 	//TO-DO
+	return nil
 }

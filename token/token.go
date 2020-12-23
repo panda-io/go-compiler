@@ -88,7 +88,7 @@ const (
 	Minus
 	Mul
 	Div
-	Mod
+	Rem
 	BitAnd
 	BitOr
 	BitXor
@@ -102,7 +102,7 @@ const (
 	MinusAssign
 	MulAssign
 	DivAssign
-	ModAssign
+	RemAssign
 	XorAssign
 	AndAssign
 	OrAssign
@@ -191,7 +191,7 @@ var (
 		Minus:            "-",
 		Mul:              "*",
 		Div:              "/",
-		Mod:              "%",
+		Rem:              "%",
 		BitAnd:           "&",
 		BitOr:            "|",
 		BitXor:           "^",
@@ -204,7 +204,7 @@ var (
 		MinusAssign:      "-=",
 		MulAssign:        "*=",
 		DivAssign:        "/=",
-		ModAssign:        "%=",
+		RemAssign:        "%=",
 		XorAssign:        "^=",
 		AndAssign:        "&=",
 		OrAssign:         "|=",
@@ -294,7 +294,7 @@ func (t Token) IsScalar() bool {
 
 func (t Token) Precedence() int {
 	switch t {
-	case Assign, MulAssign, DivAssign, ModAssign, PlusAssign, MinusAssign,
+	case Assign, MulAssign, DivAssign, RemAssign, PlusAssign, MinusAssign,
 		LeftShiftAssign, RightShiftAssign, AndAssign, OrAssign, XorAssign:
 		return 1
 
@@ -328,7 +328,7 @@ func (t Token) Precedence() int {
 	case Plus, Minus:
 		return 11
 
-	case Mul, Div, Mod:
+	case Mul, Div, Rem:
 		return 12
 	}
 	return 0

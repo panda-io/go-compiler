@@ -1,5 +1,6 @@
 package resolver
 
+/*
 import (
 	"github.com/panda-foundation/go-compiler/ast/declaration"
 	"github.com/panda-foundation/go-compiler/ast/types"
@@ -60,3 +61,4 @@ const (
 	InterfaceObject
 	ClassObject
 )
+*/

@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 
 	"github.com/panda-foundation/go-compiler/ast"
+	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/parser"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -38,7 +40,9 @@ func (c *Compiler) ParseFile(file string) {
 }
 
 func (c *Compiler) Generate(file string) {
-	content := c.program.Packages[ast.Global].GenerateIR()
+	module := ir.NewModule()
+	ctx := node.NewContext(c.program.Declarations, module)
+	content := c.program.Packages[ast.Global].GenerateIR(ctx)
 	err := ioutil.WriteFile(file, []byte(content), 0644)
 	if err != nil {
 		panic(err)

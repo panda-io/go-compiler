@@ -1,5 +1,6 @@
 package resolver
 
+/*
 import (
 	"fmt"
 
@@ -143,3 +144,4 @@ func (r *Resolver) error(offset int, message string) {
 		Message:  message,
 	})
 }
+*/

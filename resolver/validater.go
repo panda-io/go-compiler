@@ -1,10 +1,5 @@
 package resolver
 
-import (
-	"github.com/panda-foundation/go-compiler/ast/expression"
-	"github.com/panda-foundation/go-compiler/token"
-)
-
 //TO-DO validate
 //invalid recursive type // invalid inheritance
 //validate if access able
@@ -24,6 +19,13 @@ import (
     - enumeration constants
 	- values declared as const
 *********************************/
+
+/*
+import (
+	"github.com/panda-foundation/go-compiler/ast/expression"
+	"github.com/panda-foundation/go-compiler/token"
+)
+
 
 //TO-DO match type (int, float, string ... with unary, binary)
 // match number, string...
@@ -219,3 +221,4 @@ func (r *Resolver) constExpression(e expression.Expression) bool {
 		return false
 	}
 }
+*/

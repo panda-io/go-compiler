@@ -12,6 +12,3 @@ type Statement interface {
 type Base struct {
 	node.Base
 }
-
-func (*Base) GenerateIR(*node.Context) {
-}

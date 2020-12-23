@@ -1,7 +1,7 @@
 package declaration
 
 import (
-	"github.com/panda-foundation/go-compiler/ir"
+	"github.com/panda-foundation/go-compiler/ast/node"
 )
 
 type Enum struct {
@@ -9,5 +9,5 @@ type Enum struct {
 	Members []Declaration
 }
 
-func (c *Enum) GenerateIR(*ir.Module) {
+func (c *Enum) GenerateIR(*node.Context) {
 }

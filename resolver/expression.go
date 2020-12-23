@@ -1,5 +1,6 @@
 package resolver
 
+/*
 import (
 	"fmt"
 	"strings"
@@ -114,3 +115,4 @@ func (r *Resolver) resolveMemberAccess(e *expression.MemberAccess, typeParams *t
 		// TO-DO continue validate type
 	}
 }
+*/

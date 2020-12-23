@@ -2,6 +2,7 @@ package expression
 
 import (
 	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
@@ -11,6 +12,7 @@ type Unary struct {
 	Expression Expression
 }
 
-func (e *Unary) GenerateIR(c *node.Context) {
+func (e *Unary) GenerateIR(c *node.Context) ir.Value {
 	//TO-DO
+	return nil
 }
