@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -128,8 +129,8 @@ func (p *Parser) parseParameter() *types.Parameter {
 	return t
 }
 
-func (p *Parser) parseArguments() *types.Arguments {
-	t := &types.Arguments{Ellipsis: -1}
+func (p *Parser) parseArguments() *expression.Arguments {
+	t := &expression.Arguments{Ellipsis: -1}
 	t.Position = p.position
 	p.expect(token.LeftParen)
 	if p.token == token.RightParen {

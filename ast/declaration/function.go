@@ -4,6 +4,7 @@ import (
 	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Function struct {
@@ -21,4 +22,15 @@ func (f *Function) GenerateIR(c *node.Context) {
 	if f.Body != nil {
 		f.Body.GenerateIR(c)
 	}
+}
+
+func (f *Function) GenerateIRDeclaration() ir.Value {
+	params := []*ir.Param{}
+	if f.Parameters != nil {
+		for _, parameter := range f.Parameters.Parameters {
+			param := ir.NewParam(types.TypeOf(parameter.Type))
+			params = append(params, param)
+		}
+	}
+	return ir.NewFunc(f.Name.Name, types.TypeOf(f.ReturnType), params...)
 }

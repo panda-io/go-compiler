@@ -9,7 +9,7 @@ import (
 type New struct {
 	Base
 	Type      types.Type
-	Arguments *types.Arguments
+	Arguments *Arguments
 }
 
 func (e *New) GenerateIR(c *node.Context) ir.Value {

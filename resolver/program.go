@@ -31,7 +31,7 @@ type Resolver struct {
 func NewResolver() *Resolver {
 	return &Resolver{
 		declarations:  make(map[string]*Object),
-		packageScopes: map[string]*Scope{ast.Global: NewScope(nil)},
+		packageScopes: map[string]*Scope{node.Global: NewScope(nil)},
 		classScopes:   make(map[string]*Scope),
 		importsScopes: make(map[string]*Scope),
 	}
@@ -69,7 +69,7 @@ func (r *Resolver) Declare(f *token.File, s *ast.Source) {
 		// register declaration
 		if d.Kind == EnumObject || d.Kind == InterfaceObject || d.Kind == ClassObject {
 			qualifiedName := m.Identifier()
-			if r.source.Namespace != ast.Global {
+			if r.source.Namespace != node.Global {
 				qualifiedName = r.source.Namespace + "." + qualifiedName
 			}
 			m.SetQualifiedName(qualifiedName)
@@ -83,7 +83,7 @@ func (r *Resolver) Declare(f *token.File, s *ast.Source) {
 		// prepare package scope
 		if d.Kind == VariableObject || d.Kind == FunctionObject {
 			if r.source.Namespace == "" {
-				r.packageScopes[ast.Global].Insert(d)
+				r.packageScopes[node.Global].Insert(d)
 			} else {
 				r.packageScopes[r.source.Namespace].Insert(d)
 			}

@@ -72,7 +72,7 @@ func (r *Resolver) resolveExpression(e expression.Expression, typeParams *types.
 
 func (r *Resolver) findObjectsFromImportScope(name string) []*Object {
 	objects := []*Object{}
-	object := r.packageScopes[ast.Global].Find(name)
+	object := r.packageScopes[node.Global].Find(name)
 	if object != nil {
 		objects = append(objects, object)
 	}

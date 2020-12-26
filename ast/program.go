@@ -2,51 +2,54 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
-const (
-	Global = "global"
-)
-
 type Program struct {
-	Packages     map[string]*Package
-	Declarations map[string]*node.IRObject
+	Modules      map[string]*Module
+	Declarations map[string]ir.Value
 }
 
 func NewProgram() *Program {
 	return &Program{
-		Packages:     make(map[string]*Package),
-		Declarations: make(map[string]*node.IRObject),
+		Modules:      make(map[string]*Module),
+		Declarations: make(map[string]ir.Value),
 	}
 }
 
-func (p *Program) Declare(name string, typ node.IRObjectType, value ir.Value) error {
+func (p *Program) Declare(name string, value ir.Value) {
 	if p.Declarations[name] != nil {
-		return fmt.Errorf("redeclared: %s", name)
+		panic(fmt.Errorf("redeclared: %s", name))
 	}
-	p.Declarations[name] = &node.IRObject{
-		Type:  typ,
-		Value: value,
-	}
-	return nil
+	p.Declarations[name] = value
 }
 
-func (p *Program) AddSource(s *Source) {
-	if _, ok := p.Packages[s.Namespace]; !ok {
-		p.Packages[s.Namespace] = &Package{
-			Namespace: s.Namespace,
+func (p *Program) AddModule(file string, m *Module) {
+	p.Modules[m.Namespace] = m
+	for _, member := range m.Members {
+		name := member.Identifier()
+		if m.Namespace != node.Global {
+			name = m.Namespace + "." + name
 		}
+		p.Declare(name, member.GenerateIRDeclaration())
 	}
-	pkg := p.Packages[s.Namespace]
-	pkg.Attributes = append(pkg.Attributes, s.Attributes...)
-	pkg.Members = append(pkg.Members, s.Members...)
 }
 
 func (p *Program) Reset() {
-	p.Packages = make(map[string]*Package)
-	p.Declarations = make(map[string]*node.IRObject)
+	p.Modules = make(map[string]*Module)
+	p.Declarations = make(map[string]ir.Value)
 	//TO-DO build from source again
+}
+
+func (p *Program) GenerateIR() string {
+	c := node.NewContext(p.Declarations, ir.NewModule())
+	buf := &strings.Builder{}
+	for _, m := range p.Modules {
+		c.SetImports(m.Namespace, m.Imports)
+		m.GenerateIR(c, buf)
+	}
+	return buf.String()
 }

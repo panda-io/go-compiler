@@ -1,9 +1,7 @@
 package ir
 
 import (
-	"fmt"
 	"io"
-	"strings"
 )
 
 // === [ Modules ] ===
@@ -22,16 +20,6 @@ type Module struct {
 // NewModule returns a new LLVM IR module.
 func NewModule() *Module {
 	return &Module{}
-}
-
-// String returns the string representation of the module in LLVM IR assembly
-// syntax.
-func (m *Module) String() string {
-	buf := &strings.Builder{}
-	if _, err := m.WriteTo(buf); err != nil {
-		panic(fmt.Errorf("unable to write to string buffer; %v", err))
-	}
-	return buf.String()
 }
 
 // WriteTo write the string representation of the module in LLVM IR assembly

@@ -6,17 +6,13 @@ import (
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
-type IRObjectType int
-
 const (
-	IRVariable IRObjectType = iota
-	IRStruct
-	IRFunction
+	Global = "global"
 )
 
-type IRObject struct {
-	Type  IRObjectType
-	Value ir.Value
+type Import struct {
+	Alias     string
+	Namespace string
 }
 
 type Error struct {
@@ -24,7 +20,7 @@ type Error struct {
 	Message  string
 }
 
-func NewContext(declarations map[string]*IRObject, module *ir.Module) *Context {
+func NewContext(declarations map[string]ir.Value, module *ir.Module) *Context {
 	return &Context{
 		Declarations: declarations,
 		Module:       module,
@@ -36,8 +32,10 @@ func NewContext(declarations map[string]*IRObject, module *ir.Module) *Context {
 type Context struct {
 	Block        *ir.Block
 	Module       *ir.Module
-	Declarations map[string]*IRObject
+	Declarations map[string]ir.Value
 
+	imports   []*Import
+	namespace string
 	parent    *Context
 	variables map[string]ir.Value
 	errors    []*Error
@@ -45,8 +43,15 @@ type Context struct {
 
 func (c *Context) NewContext() *Context {
 	ctx := NewContext(c.Declarations, c.Module)
+	ctx.imports = c.imports
+	ctx.namespace = c.namespace
 	ctx.parent = c
 	return ctx
+}
+
+func (c Context) SetImports(namespace string, imports []*Import) {
+	c.namespace = namespace
+	c.imports = imports
 }
 
 func (c Context) AddVariable(name string, value ir.Value) error {
@@ -64,6 +69,29 @@ func (c Context) FindVariable(name string) ir.Value {
 		return c.parent.FindVariable(name)
 	}
 	return nil
+}
+
+func (c Context) FindDelaration(name string) []ir.Value {
+	declarations := []ir.Value{}
+	// search global
+	if c.Declarations[name] != nil {
+		declarations = append(declarations, c.Declarations[name])
+	}
+	// search current package
+	if c.namespace != Global {
+		qualified := c.namespace + "." + name
+		if c.Declarations[qualified] != nil {
+			declarations = append(declarations, c.Declarations[qualified])
+		}
+	}
+	// search import packages
+	for _, i := range c.imports {
+		qualified := i.Namespace + "." + name
+		if c.Declarations[qualified] != nil {
+			declarations = append(declarations, c.Declarations[qualified])
+		}
+	}
+	return declarations
 }
 
 func (c Context) Errors() []*Error {

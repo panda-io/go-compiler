@@ -1,24 +1,61 @@
 package expression
 
 import (
+	"fmt"
+
 	"github.com/panda-foundation/go-compiler/ast/node"
-	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Invocation struct {
 	Base
 	Function  Expression
-	Arguments *types.Arguments
+	Arguments *Arguments
 }
 
-func (e *Invocation) GenerateIR(c *node.Context) ir.Value {
-	//TO-DO check full name of function
-	/*
-		args := []*ir.Param{}
-		for _, arg := range e.Arguments.Arguments {
-			args = append(args, arg.(types.Type).GenerateIR())
+type Arguments struct {
+	Base
+	Arguments []Expression
+	Ellipsis  int
+}
+
+func (args *Arguments) GenerateIR(c *node.Context) []ir.Value {
+	arguments := []ir.Value{}
+	if args == nil {
+		return arguments
+	}
+	for _, arg := range args.Arguments {
+		arguments = append(arguments, arg.GenerateIR(c))
+	}
+	return arguments
+}
+
+func (i *Invocation) GenerateIR(c *node.Context) ir.Value {
+	var function *ir.Func
+	switch t := i.Function.(type) {
+	case *MemberAccess:
+		//TO-DO
+		panic("not implement")
+		// search import
+
+	case *Identifier:
+		functions := c.FindDelaration(t.Name)
+		if len(functions) == 1 {
+			if f, ok := functions[0].(*ir.Func); ok {
+				function = f
+			} else {
+				c.Error(t.Position, fmt.Sprintf("%s is not a function", t.Name))
+			}
+		} else if len(functions) == 0 {
+			c.Error(t.Position, fmt.Sprintf("%s undefined", t.Name))
+		} else {
+			c.Error(t.Position, fmt.Sprintf("ambiguous variable %s", t.Name))
 		}
-		return ir.NewCall(e.Function.GenerateIR(), args...)*/
+	}
+
+	if function != nil {
+		args := i.Arguments.GenerateIR(c)
+		return ir.NewCall(function, args...)
+	}
 	return nil
 }

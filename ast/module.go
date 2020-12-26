@@ -1,19 +1,25 @@
 package ast
 
 import (
+	"io"
+
 	"github.com/panda-foundation/go-compiler/ast/declaration"
 	"github.com/panda-foundation/go-compiler/ast/node"
 )
 
-type Package struct {
+type Module struct {
 	Namespace  string
 	Attributes []*declaration.Attribute
+	Imports    []*node.Import
 	Members    []declaration.Declaration
 }
 
-func (p *Package) GenerateIR(c *node.Context) string {
-	for _, member := range p.Members {
+func (m *Module) GenerateIR(c *node.Context, w io.Writer) {
+	for _, member := range m.Members {
 		member.GenerateIR(c)
 	}
-	return c.Module.String()
+	_, err := c.Module.WriteTo(w)
+	if err != nil {
+		panic(err)
+	}
 }

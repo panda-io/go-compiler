@@ -40,13 +40,13 @@ func (p *Parser) ParseStatements(source []byte) statement.Statement {
 	return p.parseBlockStatement()
 }
 
-func (p *Parser) ParseBytes(source []byte) *ast.Source {
+func (p *Parser) ParseBytes(source []byte) *ast.Module {
 	file := token.NewFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
 	p.setSource(file, source)
 	return p.parseSourceFile()
 }
 
-func (p *Parser) ParseFile(file *token.File, source []byte) *ast.Source {
+func (p *Parser) ParseFile(file *token.File, source []byte) *ast.Module {
 	p.setSource(file, source)
 	return p.parseSourceFile()
 }
