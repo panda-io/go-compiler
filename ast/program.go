@@ -49,7 +49,11 @@ func (p *Program) GenerateIR() string {
 	buf := &strings.Builder{}
 	for _, m := range p.Modules {
 		c.SetImports(m.Namespace, m.Imports)
-		m.GenerateIR(c, buf)
+		m.GenerateIR(c)
+	}
+	_, err := c.Module.WriteTo(buf)
+	if err != nil {
+		panic(err)
 	}
 	return buf.String()
 }
