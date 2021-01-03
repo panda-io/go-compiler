@@ -18,8 +18,8 @@ type Function struct {
 
 func (f *Function) GenerateIR(c *node.Context) {
 	function := c.Module.NewFunc(f.Name.Name, types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c)...)
-	c.Block = function.NewBlock("")
 	if f.Body != nil {
+		c.Block = function.NewBlock("")
 		f.Body.GenerateIR(c)
 	}
 }

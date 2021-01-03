@@ -55,7 +55,9 @@ func (i *Invocation) GenerateIR(c *node.Context) ir.Value {
 
 	if function != nil {
 		args := i.Arguments.GenerateIR(c)
-		return ir.NewCall(function, args...)
+		value := ir.NewCall(function, args...)
+		c.Block.AddInstruction(value)
+		return value
 	}
 	return nil
 }

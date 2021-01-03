@@ -7,6 +7,5 @@ function add(a int, b int) int
 
 public function main() int
 {
-    var c int = add(1, 2);
-    return c;
+    return add(1, 2);
 }

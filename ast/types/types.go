@@ -14,6 +14,9 @@ type Base struct {
 }
 
 func TypeOf(t Type) ir.Type {
+	if t == nil {
+		return ir.Void
+	}
 	switch typ := t.(type) {
 	case *BuitinType:
 		return typ.GenerateIR()

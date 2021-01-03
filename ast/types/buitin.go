@@ -42,6 +42,9 @@ func (t *BuitinType) GenerateIR() ir.Type {
 	case token.Void:
 		return ir.Void
 
+	case token.Pointer:
+		return ir.NewPointerType(ir.I8)
+
 	default:
 		panic("invalid buitin type: " + t.Token.String())
 	}

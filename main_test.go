@@ -34,6 +34,7 @@ func TestSample(t *testing.T) {
 func TestBasic(t *testing.T) {
 	c := NewCompiler(nil)
 
+	c.ParseFile("../panda/core/libc.pd")
 	c.ParseFile("./sample/basic.pd")
 	c.Generate("./sample/basic.ll")
 }

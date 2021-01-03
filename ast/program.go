@@ -28,7 +28,7 @@ func (p *Program) Declare(name string, value ir.Value) {
 }
 
 func (p *Program) AddModule(file string, m *Module) {
-	p.Modules[m.Namespace] = m
+	p.Modules[file] = m
 	for _, member := range m.Members {
 		name := member.Identifier()
 		if m.Namespace != node.Global {
