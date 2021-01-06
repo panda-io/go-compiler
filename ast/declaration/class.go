@@ -16,6 +16,6 @@ type Class struct {
 func (c *Class) GenerateIR(*node.Context) {
 }
 
-func (c *Class) GenerateIRDeclaration() ir.Value {
+func (c *Class) GenerateIRDeclaration(namespace string) ir.Value {
 	return nil
 }

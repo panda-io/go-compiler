@@ -30,11 +30,8 @@ func (p *Program) Declare(name string, value ir.Value) {
 func (p *Program) AddModule(file string, m *Module) {
 	p.Modules[file] = m
 	for _, member := range m.Members {
-		name := member.Identifier()
-		if m.Namespace != node.Global {
-			name = m.Namespace + "." + name
-		}
-		p.Declare(name, member.GenerateIRDeclaration())
+		name := m.Namespace + "." + member.Identifier()
+		p.Declare(name, member.GenerateIRDeclaration(m.Namespace))
 	}
 }
 

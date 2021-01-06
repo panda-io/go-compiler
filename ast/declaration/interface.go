@@ -16,6 +16,6 @@ type Interface struct {
 func (c *Interface) GenerateIR(*node.Context) {
 }
 
-func (c *Interface) GenerateIRDeclaration() ir.Value {
+func (c *Interface) GenerateIRDeclaration(namespace string) ir.Value {
 	return nil
 }

@@ -8,8 +8,9 @@ import (
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseVariable(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Variable {
+func (p *Parser) parseVariable(modifier *declaration.Modifier, attributes []*declaration.Attribute, objectName string) *declaration.Variable {
 	d := &declaration.Variable{}
+	d.ObjectName = objectName
 	d.Modifier = modifier
 	d.Attributes = attributes
 	d.Token = p.token
@@ -25,27 +26,13 @@ func (p *Parser) parseVariable(modifier *declaration.Modifier, attributes []*dec
 	return d
 }
 
-func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*declaration.Attribute, className string) *declaration.Function {
+func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*declaration.Attribute, objectName string) *declaration.Function {
 	d := &declaration.Function{}
-	d.ClassName = className
+	d.ObjectName = objectName
 	d.Modifier = modifier
 	d.Attributes = attributes
 	p.next()
-	complement := false
-	if p.token == token.Complement {
-		if d.ClassName == "" {
-			p.error(p.position, "'~' is not allow outside class as function name")
-		}
-		complement = true
-		p.next()
-	}
 	d.Name = p.parseIdentifier()
-	if complement {
-		if d.Name.Name != d.ClassName {
-			p.error(p.position, "invalid destructor name")
-		}
-		d.Name.Name = "~" + d.Name.Name
-	}
 	if p.token == token.Less {
 		d.TypeParameters = p.parseTypeParameters()
 	}
@@ -137,7 +124,7 @@ func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declar
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
-			m := p.parseVariable(modifier, attr)
+			m := p.parseVariable(modifier, attr, d.Name.Name)
 			if p.redeclared(m.Name.Name, d.Members) {
 				p.error(m.Name.Position, fmt.Sprintf("variable %s redeclared", m.Name.Name))
 			}

@@ -7,7 +7,11 @@ import (
 )
 
 const (
-	Global = "global"
+	Global      = "global"
+	Entry       = "main"
+	Extern      = "extern"
+	Constructor = "new"
+	Destructor  = "destroy"
 )
 
 type Import struct {
@@ -34,8 +38,9 @@ type Context struct {
 	Module       *ir.Module
 	Declarations map[string]ir.Value
 
-	imports   []*Import
-	namespace string
+	Imports   []*Import
+	Namespace string
+
 	parent    *Context
 	variables map[string]ir.Value
 	errors    []*Error
@@ -43,18 +48,18 @@ type Context struct {
 
 func (c *Context) NewContext() *Context {
 	ctx := NewContext(c.Declarations, c.Module)
-	ctx.imports = c.imports
-	ctx.namespace = c.namespace
+	ctx.Imports = c.Imports
+	ctx.Namespace = c.Namespace
 	ctx.parent = c
 	return ctx
 }
 
-func (c Context) SetImports(namespace string, imports []*Import) {
-	c.namespace = namespace
-	c.imports = imports
+func (c *Context) SetImports(namespace string, imports []*Import) {
+	c.Namespace = namespace
+	c.Imports = imports
 }
 
-func (c Context) AddVariable(name string, value ir.Value) error {
+func (c *Context) AddVariable(name string, value ir.Value) error {
 	if _, ok := c.variables[name]; ok {
 		return fmt.Errorf("redeclared variable: %s", name)
 	}
@@ -62,7 +67,7 @@ func (c Context) AddVariable(name string, value ir.Value) error {
 	return nil
 }
 
-func (c Context) FindVariable(name string) ir.Value {
+func (c *Context) FindVariable(name string) ir.Value {
 	if v, ok := c.variables[name]; ok {
 		return v
 	} else if c.parent != nil {
@@ -71,22 +76,23 @@ func (c Context) FindVariable(name string) ir.Value {
 	return nil
 }
 
-func (c Context) FindDelaration(name string) []ir.Value {
+func (c *Context) FindDelaration(name string) []ir.Value {
 	declarations := []ir.Value{}
 	// search global
-	if c.Declarations[name] != nil {
-		declarations = append(declarations, c.Declarations[name])
+	qualified := Global + "." + name
+	if c.Declarations[qualified] != nil {
+		declarations = append(declarations, c.Declarations[qualified])
 	}
 	// search current package
-	if c.namespace != Global {
-		qualified := c.namespace + "." + name
+	if c.Namespace != Global {
+		qualified = c.Namespace + "." + name
 		if c.Declarations[qualified] != nil {
 			declarations = append(declarations, c.Declarations[qualified])
 		}
 	}
 	// search import packages
-	for _, i := range c.imports {
-		qualified := i.Namespace + "." + name
+	for _, i := range c.Imports {
+		qualified = i.Namespace + "." + name
 		if c.Declarations[qualified] != nil {
 			declarations = append(declarations, c.Declarations[qualified])
 		}
@@ -94,7 +100,7 @@ func (c Context) FindDelaration(name string) []ir.Value {
 	return declarations
 }
 
-func (c Context) Errors() []*Error {
+func (c *Context) Errors() []*Error {
 	return c.errors
 }
 

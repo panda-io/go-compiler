@@ -13,18 +13,17 @@ type Function struct {
 	Parameters     *types.Parameters
 	ReturnType     types.Type
 	Body           *statement.Block
-	ClassName      string
 }
 
 func (f *Function) GenerateIR(c *node.Context) {
-	function := c.Module.NewFunc(f.Name.Name, types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c)...)
+	function := c.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c)...)
 	if f.Body != nil {
 		c.Block = function.NewBlock("")
 		f.Body.GenerateIR(c)
 	}
 }
 
-func (f *Function) GenerateIRDeclaration() ir.Value {
+func (f *Function) GenerateIRDeclaration(namespace string) ir.Value {
 	params := []*ir.Param{}
 	if f.Parameters != nil {
 		for _, parameter := range f.Parameters.Parameters {
@@ -32,5 +31,5 @@ func (f *Function) GenerateIRDeclaration() ir.Value {
 			params = append(params, param)
 		}
 	}
-	return ir.NewFunc(f.Name.Name, types.TypeOf(f.ReturnType), params...)
+	return ir.NewFunc(f.Qualified(namespace), types.TypeOf(f.ReturnType), params...)
 }

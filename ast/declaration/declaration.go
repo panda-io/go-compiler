@@ -8,15 +8,14 @@ import (
 
 type Declaration interface {
 	node.Node
-	GenerateIR(*node.Context)
-	GenerateIRDeclaration() ir.Value
+	GenerateIR(context *node.Context)
+	GenerateIRDeclaration(namespace string) ir.Value
 	Identifier() string
-	SetQualifiedName(string)
 }
 
 type Modifier struct {
 	Public bool
-	//Inline
+	//TO-DO Inline
 }
 
 func (m0 *Modifier) Equal(m1 *Modifier) bool {
@@ -32,16 +31,38 @@ type Attribute struct {
 
 type Base struct {
 	node.Base
-	Attributes     []*Attribute
-	Modifier       *Modifier
-	Name           *expression.Identifier
-	QualifinedName string
+	Attributes []*Attribute
+	Modifier   *Modifier
+	Name       *expression.Identifier
+	ObjectName string // parent object (class|interface|enum)
 }
 
-func (b *Base) SetQualifiedName(qualifinedName string) {
-	b.QualifinedName = qualifinedName
+func (b *Base) External() bool {
+	for _, a := range b.Attributes {
+		if a.Name == node.Extern {
+			return true
+		}
+	}
+	return false
 }
 
 func (b *Base) Identifier() string {
 	return b.Name.Name
+}
+
+func (b *Base) Qualified(namespace string) string {
+	name := b.Name.Name
+	if b.External() {
+		if b.ObjectName != "" {
+			panic("object member cannot be external")
+		}
+	} else {
+		if b.ObjectName != "" {
+			name = b.ObjectName + "." + name
+		}
+		if !(namespace == node.Global && b.Name.Name == node.Entry) {
+			name = namespace + "." + name
+		}
+	}
+	return name
 }

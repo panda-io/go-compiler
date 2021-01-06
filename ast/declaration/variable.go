@@ -18,6 +18,6 @@ type Variable struct {
 func (c *Variable) GenerateIR(*node.Context) {
 }
 
-func (c *Variable) GenerateIRDeclaration() ir.Value {
+func (c *Variable) GenerateIRDeclaration(namespace string) ir.Value {
 	return nil
 }

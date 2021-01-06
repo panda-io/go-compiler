@@ -13,6 +13,6 @@ type Enum struct {
 func (c *Enum) GenerateIR(*node.Context) {
 }
 
-func (c *Enum) GenerateIRDeclaration() ir.Value {
+func (c *Enum) GenerateIRDeclaration(namespace string) ir.Value {
 	return nil
 }

@@ -20,7 +20,7 @@ func (p *Parser) parseSourceFile() *ast.Module {
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
-			m := p.parseVariable(modifier, attr)
+			m := p.parseVariable(modifier, attr, "")
 			if p.redeclared(m.Name.Name, s.Members) {
 				p.error(m.Name.Position, fmt.Sprintf("variable %s redeclared", m.Name.Name))
 			}
