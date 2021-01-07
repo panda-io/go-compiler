@@ -23,7 +23,7 @@ func (f *Function) GenerateIR(c *node.Context) {
 	}
 }
 
-func (f *Function) GenerateIRDeclaration(namespace string) *ir.Func {
+func (f *Function) GenerateDeclaration(namespace string) *ir.Func {
 	params := []*ir.Param{}
 	if f.Parameters != nil {
 		for _, parameter := range f.Parameters.Parameters {

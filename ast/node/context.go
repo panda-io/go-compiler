@@ -25,8 +25,8 @@ type Error struct {
 }
 
 //TO-DO parent(inheritance) later
-type DataLayout struct {
-	Parent    *DataLayout
+type Struct struct {
+	Parent    *Struct
 	Variables []ir.Type
 	Indexes   map[string]ir.Type
 }
@@ -43,7 +43,7 @@ type VTable struct {
 func NewProgramData(module *ir.Module) *ProgramData {
 	return &ProgramData{
 		Module:       module,
-		Structs:      make(map[string]*DataLayout),
+		Structs:      make(map[string]*Struct),
 		Declarations: make(map[string]ir.Value),
 	}
 }
@@ -51,7 +51,7 @@ func NewProgramData(module *ir.Module) *ProgramData {
 type ProgramData struct {
 	Module *ir.Module
 
-	Structs      map[string]*DataLayout
+	Structs      map[string]*Struct
 	Declarations map[string]ir.Value
 
 	Errors []*Error

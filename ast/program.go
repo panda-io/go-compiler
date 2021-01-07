@@ -42,7 +42,7 @@ func (p *Program) AddModule(file string, m *Module) {
 			// TO-DO save it then check class later
 
 		case *declaration.Class:
-			// TO-DO set datalayout
+			p.context.Program.Structs[t.Qualified(m.Namespace)] = t.GenerateStructDeclaration(p.context)
 		}
 	}
 }
@@ -66,7 +66,7 @@ func (p *Program) GenerateIR() string {
 				// resovle later after all class type registered
 
 			case *declaration.Function:
-				err := p.context.AddDeclaration(t.Qualified(m.Namespace), t.GenerateIRDeclaration(m.Namespace))
+				err := p.context.AddDeclaration(t.Qualified(m.Namespace), t.GenerateDeclaration(m.Namespace))
 				if err != nil {
 					p.context.Error(t.Position, err.Error())
 				}
@@ -75,11 +75,12 @@ func (p *Program) GenerateIR() string {
 				// TO-DO save it then check class later
 
 			case *declaration.Class:
-
+				// TO-DO resolve class inheritance (struct, vtable)
 			}
 		}
 	}
 
+	// second pass
 	for _, m := range p.Modules {
 		p.context.Imports = m.Imports
 		p.context.Namespace = m.Namespace
@@ -96,7 +97,7 @@ func (p *Program) GenerateIR() string {
 				// TO-DO save it then check class later
 
 			case *declaration.Class:
-
+				t.GenerateIR(p.context)
 			}
 		}
 	}
