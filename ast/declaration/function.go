@@ -16,14 +16,14 @@ type Function struct {
 }
 
 func (f *Function) GenerateIR(c *node.Context) {
-	function := c.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c)...)
+	function := c.Program.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c)...)
 	if f.Body != nil {
 		c.Block = function.NewBlock("")
 		f.Body.GenerateIR(c)
 	}
 }
 
-func (f *Function) GenerateIRDeclaration(namespace string) ir.Value {
+func (f *Function) GenerateIRDeclaration(namespace string) *ir.Func {
 	params := []*ir.Param{}
 	if f.Parameters != nil {
 		for _, parameter := range f.Parameters.Parameters {

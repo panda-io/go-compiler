@@ -1,54 +1,108 @@
 package ast
 
 import (
-	"fmt"
 	"strings"
 
+	"github.com/panda-foundation/go-compiler/ast/declaration"
 	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Program struct {
-	Modules      map[string]*Module
-	Declarations map[string]ir.Value
+	Modules map[string]*Module
+
+	//interfaces map[string]string
+
+	context *node.Context
 }
 
 func NewProgram() *Program {
-	return &Program{
-		Modules:      make(map[string]*Module),
-		Declarations: make(map[string]ir.Value),
-	}
-}
-
-func (p *Program) Declare(name string, value ir.Value) {
-	if p.Declarations[name] != nil {
-		panic(fmt.Errorf("redeclared: %s", name))
-	}
-	p.Declarations[name] = value
+	p := &Program{}
+	p.Reset()
+	return p
 }
 
 func (p *Program) AddModule(file string, m *Module) {
+	//TO-DO check redeclare and merge
 	p.Modules[file] = m
+	p.context.Imports = m.Imports
+	p.context.Namespace = m.Namespace
 	for _, member := range m.Members {
-		name := m.Namespace + "." + member.Identifier()
-		p.Declare(name, member.GenerateIRDeclaration(m.Namespace))
+		switch t := member.(type) {
+		case *declaration.Variable:
+			// resovle later after all class type registered
+
+		case *declaration.Function:
+			// resovle later after all class type registered
+
+		case *declaration.Enum:
+			t.GenerateIR(p.context)
+
+		case *declaration.Interface:
+			// TO-DO save it then check class later
+
+		case *declaration.Class:
+			// TO-DO set datalayout
+		}
 	}
 }
 
+// TO-DO rebuild (language engine)
 func (p *Program) Reset() {
 	p.Modules = make(map[string]*Module)
-	p.Declarations = make(map[string]ir.Value)
-	//TO-DO build from source again
+	//interfaces: make(map[string]string),
+	p.context = node.NewContext(ir.NewModule())
 }
 
 func (p *Program) GenerateIR() string {
-	c := node.NewContext(p.Declarations, ir.NewModule())
-	buf := &strings.Builder{}
+	// first pass
 	for _, m := range p.Modules {
-		c.SetImports(m.Namespace, m.Imports)
-		m.GenerateIR(c)
+		p.context.Imports = m.Imports
+		p.context.Namespace = m.Namespace
+
+		for _, member := range m.Members {
+			switch t := member.(type) {
+			case *declaration.Variable:
+				// resovle later after all class type registered
+
+			case *declaration.Function:
+				err := p.context.AddDeclaration(t.Qualified(m.Namespace), t.GenerateIRDeclaration(m.Namespace))
+				if err != nil {
+					p.context.Error(t.Position, err.Error())
+				}
+
+			case *declaration.Interface:
+				// TO-DO save it then check class later
+
+			case *declaration.Class:
+
+			}
+		}
 	}
-	_, err := c.Module.WriteTo(buf)
+
+	for _, m := range p.Modules {
+		p.context.Imports = m.Imports
+		p.context.Namespace = m.Namespace
+
+		for _, member := range m.Members {
+			switch t := member.(type) {
+			case *declaration.Variable:
+				// resovle later after all class type registered
+
+			case *declaration.Function:
+				t.GenerateIR(p.context)
+
+			case *declaration.Interface:
+				// TO-DO save it then check class later
+
+			case *declaration.Class:
+
+			}
+		}
+	}
+
+	buf := &strings.Builder{}
+	_, err := p.context.Program.Module.WriteTo(buf)
 	if err != nil {
 		panic(err)
 	}

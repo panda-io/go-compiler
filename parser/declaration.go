@@ -58,12 +58,13 @@ func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declara
 	for p.token != token.RightBrace {
 		v := &declaration.Variable{}
 		v.Name = p.parseIdentifier()
+		v.ObjectName = d.Name.Name
 		if p.token == token.Assign {
 			p.next()
 			v.Value = p.parseExpression()
 		}
 		if p.redeclared(v.Name.Name, d.Members) {
-			p.error(v.Name.Position, fmt.Sprintf("function %s redeclared", v.Name.Name))
+			p.error(v.Name.Position, fmt.Sprintf("enum %s redeclared", v.Name.Name))
 		}
 		d.Members = append(d.Members, v)
 		if p.token != token.Comma {

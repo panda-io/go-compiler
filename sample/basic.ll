@@ -1,3 +1,7 @@
+@global.color.red = global i32 0
+@global.color.green = global i32 1
+@global.color.blue = global i32 2
+
 declare i32 @printf(i8* %0)
 
 declare i8* @malloc(i32 %0)

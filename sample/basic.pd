@@ -1,5 +1,12 @@
 namespace;
 
+enum color
+{
+    red,
+    green,
+    blue
+}
+
 function add(a int, b int) int
 {
     return a + b;

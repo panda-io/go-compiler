@@ -11,9 +11,3 @@ type Module struct {
 	Imports    []*node.Import
 	Members    []declaration.Declaration
 }
-
-func (m *Module) GenerateIR(c *node.Context) {
-	for _, member := range m.Members {
-		member.GenerateIR(c)
-	}
-}

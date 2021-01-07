@@ -3,7 +3,6 @@ package declaration
 import (
 	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ast/types"
-	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Class struct {
@@ -14,8 +13,4 @@ type Class struct {
 }
 
 func (c *Class) GenerateIR(*node.Context) {
-}
-
-func (c *Class) GenerateIRDeclaration(namespace string) ir.Value {
-	return nil
 }

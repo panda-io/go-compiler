@@ -24,39 +24,67 @@ type Error struct {
 	Message  string
 }
 
-func NewContext(declarations map[string]ir.Value, module *ir.Module) *Context {
-	return &Context{
-		Declarations: declarations,
+//TO-DO parent(inheritance) later
+type DataLayout struct {
+	Parent    *DataLayout
+	Variables []ir.Type
+	Indexes   map[string]ir.Type
+}
+
+/*
+
+type VTable struct {
+	Type  *ir.Global
+	Data  *ir.Global
+	Index map[string]int
+}
+}*/
+
+func NewProgramData(module *ir.Module) *ProgramData {
+	return &ProgramData{
 		Module:       module,
-		parent:       nil,
-		variables:    make(map[string]ir.Value),
+		Structs:      make(map[string]*DataLayout),
+		Declarations: make(map[string]ir.Value),
+	}
+}
+
+type ProgramData struct {
+	Module *ir.Module
+
+	Structs      map[string]*DataLayout
+	Declarations map[string]ir.Value
+
+	Errors []*Error
+}
+
+func NewContext(module *ir.Module) *Context {
+	return &Context{
+		Program:   NewProgramData(module),
+		parent:    nil,
+		variables: make(map[string]ir.Value),
 	}
 }
 
 type Context struct {
-	Block        *ir.Block
-	Module       *ir.Module
-	Declarations map[string]ir.Value
+	Program *ProgramData
 
+	Block     *ir.Block
 	Imports   []*Import
 	Namespace string
 
 	parent    *Context
 	variables map[string]ir.Value
-	errors    []*Error
 }
 
 func (c *Context) NewContext() *Context {
-	ctx := NewContext(c.Declarations, c.Module)
-	ctx.Imports = c.Imports
-	ctx.Namespace = c.Namespace
-	ctx.parent = c
-	return ctx
-}
+	return &Context{
+		Program: c.Program,
 
-func (c *Context) SetImports(namespace string, imports []*Import) {
-	c.Namespace = namespace
-	c.Imports = imports
+		Imports:   c.Imports,
+		Namespace: c.Namespace,
+		parent:    c,
+		variables: make(map[string]ir.Value),
+	}
 }
 
 func (c *Context) AddVariable(name string, value ir.Value) error {
@@ -76,39 +104,47 @@ func (c *Context) FindVariable(name string) ir.Value {
 	return nil
 }
 
+func (c *Context) AddDeclaration(qualified string, value ir.Value) error {
+	if c.Program.Declarations[qualified] != nil {
+		return fmt.Errorf("redeclared function %s.", qualified)
+	}
+	c.Program.Declarations[qualified] = value
+	return nil
+}
+
 func (c *Context) FindDelaration(name string) []ir.Value {
 	declarations := []ir.Value{}
 	// search global
 	qualified := Global + "." + name
-	if c.Declarations[qualified] != nil {
-		declarations = append(declarations, c.Declarations[qualified])
+	if c.Program.Declarations[qualified] != nil {
+		declarations = append(declarations, c.Program.Declarations[qualified])
 	}
 	// search current package
 	if c.Namespace != Global {
 		qualified = c.Namespace + "." + name
-		if c.Declarations[qualified] != nil {
-			declarations = append(declarations, c.Declarations[qualified])
+		if c.Program.Declarations[qualified] != nil {
+			declarations = append(declarations, c.Program.Declarations[qualified])
 		}
 	}
 	// search import packages
 	for _, i := range c.Imports {
 		qualified = i.Namespace + "." + name
-		if c.Declarations[qualified] != nil {
-			declarations = append(declarations, c.Declarations[qualified])
+		if c.Program.Declarations[qualified] != nil {
+			declarations = append(declarations, c.Program.Declarations[qualified])
 		}
 	}
 	return declarations
 }
 
 func (c *Context) Errors() []*Error {
-	return c.errors
+	return c.Program.Errors
 }
 
 func (c *Context) Error(p int, message string) {
 	if c.parent != nil {
 		c.parent.Error(p, message)
 	} else {
-		c.errors = append(c.errors, &Error{
+		c.Program.Errors = append(c.Program.Errors, &Error{
 			Position: p,
 			Message:  message,
 		})
