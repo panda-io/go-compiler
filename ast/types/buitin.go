@@ -36,9 +36,6 @@ func (t *BuitinType) GenerateIR() ir.Type {
 	case token.Float64, token.Double:
 		return ir.Float64
 
-	case token.String:
-		panic("TO-DO string is not implemented")
-
 	case token.Void:
 		return ir.Void
 

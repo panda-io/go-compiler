@@ -33,7 +33,6 @@ func TestTokens(t *testing.T) {
 func TestTypes(t *testing.T) {
 	assertEqual(t, Case.IsKeyword(), true)
 	assertEqual(t, IDENT.IsLiteral(), true)
-	assertEqual(t, String.IsScalar(), true)
 	assertEqual(t, Or.IsOperator(), true)
 	assertEqual(t, META.Precedence(), 0)
 }

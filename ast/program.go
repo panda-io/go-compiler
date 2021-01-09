@@ -46,7 +46,9 @@ func (p *Program) GenerateIR() string {
 
 		for _, member := range m.Members {
 			qualified := member.Qualified(m.Namespace)
-			if p.Declarations[qualified] != nil {
+			if p.Declarations[qualified] == nil {
+				p.Declarations[qualified] = member
+			} else {
 				p.context.Error(member.GetPosition(), fmt.Sprintf("%s redeclared", member.Identifier()))
 				//TO-DO get redeclaration position
 			}
@@ -111,4 +113,8 @@ func (p *Program) GenerateIR() string {
 		panic(err)
 	}
 	return buf.String()
+}
+
+func (p *Program) Errors() []*node.Error {
+	return p.context.Program.Errors
 }

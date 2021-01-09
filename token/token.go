@@ -71,7 +71,6 @@ const (
 	Float64
 	Float
 	Double
-	String
 	Void
 	Pointer
 	scalarEnd
@@ -132,6 +131,14 @@ const (
 
 var (
 	tokenStrings = [...]string{
+		IDENT:  "identifier",
+		BOOL:   "bool_literal",
+		INT:    "int_literal",
+		FLOAT:  "float_literal",
+		CHAR:   "char_literal",
+		STRING: "string_literal",
+		NULL:   "null",
+
 		Break:     "break",
 		Case:      "case",
 		Catch:     "catch",
@@ -179,7 +186,6 @@ var (
 		Float64: "f64",
 		Float:   "float",
 		Double:  "double",
-		String:  "string",
 		Void:    "void",
 		Pointer: "pointer",
 
