@@ -54,6 +54,7 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 func (c *Class) GenerateIR(ctx *node.Context) {
 	// generate struct
 	c.Struct.GenerateIR(ctx)
+	ctx.Program.Module.NewGlobal(c.Qualified(ctx.Namespace), ir.NewStructType(c.Struct.Types...))
 
 	//TO-DO generate function
 

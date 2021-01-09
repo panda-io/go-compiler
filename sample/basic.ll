@@ -1,6 +1,7 @@
 @global.color.red = global i32 0
 @global.color.green = global i32 1
 @global.color.blue = global i32 2
+@global.allocator = global { i8*, i32 }
 
 define i32 @global.add(i32 %0, i32 %1) {
 2:

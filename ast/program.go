@@ -25,25 +25,7 @@ func NewProgram() *Program {
 
 func (p *Program) AddModule(file string, m *Module) {
 	p.Modules[file] = m
-	p.context.Imports = m.Imports
-	p.context.Namespace = m.Namespace
 	p.Namespaces[m.Namespace] = true
-
-	// zero pass
-	for _, member := range m.Members {
-		qualified := member.Qualified(m.Namespace)
-		if p.Declarations[qualified] != nil {
-			p.context.Error(member.GetPosition(), fmt.Sprintf("%s redeclared", member.Identifier()))
-			//TO-DO get redeclaration position
-		}
-		switch t := member.(type) {
-		case *declaration.Enum:
-			t.GenerateIR(p.context)
-
-		case *declaration.Class:
-			t.GenerateStructDeclaration(p.context)
-		}
-	}
 }
 
 // TO-DO rebuild (language engine)
@@ -56,6 +38,28 @@ func (p *Program) Reset() {
 
 func (p *Program) GenerateIR() string {
 	// TO-DO check if import is valid // must be valid, cannot import self, cannot duplicated
+
+	// zero pass
+	for _, m := range p.Modules {
+		p.context.Imports = m.Imports
+		p.context.Namespace = m.Namespace
+
+		for _, member := range m.Members {
+			qualified := member.Qualified(m.Namespace)
+			if p.Declarations[qualified] != nil {
+				p.context.Error(member.GetPosition(), fmt.Sprintf("%s redeclared", member.Identifier()))
+				//TO-DO get redeclaration position
+			}
+			switch t := member.(type) {
+			case *declaration.Enum:
+				t.GenerateIR(p.context)
+
+			case *declaration.Class:
+				t.GenerateStructDeclaration(p.context)
+			}
+		}
+	}
+
 	// first pass
 	for _, m := range p.Modules {
 		p.context.Imports = m.Imports
