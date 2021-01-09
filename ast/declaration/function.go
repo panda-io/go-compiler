@@ -24,6 +24,7 @@ func (f *Function) GenerateIR(c *node.Context) {
 }
 
 func (f *Function) GenerateDeclaration(namespace string) *ir.Func {
+	//TO-DO if add struct pointer as param
 	params := []*ir.Param{}
 	if f.Parameters != nil {
 		for _, parameter := range f.Parameters.Parameters {

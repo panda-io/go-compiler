@@ -5,7 +5,7 @@ import "github.com/panda-foundation/go-compiler/ir"
 type TypeName struct {
 	Base
 	Name          string
-	QualifiedName string
+	Selector      string
 	TypeArguments *TypeArguments
 }
 

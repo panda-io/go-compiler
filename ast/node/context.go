@@ -24,26 +24,15 @@ type Error struct {
 	Message  string
 }
 
-//TO-DO parent(inheritance) later
-type Struct struct {
-	Parent    *Struct
-	Variables []ir.Type
-	Indexes   map[string]ir.Type
-}
-
-/*
-
 type VTable struct {
-	Type  *ir.Global
-	Data  *ir.Global
-	Index map[string]int
+	//Type  *ir.Global
+	//Data  *ir.Global
+	//Index map[string]int
 }
-}*/
 
 func NewProgramData(module *ir.Module) *ProgramData {
 	return &ProgramData{
 		Module:       module,
-		Structs:      make(map[string]*Struct),
 		Declarations: make(map[string]ir.Value),
 	}
 }
@@ -51,7 +40,6 @@ func NewProgramData(module *ir.Module) *ProgramData {
 type ProgramData struct {
 	Module *ir.Module
 
-	Structs      map[string]*Struct
 	Declarations map[string]ir.Value
 
 	Errors []*Error
@@ -112,28 +100,30 @@ func (c *Context) AddDeclaration(qualified string, value ir.Value) error {
 	return nil
 }
 
-func (c *Context) FindDelaration(name string) []ir.Value {
-	declarations := []ir.Value{}
+func (c *Context) FindDelaration(name string) ir.Value {
+	// search current package
+	if c.Namespace != Global {
+		qualified := c.Namespace + "." + name
+		if c.Program.Declarations[qualified] != nil {
+			return c.Program.Declarations[qualified]
+		}
+	}
 	// search global
 	qualified := Global + "." + name
 	if c.Program.Declarations[qualified] != nil {
-		declarations = append(declarations, c.Program.Declarations[qualified])
+		return c.Program.Declarations[qualified]
 	}
-	// search current package
-	if c.Namespace != Global {
-		qualified = c.Namespace + "." + name
-		if c.Program.Declarations[qualified] != nil {
-			declarations = append(declarations, c.Program.Declarations[qualified])
-		}
-	}
-	// search import packages
-	for _, i := range c.Imports {
-		qualified = i.Namespace + "." + name
-		if c.Program.Declarations[qualified] != nil {
-			declarations = append(declarations, c.Program.Declarations[qualified])
-		}
-	}
-	return declarations
+
+	//TO-DO find with selector
+	/*
+		// search import packages
+		for _, i := range c.Imports {
+			qualified = i.Namespace + "." + name
+			if c.Program.Declarations[qualified] != nil {
+				declarations = append(declarations, c.Program.Declarations[qualified])
+			}
+		}*/
+	return nil
 }
 
 func (c *Context) Errors() []*Error {

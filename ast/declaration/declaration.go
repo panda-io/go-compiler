@@ -3,11 +3,13 @@ package declaration
 import (
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/ast/types"
 )
 
 type Declaration interface {
 	node.Node
 	Identifier() string
+	Qualified(namespace string) string
 }
 
 type Modifier struct {
@@ -62,4 +64,27 @@ func (b *Base) Qualified(namespace string) string {
 		}
 	}
 	return name
+}
+
+func FindeDeclaration(c *node.Context, declarations map[string]Declaration, t *types.TypeName) Declaration {
+	if t.Selector == "" {
+		// search current package
+		if c.Namespace != node.Global {
+			qualified := c.Namespace + "." + t.Name
+			if declarations != nil {
+				return declarations[qualified]
+			}
+		}
+		// search global
+		qualified := node.Global + "." + t.Name
+		return declarations[qualified]
+	} else {
+		// search imports
+		for _, i := range c.Imports {
+			if i.Alias == t.Selector {
+				return declarations[i.Namespace+"."+t.Name]
+			}
+		}
+		return nil
+	}
 }

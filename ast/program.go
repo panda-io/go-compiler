@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/panda-foundation/go-compiler/ast/declaration"
@@ -9,9 +10,9 @@ import (
 )
 
 type Program struct {
-	Modules map[string]*Module
-
-	//interfaces map[string]string
+	Modules      map[string]*Module
+	Declarations map[string]declaration.Declaration
+	Namespaces   map[string]bool
 
 	context *node.Context
 }
@@ -23,26 +24,24 @@ func NewProgram() *Program {
 }
 
 func (p *Program) AddModule(file string, m *Module) {
-	//TO-DO check redeclare and merge
 	p.Modules[file] = m
 	p.context.Imports = m.Imports
 	p.context.Namespace = m.Namespace
+	p.Namespaces[m.Namespace] = true
+
+	// zero pass
 	for _, member := range m.Members {
+		qualified := member.Qualified(m.Namespace)
+		if p.Declarations[qualified] != nil {
+			p.context.Error(member.GetPosition(), fmt.Sprintf("%s redeclared", member.Identifier()))
+			//TO-DO get redeclaration position
+		}
 		switch t := member.(type) {
-		case *declaration.Variable:
-			// resovle later after all class type registered
-
-		case *declaration.Function:
-			// resovle later after all class type registered
-
 		case *declaration.Enum:
 			t.GenerateIR(p.context)
 
-		case *declaration.Interface:
-			// TO-DO save it then check class later
-
 		case *declaration.Class:
-			p.context.Program.Structs[t.Qualified(m.Namespace)] = t.GenerateStructDeclaration(p.context)
+			t.GenerateStructDeclaration(p.context)
 		}
 	}
 }
@@ -50,11 +49,13 @@ func (p *Program) AddModule(file string, m *Module) {
 // TO-DO rebuild (language engine)
 func (p *Program) Reset() {
 	p.Modules = make(map[string]*Module)
-	//interfaces: make(map[string]string),
+	p.Declarations = make(map[string]declaration.Declaration)
+	p.Namespaces = make(map[string]bool)
 	p.context = node.NewContext(ir.NewModule())
 }
 
 func (p *Program) GenerateIR() string {
+	// TO-DO check if import is valid // must be valid, cannot import self, cannot duplicated
 	// first pass
 	for _, m := range p.Modules {
 		p.context.Imports = m.Imports
@@ -62,9 +63,6 @@ func (p *Program) GenerateIR() string {
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
-			case *declaration.Variable:
-				// resovle later after all class type registered
-
 			case *declaration.Function:
 				err := p.context.AddDeclaration(t.Qualified(m.Namespace), t.GenerateDeclaration(m.Namespace))
 				if err != nil {
@@ -73,9 +71,10 @@ func (p *Program) GenerateIR() string {
 
 			case *declaration.Interface:
 				// TO-DO save it then check class later
+				// Generate function declaration
 
 			case *declaration.Class:
-				// TO-DO resolve class inheritance (struct, vtable)
+				t.ResolveParents(p.context, p.Declarations)
 			}
 		}
 	}

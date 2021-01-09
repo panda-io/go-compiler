@@ -20,7 +20,12 @@ func (p *Parser) parseType() types.Type {
 func (p *Parser) parseTypeName() *types.TypeName {
 	t := &types.TypeName{}
 	t.Position = p.position
-	t.Name = p.parseName("")
+	t.Name = p.parseIdentifier().Name
+	if p.token == token.Dot {
+		p.next()
+		t.Selector = t.Name
+		t.Name = p.parseIdentifier().Name
+	}
 	if p.token == token.Less {
 		t.TypeArguments = p.parseTypeArguments()
 	}
@@ -155,16 +160,4 @@ func (p *Parser) parseArguments() *expression.Arguments {
 	}
 	p.expect(token.RightParen)
 	return t
-}
-
-func (p *Parser) parseName(identifier string) string {
-	if identifier == "" {
-		identifier = p.parseIdentifier().Name
-	}
-	qualifiedName := identifier
-	for p.token == token.Dot {
-		p.next()
-		qualifiedName += "." + p.parseIdentifier().Name
-	}
-	return qualifiedName
 }

@@ -68,7 +68,7 @@ func (p *Parser) parseNamespace() string {
 		p.next()
 		return node.Global
 	}
-	namespace := p.parseName("")
+	namespace := p.parseQualifiedName("")
 	p.expect(token.Semi)
 	return namespace
 }
@@ -84,7 +84,7 @@ func (p *Parser) parseImports() []*node.Import {
 			p.next()
 			name = p.parseIdentifier()
 		}
-		u.Namespace = p.parseName(name.Name)
+		u.Namespace = p.parseQualifiedName(name.Name)
 		if u.Alias == "" {
 			names := strings.Split(u.Namespace, ".")
 			u.Alias = names[len(names)-1]
@@ -93,4 +93,16 @@ func (p *Parser) parseImports() []*node.Import {
 		imports = append(imports, u)
 	}
 	return imports
+}
+
+func (p *Parser) parseQualifiedName(identifier string) string {
+	if identifier == "" {
+		identifier = p.parseIdentifier().Name
+	}
+	qualifiedName := identifier
+	for p.token == token.Dot {
+		p.next()
+		qualifiedName += "." + p.parseIdentifier().Name
+	}
+	return qualifiedName
 }

@@ -9,4 +9,6 @@ type Interface struct {
 	TypeParameters *types.TypeParameters
 	Parents        []*types.TypeName
 	Members        []Declaration
+
+	ResolvedParents []*Interface
 }

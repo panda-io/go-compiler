@@ -39,20 +39,20 @@ func (i *Invocation) GenerateIR(c *node.Context) ir.Value {
 		// search import
 
 	case *Identifier:
-		functions := c.FindDelaration(t.Name)
-		if len(functions) == 1 {
-			if f, ok := functions[0].(*ir.Func); ok {
+		//TO-DO if class, search member function and parent function
+		d := c.FindDelaration(t.Name)
+		if d == nil {
+			c.Error(t.Position, fmt.Sprintf("%s undefined", t.Name))
+		} else {
+			if f, ok := d.(*ir.Func); ok {
 				function = f
 			} else {
 				c.Error(t.Position, fmt.Sprintf("%s is not a function", t.Name))
 			}
-		} else if len(functions) == 0 {
-			c.Error(t.Position, fmt.Sprintf("%s undefined", t.Name))
-		} else {
-			c.Error(t.Position, fmt.Sprintf("ambiguous variable %s", t.Name))
 		}
 	}
 
+	//TO-DO compare sig
 	if function != nil {
 		args := i.Arguments.GenerateIR(c)
 		value := ir.NewCall(function, args...)
