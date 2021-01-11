@@ -39,7 +39,7 @@ func (p *Program) Reset() {
 func (p *Program) GenerateIR() string {
 	// TO-DO check if import is valid // must be valid, cannot import self, cannot duplicated
 
-	// zero pass
+	// zero pass (register all)
 	for _, m := range p.Modules {
 		p.context.Imports = m.Imports
 		p.context.Namespace = m.Namespace
@@ -57,27 +57,22 @@ func (p *Program) GenerateIR() string {
 				t.GenerateIR(p.context)
 
 			case *declaration.Class:
-				t.GenerateStructDeclaration(p.context)
+				t.ProcessMembers(p.context)
 			}
 		}
 	}
 
-	// first pass
+	// first pass (resolve oop)
 	for _, m := range p.Modules {
 		p.context.Imports = m.Imports
 		p.context.Namespace = m.Namespace
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
-			case *declaration.Function:
-				err := p.context.AddDeclaration(t.Qualified(m.Namespace), t.GenerateDeclaration(m.Namespace))
-				if err != nil {
-					p.context.Error(t.Position, err.Error())
-				}
-
 			case *declaration.Interface:
 				// TO-DO save it then check class later
 				// Generate function declaration
+				// resolve parants
 
 			case *declaration.Class:
 				t.ResolveParents(p.context, p.Declarations)
@@ -85,7 +80,27 @@ func (p *Program) GenerateIR() string {
 		}
 	}
 
-	// second pass
+	// second pass (generate declarations)
+	for _, m := range p.Modules {
+		p.context.Imports = m.Imports
+		p.context.Namespace = m.Namespace
+
+		for _, member := range m.Members {
+			switch t := member.(type) {
+			case *declaration.Function:
+				t.GenerateDeclaration(p.context)
+
+			case *declaration.Interface:
+				// TO-DO save it then check class later
+				// Generate function declaration
+
+			case *declaration.Class:
+				t.GenerateDeclaration(p.context)
+			}
+		}
+	}
+
+	// third pass (generate functions)
 	for _, m := range p.Modules {
 		p.context.Imports = m.Imports
 		p.context.Namespace = m.Namespace

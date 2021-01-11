@@ -35,8 +35,9 @@ func (i *Invocation) GenerateIR(c *node.Context) ir.Value {
 	switch t := i.Function.(type) {
 	case *MemberAccess:
 		//TO-DO
-		panic("not implement")
+		//panic("not implement")
 		// search import
+		return nil
 
 	case *Identifier:
 		//TO-DO if class, search member function and parent function

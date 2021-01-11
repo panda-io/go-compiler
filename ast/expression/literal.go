@@ -13,12 +13,14 @@ type Literal struct {
 }
 
 func (e *Literal) GenerateIR(c *node.Context) ir.Value {
+	//	case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL, token.NULL, token.Void:
 	switch e.Type {
 	case token.STRING:
-		//TO-DO
+		return ir.NewCharArray([]byte(e.Value))
 
 	case token.CHAR:
 		//TO-DO
+		return nil
 
 	case token.FLOAT:
 		return ir.NewFloatFromString(ir.Float32, e.Value)
@@ -29,8 +31,10 @@ func (e *Literal) GenerateIR(c *node.Context) ir.Value {
 	case token.BOOL:
 		return ir.NewIntFromString(ir.I1, e.Value)
 
-	case token.IDENT:
-		//TO-DO
+	case token.NULL:
+		return ir.NewNull(nil)
+
+	default:
+		return nil
 	}
-	return nil
 }
