@@ -14,7 +14,8 @@ type Program struct {
 	Declarations map[string]declaration.Declaration
 	Namespaces   map[string]bool
 
-	context *node.Context
+	context  *node.Context
+	contexts map[string]*node.Context
 }
 
 func NewProgram() *Program {
@@ -33,7 +34,8 @@ func (p *Program) Reset() {
 	p.Modules = make(map[string]*Module)
 	p.Declarations = make(map[string]declaration.Declaration)
 	p.Namespaces = make(map[string]bool)
-	p.context = node.NewContext(ir.NewModule())
+	p.contexts = make(map[string]*node.Context)
+	p.contexts[node.Global] = node.NewContext(ir.NewModule())
 }
 
 func (p *Program) GenerateIR() string {
@@ -41,6 +43,12 @@ func (p *Program) GenerateIR() string {
 
 	// zero pass (register all)
 	for _, m := range p.Modules {
+		if c, ok := p.contexts[m.Namespace]; ok {
+			p.context = c
+		} else {
+			p.context = p.contexts[node.Global].NewContext()
+			p.contexts[m.Namespace] = p.context
+		}
 		p.context.Imports = m.Imports
 		p.context.Namespace = m.Namespace
 
@@ -64,6 +72,7 @@ func (p *Program) GenerateIR() string {
 
 	// first pass (resolve oop)
 	for _, m := range p.Modules {
+		p.context = p.contexts[m.Namespace]
 		p.context.Imports = m.Imports
 		p.context.Namespace = m.Namespace
 
@@ -82,6 +91,7 @@ func (p *Program) GenerateIR() string {
 
 	// second pass (generate declarations)
 	for _, m := range p.Modules {
+		p.context = p.contexts[m.Namespace]
 		p.context.Imports = m.Imports
 		p.context.Namespace = m.Namespace
 
@@ -102,6 +112,7 @@ func (p *Program) GenerateIR() string {
 
 	// third pass (generate functions)
 	for _, m := range p.Modules {
+		p.context = p.contexts[m.Namespace]
 		p.context.Imports = m.Imports
 		p.context.Namespace = m.Namespace
 

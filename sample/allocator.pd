@@ -1,0 +1,50 @@
+namespace;
+
+import libc;
+
+public class allocator
+{
+    var address pointer;
+    var size int;
+
+    function reallocate(size int)
+    {
+        if (this.address == null)
+        {
+            return this.allocate(size);
+        }
+
+        var new_address pointer = libc.malloc(size);
+        libc.memset(new_address, 0, size);
+        var copy_size int = (size < this.size) ? size : this.size;
+        libc.memcpy(new_address, this.address, copy_size);
+        libc.free(this.address);
+        this.address = new_address;
+        this.size = size;
+    }
+
+    function allocate(size int)
+    {
+        this.free();
+        this.address = libc.malloc(size);
+        libc.memset(this.address, 0, size);
+        this.size = size;
+    }
+
+    //TO-DO sizeof
+    //TO-DO read, write values //endian?
+
+    function free()
+    {
+        if (this.address != null)
+        {
+            libc.free(this.address);
+            this.address = null;
+        }
+    }
+
+    function destroy()
+    {
+        this.free();
+    }
+}

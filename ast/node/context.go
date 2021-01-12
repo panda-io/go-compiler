@@ -75,6 +75,10 @@ func (c *Context) NewContext() *Context {
 	}
 }
 
+func (c *Context) CloseContext() *Context {
+	return c.parent
+}
+
 func (c *Context) AddVariable(name string, value ir.Value) error {
 	if _, ok := c.variables[name]; ok {
 		return fmt.Errorf("redeclared variable: %s", name)
