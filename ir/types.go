@@ -79,6 +79,10 @@ func IsFloat(t Type) bool {
 	return ok
 }
 
+func IsNumber(t Type) bool {
+	return IsInt(t) || IsFloat(t)
+}
+
 // IsPointer reports whether the given type is a pointer type.
 func IsPointer(t Type) bool {
 	_, ok := t.(*PointerType)

@@ -8,11 +8,16 @@ import (
 
 type New struct {
 	Base
-	Type      types.Type
+	Typ       types.Type
 	Arguments *Arguments
 }
 
-func (e *New) GenerateIR(c *node.Context) ir.Value {
+func (n *New) Type(c *node.Context) ir.Type {
+	//TO-DO
+	return nil
+}
+
+func (n *New) GenerateIR(c *node.Context) ir.Value {
 	//TO-DO
 	return nil
 }

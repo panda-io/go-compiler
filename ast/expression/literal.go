@@ -8,28 +8,53 @@ import (
 
 type Literal struct {
 	Base
-	Type  token.Token // (identifier, string, char, float, int, bool)
+	Typ   token.Token // (identifier, string, char, float, int, bool)
 	Value string
 }
 
-func (e *Literal) GenerateIR(c *node.Context) ir.Value {
-	//	case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL, token.NULL, token.Void:
-	switch e.Type {
+func (l *Literal) Type(c *node.Context) ir.Type {
+	switch l.Typ {
 	case token.STRING:
-		return ir.NewCharArray([]byte(e.Value))
+		return ir.NewArrayType(uint64(len(l.Value)+1), ir.I8)
 
 	case token.CHAR:
-		//TO-DO
+		return ir.I32
+
+	case token.FLOAT:
+		return ir.Float32
+
+	case token.INT:
+		return ir.I32
+
+	case token.BOOL:
+		return ir.I1
+
+	case token.NULL:
+		return ir.Void
+
+	default:
+		return nil
+	}
+}
+
+func (l *Literal) GenerateIR(c *node.Context) ir.Value {
+	// case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL, token.NULL, token.Void:
+	switch l.Typ {
+	case token.STRING:
+		return ir.NewCharArray([]byte(l.Value))
+
+	case token.CHAR:
+		//TO-DO convert char to i32
 		return nil
 
 	case token.FLOAT:
-		return ir.NewFloatFromString(ir.Float32, e.Value)
+		return ir.NewFloatFromString(ir.Float32, l.Value)
 
 	case token.INT:
-		return ir.NewIntFromString(ir.I32, e.Value)
+		return ir.NewIntFromString(ir.I32, l.Value)
 
 	case token.BOOL:
-		return ir.NewIntFromString(ir.I1, e.Value)
+		return ir.NewIntFromString(ir.I1, l.Value)
 
 	case token.NULL:
 		return ir.NewNull(nil)

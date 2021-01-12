@@ -10,7 +10,15 @@ type Increment struct {
 	Expression Expression
 }
 
-func (e *Increment) GenerateIR(c *node.Context) ir.Value {
+func (i *Increment) Type(c *node.Context) ir.Type {
+	if ir.IsNumber(i.Expression.Type(c)) {
+		return i.Expression.Type(c)
+	}
+	c.Error(i.Position, "invalid type for increment expression")
+	return nil
+}
+
+func (i *Increment) GenerateIR(c *node.Context) ir.Value {
 	//TO-DO
 	return nil
 }

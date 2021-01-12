@@ -19,6 +19,18 @@ type Arguments struct {
 	Ellipsis  int
 }
 
+func (i *Invocation) Type(c *node.Context) ir.Type {
+	t := i.Function.Type(c)
+	if f, ok := t.(*ir.FuncType); ok {
+		if f.RetType == nil {
+			c.Error(i.Position, "no value is returned")
+		}
+		return f.RetType
+	}
+	c.Error(i.Position, "not a function")
+	return nil
+}
+
 func (args *Arguments) GenerateIR(c *node.Context) []ir.Value {
 	arguments := []ir.Value{}
 	if args == nil {

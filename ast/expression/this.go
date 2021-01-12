@@ -9,7 +9,10 @@ type This struct {
 	Base
 }
 
-func (e *This) GenerateIR(c *node.Context) ir.Value {
-	//TO-DO
+func (t *This) Type(c *node.Context) ir.Type {
+	return nil
+}
+
+func (t *This) GenerateIR(c *node.Context) ir.Value {
 	return nil
 }

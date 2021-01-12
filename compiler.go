@@ -45,7 +45,7 @@ func (c *Compiler) Generate(file string) {
 			//TO-DO use global position and fileset
 			fmt.Println(e.Message)
 		}
-		panic("compile failed.")
+		//panic("compile failed.")
 	}
 	err := ioutil.WriteFile(file, []byte(content), 0644)
 	if err != nil {

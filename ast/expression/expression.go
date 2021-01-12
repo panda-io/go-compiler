@@ -5,21 +5,9 @@ import (
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
-/*
-type ExpressionType int
-
-const (
-	NoneValue ExpressionType = iota
-	IntValue
-	FloatValue
-	StringValue
-	ObjectValue
-)*/
-
-// TO-DO add validate later
 type Expression interface {
 	node.Node
-	//Type() *ExpressionType //TO-DO
+	Type(*node.Context) ir.Type
 	//TypeName() string //TO-DO
 	//IsConstant() bool
 	GenerateIR(*node.Context) ir.Value

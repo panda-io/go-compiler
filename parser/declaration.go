@@ -190,7 +190,7 @@ func (p *Parser) parseAttributes() []*declaration.Attribute {
 								p.error(p.position, "duplicated attribute "+name)
 							}
 							m.Values[name] = &expression.Literal{
-								Type:  p.token,
+								Typ:   p.token,
 								Value: p.literal,
 							}
 							m.Values[name].Position = p.position

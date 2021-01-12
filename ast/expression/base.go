@@ -9,7 +9,10 @@ type Super struct {
 	Base
 }
 
+func (e *Super) Type(c *node.Context) ir.Type {
+	return nil
+}
+
 func (e *Super) GenerateIR(c *node.Context) ir.Value {
-	//TO-DO
 	return nil
 }

@@ -24,7 +24,7 @@ func (e *Enum) GenerateIR(c *node.Context) {
 				index++
 			} else {
 				if literal, ok := v.Value.(*expression.Literal); ok {
-					if literal.Type == token.INT {
+					if literal.Typ == token.INT {
 						if i, _ := strconv.Atoi(literal.Value); int64(i) >= index {
 							index = int64(i)
 							c.Program.Module.NewGlobalDef(v.Qualified(c.Namespace), ir.NewInt(ir.I32, index))

@@ -10,7 +10,11 @@ type Parentheses struct {
 	Expression Expression
 }
 
-func (e *Parentheses) GenerateIR(c *node.Context) ir.Value {
+func (p *Parentheses) Type(c *node.Context) ir.Type {
+	return p.Expression.Type(c)
+}
+
+func (p *Parentheses) GenerateIR(c *node.Context) ir.Value {
 	//TO-DO
 	return nil
 }

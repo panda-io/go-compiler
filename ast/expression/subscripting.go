@@ -11,6 +11,11 @@ type Subscripting struct {
 	Element Expression
 }
 
+func (e *Subscripting) Type(c *node.Context) ir.Type {
+	//TO-DO
+	return nil
+}
+
 func (e *Subscripting) GenerateIR(c *node.Context) ir.Value {
 	//TO-DO
 	return nil

@@ -12,6 +12,15 @@ type Identifier struct {
 	Name string
 }
 
+func (i *Identifier) Type(c *node.Context) ir.Type {
+	v := c.FindDelaration(i.Name)
+	if v != nil {
+		return v.Type()
+	}
+	c.Error(i.Position, fmt.Sprintf("%s undefined", i.Name))
+	return nil
+}
+
 func (i *Identifier) GenerateIR(c *node.Context) ir.Value {
 	v := c.FindVariable(i.Name)
 	if v == nil {

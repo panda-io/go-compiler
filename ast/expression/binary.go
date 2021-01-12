@@ -13,6 +13,40 @@ type Binary struct {
 	Right    Expression
 }
 
+//TO-DO operator override
+func (b *Binary) Type(c *node.Context) ir.Type {
+	switch b.Operator {
+	// bitwise code
+	case token.LeftShift, token.RightShift, token.BitXor, token.BitOr, token.BitAnd, token.Not:
+		if ir.IsInt(b.Left.Type(c)) && ir.IsInt(b.Right.Type(c)) {
+			return b.Left.Type(c)
+		}
+		c.Error(b.Position, "only int are valid for bitwise operator")
+		return nil
+
+	// assign
+	case token.Assign, token.MulAssign, token.DivAssign, token.RemAssign, token.PlusAssign, token.MinusAssign,
+		token.LeftShiftAssign, token.RightShiftAssign, token.AndAssign, token.OrAssign, token.XorAssign:
+		return nil
+
+	// logic operator
+	case token.Or, token.And, token.Equal, token.NotEqual, token.Less, token.LessEqual, token.Greater, token.GreaterEqual:
+		if ir.IsNumber(b.Left.Type(c)) && ir.IsNumber(b.Right.Type(c)) {
+			return ir.I1
+		}
+		c.Error(b.Position, "invalid type for binary logic operator")
+		return nil
+
+	//arithmetic operator
+	case token.Plus, token.Minus, token.Mul, token.Div, token.Rem:
+		return PromoteNumberType(c, b.Left, b.Right)
+
+	default:
+		c.Error(b.Position, "invalid type for binary expression")
+		return nil
+	}
+}
+
 //TO-DO operator overload
 func (b *Binary) GenerateIR(c *node.Context) ir.Value {
 	l := b.Left.GenerateIR(c)

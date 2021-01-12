@@ -29,7 +29,7 @@ func (p *Parser) parseOperand() expression.Expression {
 	case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL, token.NULL, token.Void:
 		e := &expression.Literal{}
 		e.Position = p.position
-		e.Type = p.token
+		e.Typ = p.token
 		e.Value = p.literal
 		p.next()
 		return e
@@ -121,7 +121,7 @@ func (p *Parser) parseUnaryExpression() expression.Expression {
 		e := &expression.New{}
 		e.Position = p.position
 		p.next()
-		e.Type = p.parseType()
+		e.Typ = p.parseType()
 		e.Arguments = p.parseArguments()
 		return e
 

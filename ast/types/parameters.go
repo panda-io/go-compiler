@@ -11,8 +11,11 @@ type Parameters struct {
 	Ellipsis   bool
 }
 
-func (p *Parameters) GenerateIR(c *node.Context) []*ir.Param {
+func (p *Parameters) GenerateIR(c *node.Context, structType *ir.StructType) []*ir.Param {
 	params := []*ir.Param{}
+	if structType != nil {
+		params = append(params, ir.NewParam(ir.NewPointerType(structType)))
+	}
 	if p == nil {
 		return params
 	}

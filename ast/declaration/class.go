@@ -25,12 +25,12 @@ type Struct struct {
 	Parent    *Struct
 	Variables []*Variable
 
-	Types   []ir.Type
+	Type    *ir.StructType
+	Members []ir.Type
 	Indexes map[string]int
 }
 
 func (s *Struct) GenerateIR(ctx *node.Context) {
-	// TO-DO add vtable pointer
 	structs := []*Struct{s}
 	current := s
 	for current.Parent != nil {
@@ -41,7 +41,7 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 	for i := len(structs) - 1; i > -1; i-- {
 		current = structs[i]
 		for _, v := range current.Variables {
-			s.Types = append(s.Types, types.TypeOf(v.Type))
+			s.Members = append(s.Members, types.TypeOf(v.Type))
 			if _, ok := s.Indexes[v.Name.Name]; ok {
 				ctx.Error(v.Position, fmt.Sprintf("duplicate class member: %s", v.Name.Name))
 			} else {
@@ -50,7 +50,12 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 			index++
 		}
 	}
-	//ctx.Program.Module.NewGlobal(c.Qualified(ctx.Namespace), ir.NewStructType(c.Struct.Types...))
+	// TO-DO add vtable pointer, add interface vtable
+	qualified := s.Class.Qualified(ctx.Namespace)
+	s.Type = ir.NewStructType(s.Members...)
+	s.Type.TypeName = qualified
+	v := ctx.Program.Module.NewGlobal(qualified, s.Type)
+	ctx.AddDeclaration(qualified, v)
 }
 
 type VTable struct {

@@ -16,7 +16,12 @@ type Function struct {
 }
 
 func (f *Function) GenerateIR(c *node.Context) {
-	function := c.Program.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c)...)
+	var s *ir.StructType
+	if f.ObjectName != "" {
+		d := c.FindDelaration(f.ObjectName)
+		s = d.(*ir.Global).ContentType.(*ir.StructType)
+	}
+	function := c.Program.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c, s)...)
 	if f.Body != nil {
 		c.Block = function.NewBlock("")
 		f.Body.GenerateIR(c)
@@ -31,7 +36,7 @@ func (f *Function) GenerateDeclaration(c *node.Context) {
 	if f.ObjectName != "" {
 		t := ir.NewStructType()
 		t.TypeName = c.Namespace + "." + f.ObjectName
-		param := ir.NewParam(t)
+		param := ir.NewParam(ir.NewPointerType(t))
 		params = append(params, param)
 	}
 	if f.Parameters != nil {
