@@ -14,18 +14,17 @@ type Parameters struct {
 func (p *Parameters) GenerateIR(c *node.Context, structType *ir.StructType) []*ir.Param {
 	params := []*ir.Param{}
 	if structType != nil {
-		params = append(params, ir.NewParam(ir.NewPointerType(structType)))
+		param := ir.NewParam(ir.NewPointerType(structType))
+		param.LocalName = node.This
+		params = append(params, param)
 	}
 	if p == nil {
 		return params
 	}
 	for _, parameter := range p.Parameters {
 		param := ir.NewParam(TypeOf(parameter.Type))
+		param.LocalName = parameter.Name
 		params = append(params, param)
-		err := c.AddVariable(parameter.Name, param)
-		if err != nil {
-			c.Error(parameter.Position, err.Error())
-		}
 	}
 	return params
 }

@@ -13,7 +13,7 @@ type Identifier struct {
 }
 
 func (i *Identifier) Type(c *node.Context) ir.Type {
-	v := c.FindDelaration(i.Name)
+	v := c.FindObject(i.Name)
 	if v != nil {
 		return v.Type()
 	}
@@ -22,7 +22,7 @@ func (i *Identifier) Type(c *node.Context) ir.Type {
 }
 
 func (i *Identifier) GenerateIR(c *node.Context) ir.Value {
-	v := c.FindVariable(i.Name)
+	v := c.FindObject(i.Name)
 	if v == nil {
 		c.Error(i.Position, fmt.Sprintf("undefined %s", i.Name))
 		return nil
@@ -33,7 +33,7 @@ func (i *Identifier) GenerateIR(c *node.Context) ir.Value {
 		c.Block.AddInstruction(load)
 		return load
 
-	case *ir.Param, *ir.InstAlloca:
+	case *ir.InstLoad, *ir.InstAlloca:
 		return t
 	}
 	c.Error(i.Position, fmt.Sprintf("invalid variable: %s", i.Name))

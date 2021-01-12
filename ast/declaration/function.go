@@ -21,12 +21,22 @@ func (f *Function) GenerateIR(c *node.Context) {
 		s = ir.NewStructType()
 		s.TypeName = c.Namespace + "." + f.ObjectName
 	}
-	function := c.Program.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c, s)...)
+	params := f.Parameters.GenerateIR(c, s)
+	function := c.Program.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), params...)
 	if f.Body != nil {
-		c.Block = function.NewBlock("")
-		f.Body.GenerateIR(c)
-		if c.Block.Term == nil {
-			c.Block.Term = ir.NewRet(ir.NewNull(nil))
+		ctx := c.NewContext()
+		ctx.Block = function.NewBlock("entry")
+		for _, param := range params {
+			load := ir.NewLoad(param.Type(), param)
+			ctx.Block.AddInstruction(load)
+			err := ctx.AddObject(param.LocalName, load)
+			if err != nil {
+				c.Error(f.Position, err.Error())
+			}
+		}
+		f.Body.GenerateIR(ctx)
+		if ctx.Block.Term == nil {
+			ctx.Block.Term = ir.NewRet(ir.NewNull(nil))
 		}
 	}
 }
@@ -46,7 +56,7 @@ func (f *Function) GenerateDeclaration(c *node.Context) {
 		}
 	}
 	d := ir.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), params...)
-	err := c.AddDeclaration(f.Qualified(c.Namespace), d)
+	err := c.AddObject(f.Name.Name, d)
 	if err != nil {
 		c.Error(f.Position, err.Error())
 	}

@@ -46,14 +46,16 @@ func (i *Invocation) GenerateIR(c *node.Context) ir.Value {
 	var function *ir.Func
 	switch t := i.Function.(type) {
 	case *MemberAccess:
-		//TO-DO
-		//panic("not implement")
-		// search import
-		return nil
+		d := t.GenerateIR(c)
+		if f, ok := d.(*ir.Func); ok {
+			function = f
+		} else {
+			c.Error(t.Position, fmt.Sprintf("%s is not a function", t.Member.Name))
+		}
 
 	case *Identifier:
 		//TO-DO if class, search member function and parent function
-		d := c.FindDelaration(t.Name)
+		d := c.FindObject(t.Name)
 		if d == nil {
 			c.Error(t.Position, fmt.Sprintf("%s undefined", t.Name))
 		} else {

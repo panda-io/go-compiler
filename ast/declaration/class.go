@@ -22,7 +22,6 @@ type Class struct {
 
 type Struct struct {
 	Class     *Class
-	Parent    *Struct
 	Variables []*Variable
 
 	Type    *ir.StructType
@@ -33,9 +32,9 @@ type Struct struct {
 func (s *Struct) GenerateIR(ctx *node.Context) {
 	structs := []*Struct{s}
 	current := s
-	for current.Parent != nil {
-		structs = append(structs, current.Parent)
-		current = current.Parent
+	for current.Class.ResolvedParent != nil {
+		structs = append(structs, current.Class.ResolvedParent.Struct)
+		current = current.Class.ResolvedParent.Struct
 	}
 	index := 0
 	for i := len(structs) - 1; i > -1; i-- {
@@ -54,7 +53,7 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 	qualified := s.Class.Qualified(ctx.Namespace)
 	s.Type = ir.NewStructType(s.Members...)
 	v := ctx.Program.Module.NewGlobal(qualified, s.Type)
-	err := ctx.AddDeclaration(qualified, v)
+	err := ctx.AddObject(s.Class.Name.Name, v)
 	if err != nil {
 		ctx.Error(s.Class.Position, fmt.Sprintf("%s redeclared", s.Class.Name.Name))
 	}
@@ -62,7 +61,6 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 
 type VTable struct {
 	Class     *Class
-	Parent    *VTable
 	Functions []*Function
 
 	//Table   []*ir.Func
@@ -100,7 +98,6 @@ func (c *Class) GenerateDeclaration(ctx *node.Context) {
 	c.Struct.GenerateIR(ctx)
 
 	c.VTable.GenerateIR(ctx)
-	// generate member function
 
 	//TO-DO generate vtable
 }
@@ -111,7 +108,7 @@ func (c *Class) GenerateIR(ctx *node.Context) {
 	}
 }
 
-func (c *Class) ProcessMembers(*node.Context) {
+func (c *Class) PreProcess(*node.Context) {
 	s := &Struct{
 		Class:   c,
 		Indexes: make(map[string]int),
@@ -145,9 +142,7 @@ func (c *Class) ResolveParents(ctx *node.Context, declarations map[string]Declar
 			case *Class:
 				if c.ResolvedParent == nil {
 					c.ResolvedParent = t
-					c.Struct.Parent = t.Struct
-					c.VTable.Parent = t.VTable
-					//TO-DO check, cannot self inherit
+					//TO-DO check, cannot self inherit, cycle inherit
 				} else {
 					ctx.Error(p.Position, "class can only inherit 1 other class")
 				}

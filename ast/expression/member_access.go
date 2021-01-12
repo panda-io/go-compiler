@@ -19,5 +19,6 @@ func (e *MemberAccess) Type(c *node.Context) ir.Type {
 
 func (e *MemberAccess) GenerateIR(c *node.Context) ir.Value {
 	//TO-DO
+	//TO-DO find from import
 	return nil
 }
