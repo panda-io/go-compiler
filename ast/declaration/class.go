@@ -53,9 +53,11 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 	// TO-DO add vtable pointer, add interface vtable
 	qualified := s.Class.Qualified(ctx.Namespace)
 	s.Type = ir.NewStructType(s.Members...)
-	s.Type.TypeName = qualified
 	v := ctx.Program.Module.NewGlobal(qualified, s.Type)
-	ctx.AddDeclaration(qualified, v)
+	err := ctx.AddDeclaration(qualified, v)
+	if err != nil {
+		ctx.Error(s.Class.Position, fmt.Sprintf("%s redeclared", s.Class.Name.Name))
+	}
 }
 
 type VTable struct {

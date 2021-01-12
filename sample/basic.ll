@@ -1,8 +1,8 @@
 @global.color.red = global i32 0
 @global.color.green = global i32 1
 @global.color.blue = global i32 2
-@global.string = global %global.string
-@global.allocator = global %global.allocator
+@global.allocator = global { i8*, i32 }
+@global.string = global { i8*, i32, i32 }
 
 declare i32 @printf(i8* %0)
 

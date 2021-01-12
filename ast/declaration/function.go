@@ -18,8 +18,8 @@ type Function struct {
 func (f *Function) GenerateIR(c *node.Context) {
 	var s *ir.StructType
 	if f.ObjectName != "" {
-		d := c.FindDelaration(f.ObjectName)
-		s = d.(*ir.Global).ContentType.(*ir.StructType)
+		s = ir.NewStructType()
+		s.TypeName = c.Namespace + "." + f.ObjectName
 	}
 	function := c.Program.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), f.Parameters.GenerateIR(c, s)...)
 	if f.Body != nil {
