@@ -63,6 +63,14 @@ type Constant interface {
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
+func (*Global) Constant() {}
+
+// IsConstant ensures that only constants can be assigned to the
+// constant.Constant interface.
+func (*Func) Constant() {}
+
+// IsConstant ensures that only constants can be assigned to the
+// constant.Constant interface.
 func (*Int) Constant() {}
 
 // IsConstant ensures that only constants can be assigned to the

@@ -79,6 +79,8 @@ func (p *Program) GenerateIR() string {
 
 			case *declaration.Class:
 				t.ResolveParents(p.Data.Context, p.Declarations)
+				t.IRStruct.GenerateDeclaration(p.Data.Context, p.Declarations)
+				t.IRVTable.GenerateDeclaration(p.Data.Context, p.Declarations)
 			}
 		}
 	}
@@ -91,15 +93,19 @@ func (p *Program) GenerateIR() string {
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
+			case *declaration.Variable:
+				// TO-DO
+
 			case *declaration.Function:
-				t.GenerateDeclaration(p.Data.Context)
+				t.GenerateDeclaration(p.Data.Context, p.Declarations)
 
 			case *declaration.Interface:
 				// TO-DO save it then check class later
 				// Generate function declaration
 
 			case *declaration.Class:
-				t.GenerateDeclaration(p.Data.Context)
+				t.IRStruct.GenerateIR(p.Data.Context)
+				t.IRVTable.GenerateIR(p.Data.Context)
 			}
 		}
 	}
@@ -112,9 +118,6 @@ func (p *Program) GenerateIR() string {
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
-			case *declaration.Variable:
-				// resovle later after all class type registered
-
 			case *declaration.Function:
 				t.GenerateIR(p.Data.Context)
 

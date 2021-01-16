@@ -14,33 +14,45 @@ type Class struct {
 	Parents        []*types.TypeName
 	Members        []Declaration
 
-	Struct             *Struct
-	VTable             *VTable
 	ResolvedParent     *Class
 	ResolvedInterfaces []*Interface
+
+	IRStruct *Struct
+	IRVTable *VTable
 }
 
 type Struct struct {
 	Class     *Class
 	Variables []*Variable
+	Members   []ir.Type
 
-	Type    *ir.StructType
-	Members []ir.Type
-	Indexes map[string]int
+	Type          *ir.StructType
+	MergedMembers []ir.Type
+	Indexes       map[string]int
+}
+
+func (s *Struct) GenerateDeclaration(ctx *node.Context, declarations map[string]Declaration) {
+	for _, v := range s.Variables {
+		s.Members = append(s.Members, TypeOf(ctx, declarations, v.Type))
+	}
 }
 
 func (s *Struct) GenerateIR(ctx *node.Context) {
+	t := ir.NewStructType()
+	t.TypeName = ctx.Namespace + "." + s.Class.Name.Name + ".vtable.type"
+	s.MergedMembers = append(s.MergedMembers, ir.NewPointerType(t))
+
 	structs := []*Struct{s}
 	current := s
 	for current.Class.ResolvedParent != nil {
-		structs = append(structs, current.Class.ResolvedParent.Struct)
-		current = current.Class.ResolvedParent.Struct
+		structs = append(structs, current.Class.ResolvedParent.IRStruct)
+		current = current.Class.ResolvedParent.IRStruct
 	}
 	index := 0
 	for i := len(structs) - 1; i > -1; i-- {
 		current = structs[i]
-		for _, v := range current.Variables {
-			s.Members = append(s.Members, types.TypeOf(v.Type))
+		for i, v := range current.Variables {
+			s.MergedMembers = append(s.MergedMembers, current.Members[i])
 			if _, ok := s.Indexes[v.Name.Name]; ok {
 				ctx.Error(v.Position, fmt.Sprintf("duplicate class member: %s", v.Name.Name))
 			} else {
@@ -49,9 +61,9 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 			index++
 		}
 	}
-	// TO-DO add vtable pointer, add interface vtable
+
 	qualified := s.Class.Qualified(ctx.Namespace)
-	s.Type = ir.NewStructType(s.Members...)
+	s.Type = ir.NewStructType(s.MergedMembers...)
 	v := ctx.Program.Module.NewGlobal(qualified, s.Type)
 	err := ctx.AddObject(s.Class.Name.Name, v)
 	if err != nil {
@@ -62,48 +74,75 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 type VTable struct {
 	Class     *Class
 	Functions []*Function
+	Members   []*ir.Func
 
-	//Table   []*ir.Func
-	Indexes map[string]int
+	Type            *ir.StructType
+	Data            *ir.Struct
+	MergedFunctions []*ir.Func
+	Indexes         map[string]int
+}
+
+//%Foo_vtable_type = type { i32(%Foo*)* }
+func (t *VTable) GenerateDeclaration(ctx *node.Context, declarations map[string]Declaration) {
+	for _, v := range t.Functions {
+		t.Members = append(t.Members, v.GenerateDeclaration(ctx, declarations))
+	}
 }
 
 func (t *VTable) GenerateIR(ctx *node.Context) {
-	for _, v := range t.Functions {
-		v.GenerateDeclaration(ctx)
+	vtables := []*VTable{t}
+	current := t
+	for current.Class.ResolvedParent != nil {
+		vtables = append(vtables, current.Class.ResolvedParent.IRVTable)
+		current = current.Class.ResolvedParent.IRVTable
 	}
-	/*
-		vtables := []*VTable{t}
-		current := t
-		for current.Parent != nil {
-			vtables = append(vtables, current.Parent)
-			current = current.Parent
-		}
-		index := 0
-		for i := len(vtables) - 1; i > -1; i-- {
-			current = vtables[i]
-			for _, v := range current.Functions {
-				v.GenerateDeclaration(ctx)
-				if _, ok := t.Indexes[v.Name.Name]; ok {
-					ctx.Error(v.Position, fmt.Sprintf("duplicate class member: %s", v.Name.Name))
+	index := 0
+	for i := len(vtables) - 1; i > -1; i-- {
+		current = vtables[i]
+		for i, v := range current.Functions {
+			if existing, ok := t.Indexes[v.Name.Name]; ok {
+				// existing function
+				f := t.MergedFunctions[existing]
+				if !CompareMemberFunction(f.Sig, current.Members[i].Sig) {
+					ctx.Error(v.Position, fmt.Sprintf("member function %s does not match its parent class", v.Name.Name))
+					//TO-DO print more params details here
 				} else {
-					t.Indexes[v.Name.Name] = index
+					t.MergedFunctions[existing] = current.Members[i]
 				}
+			} else {
+				// new function
+				t.MergedFunctions = append(t.MergedFunctions, current.Members[i])
+				t.Indexes[v.Name.Name] = index
 				index++
 			}
-		}*/
-	//TO-DO compare function sig
-}
+		}
+	}
 
-func (c *Class) GenerateDeclaration(ctx *node.Context) {
-	c.Struct.GenerateIR(ctx)
+	var types []ir.Type
+	var constants []ir.Constant
+	for _, f := range t.MergedFunctions {
+		types = append(types, f.Sig)
+		constants = append(constants, f)
+	}
+	t.Type = ir.NewStructType(types...)
+	v := ctx.Program.Module.NewGlobal(t.Class.Qualified(ctx.Namespace)+".vtable.type", t.Type)
+	err := ctx.AddObject(t.Class.Name.Name+".vtable.type", v)
+	if err != nil {
+		ctx.Error(t.Class.Position, fmt.Sprintf("%s redeclared", t.Class.Name.Name))
+	}
 
-	c.VTable.GenerateIR(ctx)
-
-	//TO-DO generate vtable
+	vtableType := ir.NewStructType()
+	vtableType.TypeName = t.Class.Qualified(ctx.Namespace) + ".vtable.type"
+	t.Data = ir.NewStruct(vtableType, constants...)
+	v = ctx.Program.Module.NewGlobalDef(t.Class.Qualified(ctx.Namespace)+".vtable.data", t.Data)
+	err = ctx.AddObject(t.Class.Name.Name+".vtable.data", v)
+	if err != nil {
+		ctx.Error(t.Class.Position, fmt.Sprintf("%s redeclared", t.Class.Name.Name))
+	}
 }
 
 func (c *Class) GenerateIR(ctx *node.Context) {
-	for _, v := range c.VTable.Functions {
+	for _, v := range c.IRVTable.Functions {
 		v.GenerateIR(ctx)
 	}
 }
@@ -118,7 +157,7 @@ func (c *Class) PreProcess(*node.Context) {
 			s.Variables = append(s.Variables, v)
 		}
 	}
-	c.Struct = s
+	c.IRStruct = s
 
 	t := &VTable{
 		Class:   c,
@@ -129,12 +168,12 @@ func (c *Class) PreProcess(*node.Context) {
 			t.Functions = append(t.Functions, v)
 		}
 	}
-	c.VTable = t
+	c.IRVTable = t
 }
 
 func (c *Class) ResolveParents(ctx *node.Context, declarations map[string]Declaration) {
 	for _, p := range c.Parents {
-		d := FindeDeclaration(ctx, declarations, p)
+		_, d := FindDeclaration(ctx, declarations, p)
 		if d == nil {
 			ctx.Error(p.Position, fmt.Sprintf("%s undefined", p.Name))
 		} else {

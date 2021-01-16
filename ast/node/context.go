@@ -102,41 +102,6 @@ func (c *Context) FindSelector(object string, member string) ir.Value {
 	return nil
 }
 
-/*
-func (c *Context) AddDeclaration(qualified string, value ir.Value) error {
-	if c.Program.Declarations[qualified] != nil {
-		return fmt.Errorf("redeclared function %s.", qualified)
-	}
-	c.Program.Declarations[qualified] = value
-	return nil
-}
-
-func (c *Context) FindDelaration(name string) ir.Value {
-	// search current package
-	if c.Namespace != Global {
-		qualified := c.Namespace + "." + name
-		if c.Program.Declarations[qualified] != nil {
-			return c.Program.Declarations[qualified]
-		}
-	}
-	// search global
-	qualified := Global + "." + name
-	if c.Program.Declarations[qualified] != nil {
-		return c.Program.Declarations[qualified]
-	}
-
-	//TO-DO find with selector
-
-		// search import packages
-		for _, i := range c.Imports {
-			qualified = i.Namespace + "." + name
-			if c.Program.Declarations[qualified] != nil {
-				declarations = append(declarations, c.Program.Declarations[qualified])
-			}
-		}
-	return nil
-}*/
-
 func (c *Context) Errors() []*Error {
 	return c.Program.Errors
 }

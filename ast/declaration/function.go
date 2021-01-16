@@ -13,20 +13,16 @@ type Function struct {
 	Parameters     *types.Parameters
 	ReturnType     types.Type
 	Body           *statement.Block
+
+	IRParams   []*ir.Param
+	IRFunction *ir.Func
 }
 
 func (f *Function) GenerateIR(c *node.Context) {
-	var s *ir.StructType
-	if f.ObjectName != "" {
-		s = ir.NewStructType()
-		s.TypeName = c.Namespace + "." + f.ObjectName
-	}
-	params := f.Parameters.GenerateIR(c, s)
-	function := c.Program.Module.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), params...)
 	if f.Body != nil {
 		ctx := c.NewContext()
-		ctx.Block = function.NewBlock("entry")
-		for _, param := range params {
+		ctx.Block = f.IRFunction.NewBlock("entry")
+		for _, param := range f.IRParams {
 			load := ir.NewLoad(param.Type(), param)
 			ctx.Block.AddInstruction(load)
 			err := ctx.AddObject(param.LocalName, load)
@@ -41,23 +37,29 @@ func (f *Function) GenerateIR(c *node.Context) {
 	}
 }
 
-func (f *Function) GenerateDeclaration(c *node.Context) {
-	params := []*ir.Param{}
+func (f *Function) GenerateDeclaration(c *node.Context, declarations map[string]Declaration) *ir.Func {
 	if f.ObjectName != "" {
 		t := ir.NewStructType()
 		t.TypeName = c.Namespace + "." + f.ObjectName
 		param := ir.NewParam(ir.NewPointerType(t))
-		params = append(params, param)
+		param.LocalName = node.This
+		f.IRParams = append(f.IRParams, param)
 	}
 	if f.Parameters != nil {
 		for _, parameter := range f.Parameters.Parameters {
-			param := ir.NewParam(types.TypeOf(parameter.Type))
-			params = append(params, param)
+			param := ir.NewParam(TypeOf(c, declarations, parameter.Type))
+			param.LocalName = parameter.Name
+			f.IRParams = append(f.IRParams, param)
 		}
 	}
-	d := ir.NewFunc(f.Qualified(c.Namespace), types.TypeOf(f.ReturnType), params...)
-	err := c.AddObject(f.Name.Name, d)
+	f.IRFunction = c.Program.Module.NewFunc(f.Qualified(c.Namespace), TypeOf(c, declarations, f.ReturnType), f.IRParams...)
+	n := f.Name.Name
+	if f.ObjectName != "" {
+		n = f.ObjectName + "." + n
+	}
+	err := c.AddObject(n, f.IRFunction)
 	if err != nil {
 		c.Error(f.Position, err.Error())
 	}
+	return f.IRFunction
 }

@@ -13,6 +13,8 @@ import (
 type Enum struct {
 	Base
 	Members []Declaration
+
+	IRMembers map[string]*ir.Global
 }
 
 func (e *Enum) GenerateIR(c *node.Context) {
