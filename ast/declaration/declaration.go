@@ -47,6 +47,15 @@ func (b *Base) External() bool {
 	return false
 }
 
+func (b *Base) Builtin() bool {
+	for _, a := range b.Attributes {
+		if a.Name == node.Builtin {
+			return true
+		}
+	}
+	return false
+}
+
 func (b *Base) Identifier() string {
 	return b.Name.Name
 }
@@ -163,22 +172,3 @@ func CompareMemberFunction(f1 *ir.FuncType, f2 *ir.FuncType) bool {
 	}
 	return f1.Variadic == f2.Variadic
 }
-
-/*
-func (p *Parameters) GenerateParameters(c *node.Context, structType *ir.StructType) []*ir.Param {
-	params := []*ir.Param{}
-	if structType != nil {
-		param := ir.NewParam(ir.NewPointerType(structType))
-		param.LocalName = node.This
-		params = append(params, param)
-	}
-	if p == nil {
-		return params
-	}
-	for _, parameter := range p.Parameters {
-		param := ir.NewParam(TypeOf(parameter.Type))
-		param.LocalName = parameter.Name
-		params = append(params, param)
-	}
-	return params
-}*/

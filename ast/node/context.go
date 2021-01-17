@@ -1,6 +1,7 @@
 package node
 
 import (
+	"crypto/md5"
 	"fmt"
 
 	"github.com/panda-foundation/go-compiler/ir"
@@ -13,7 +14,8 @@ const (
 	Constructor = "new"
 	Destructor  = "destroy"
 
-	Extern = "extern"
+	Extern  = "extern"
+	Builtin = "builtin"
 )
 
 type Import struct {
@@ -30,6 +32,7 @@ func NewProgramData() *ProgramData {
 	p := &ProgramData{
 		Module:   ir.NewModule(),
 		Contexts: make(map[string]*Context),
+		Strings:  make(map[string]*ir.Global),
 	}
 	p.Contexts[Global] = NewContext(p)
 	return p
@@ -41,7 +44,21 @@ type ProgramData struct {
 	Context  *Context
 	Contexts map[string]*Context
 
+	Strings map[string]*ir.Global
+
 	Errors []*Error
+}
+
+func (p *ProgramData) AddString(value string) *ir.Global {
+	bytes := []byte(value)
+	bytes = append(bytes, 0)
+	hash := fmt.Sprintf("%x", md5.Sum(bytes))
+	if g, ok := p.Strings[hash]; ok {
+		return g
+	}
+	s := p.Module.NewGlobalDef("string."+hash, ir.NewCharArray(bytes))
+	p.Strings[hash] = s
+	return s
 }
 
 func NewContext(data *ProgramData) *Context {

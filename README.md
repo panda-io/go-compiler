@@ -201,6 +201,7 @@
 
     | expression	| translated to |
     |:---:|:---|
+    |a = b| a.assign(b) |
     |a += b| a.plus_assign(b) |
     |a -= b| a.minus_assign(b) |
     |a *= b| a.mul_assign(b) |
