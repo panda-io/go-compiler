@@ -15,7 +15,7 @@ type Literal struct {
 func (l *Literal) Type(c *node.Context) ir.Type {
 	switch l.Typ {
 	case token.STRING:
-		return ir.NewArrayType(uint64(len(l.Value)+1), ir.I8)
+		return ir.NewArrayType(uint64(len(l.Value)-1), ir.I8)
 
 	case token.CHAR:
 		return ir.I32
@@ -41,7 +41,7 @@ func (l *Literal) GenerateIR(c *node.Context) ir.Value {
 	// case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL, token.NULL, token.Void:
 	switch l.Typ {
 	case token.STRING:
-		return c.Program.AddString(l.Value)
+		return c.Program.AddString(l.Value[1 : len(l.Value)-1])
 
 	case token.CHAR:
 		//TO-DO convert char to i32

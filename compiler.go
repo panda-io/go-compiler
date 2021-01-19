@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os/exec"
 
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/parser"
@@ -35,7 +36,7 @@ func (c *Compiler) ParseFile(file string) {
 	c.program.AddModule(file, m)
 }
 
-func (c *Compiler) Generate(file string) {
+func (c *Compiler) Compile(file string) {
 	content := c.program.GenerateIR()
 	errors := c.program.Errors()
 	if len(errors) > 0 {
@@ -45,10 +46,19 @@ func (c *Compiler) Generate(file string) {
 			//TO-DO use global position and fileset
 			fmt.Println(e.Message)
 		}
-		//panic("compile failed.")
+		panic("compile failed.")
 	}
-	err := ioutil.WriteFile(file, []byte(content), 0644)
-	if err != nil {
+	if err := ioutil.WriteFile(file+".ll", []byte(content), 0644); err != nil {
+		panic(err)
+	}
+
+	cmd := exec.Command("llc-10", "-filetype=obj", "-o", file+".o", file+".ll")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	cmd = exec.Command("clang", "-o", file, file+".o")
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
 }

@@ -1,6 +1,7 @@
 @global.color.red = global i32 0
 @global.color.green = global i32 1
 @global.color.blue = global i32 2
+@string.cb091131e20d7842e7627e8736856b45 = constant [12 x i8] c"hello world\00"
 
 declare i32 @puts(i8* %text)
 
@@ -16,16 +17,18 @@ declare void @memcpy(i8* %dest, i8* %source, i32 %size)
 
 declare void @memset(i8* %source, i32 %value, i32 %size)
 
-define i32 @global.add(i32 %a, i32 %b) {
+define void @global.nothing(i32 %a, i32 %b) {
 entry:
-	%0 = load i32, i32 %a
-	%1 = load i32, i32 %b
-	%2 = add i32 %0, %1
-	ret i32 %2
+	%0 = alloca i32
+	store i32 %a, i32* %0
+	%1 = alloca i32
+	store i32 %b, i32* %1
+	ret void
 }
 
 define i32 @main() {
 entry:
-	%0 = call i32 @global.add(i32 1, i32 2)
-	ret i32 %0
+	%0 = getelementptr [12 x i8], [12 x i8]* @string.cb091131e20d7842e7627e8736856b45, i32 0, i32 0
+	%1 = call i32 @puts(i8* %0)
+	ret i32 0
 }

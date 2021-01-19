@@ -38,7 +38,25 @@ func PromoteNumberType(c *node.Context, e1 Expression, e2 Expression) ir.Type {
 }
 
 // also string here
-func Cast(c *node.Context, in ir.Value, out ir.Type) ir.Value {
+func Cast(c *node.Context, in ir.Value, outType ir.Type) ir.Value {
+	inType := in.Type()
+	if ir.IsPointer(inType) && ir.IsPointer(outType) {
+		if outType.Equal(ir.NewPointerType(ir.I8)) {
+			// convert to raw pointer
+			gep := ir.NewGetElementPtr(inType.(*ir.PointerType).ElemType, in, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
+			c.Block.AddInstruction(gep)
+			return gep
+		} /*else {
+			// TO-DO convert
+			check if convertable, oop inheritance
+		}*/
+		return nil
+	}
+
+	if ir.IsPointer(inType) || ir.IsPointer(outType) {
+		// cannot convert between pointer and value
+		return nil
+	}
 	/*
 		inType := in.Type()
 		fromInt := types.IsInt(inType)

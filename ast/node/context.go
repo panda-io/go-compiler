@@ -21,6 +21,7 @@ const (
 type Import struct {
 	Alias     string
 	Namespace string
+	Position  int
 }
 
 type Error struct {
@@ -57,6 +58,7 @@ func (p *ProgramData) AddString(value string) *ir.Global {
 		return g
 	}
 	s := p.Module.NewGlobalDef("string."+hash, ir.NewCharArray(bytes))
+	s.Immutable = true
 	p.Strings[hash] = s
 	return s
 }
@@ -112,11 +114,27 @@ func (c *Context) FindObject(name string) ir.Value {
 	return nil
 }
 
-func (c *Context) FindSelector(object string, member string) ir.Value {
-	//This
-	//Object//class instance, not define
-	//Import
-	return nil
+func (c *Context) FindSelector(parent string, member string) (parentValue ir.Value, memberValue ir.Value) {
+	parentValue = c.FindObject(parent)
+	if parentValue == nil {
+		// find from imports
+		for _, i := range c.Program.Context.Imports {
+			if i.Alias == parent {
+				ctx := c.Program.Contexts[i.Namespace]
+				if ctx == nil {
+					c.Error(i.Position, "invalid import")
+					return
+				}
+				memberValue = ctx.objects[member]
+				return
+			}
+		}
+	} /*else {
+		// TO-DO parent is an object, find its member then
+		//parent is "this", "base"
+		//parent is an object //class instance
+	}*/
+	return
 }
 
 func (c *Context) Errors() []*Error {

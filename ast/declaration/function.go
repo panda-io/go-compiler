@@ -18,21 +18,39 @@ type Function struct {
 	IRFunction *ir.Func
 }
 
+/*
+define void @add(i32, i32) #0 {
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  store i32 %0, i32* %3, align 4
+  store i32 %1, i32* %4, align 4
+  store i32 1, i32* %3, align 4
+  ret void
+}
+*/
 func (f *Function) GenerateIR(c *node.Context) {
 	if f.Body != nil {
 		ctx := c.NewContext()
 		ctx.Block = f.IRFunction.NewBlock("entry")
 		for _, param := range f.IRParams {
-			load := ir.NewLoad(param.Type(), param)
-			ctx.Block.AddInstruction(load)
-			err := ctx.AddObject(param.LocalName, load)
+			var value ir.Value
+			if ir.IsPointer(param.Typ) {
+				value = param
+			} else {
+				alloc := ir.NewAlloca(param.Typ)
+				ctx.Block.AddInstruction(alloc)
+				store := ir.NewStore(param, alloc)
+				ctx.Block.AddInstruction(store)
+				value = alloc
+			}
+			err := ctx.AddObject(param.LocalName, value)
 			if err != nil {
 				c.Error(f.Position, err.Error())
 			}
 		}
 		f.Body.GenerateIR(ctx)
 		if ctx.Block.Term == nil {
-			ctx.Block.Term = ir.NewRet(ir.NewNull(nil))
+			ctx.Block.Term = ir.NewRet(nil)
 		}
 	}
 }
