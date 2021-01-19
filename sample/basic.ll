@@ -17,6 +17,18 @@ declare void @memcpy(i8* %dest, i8* %source, i32 %size)
 
 declare void @memset(i8* %source, i32 %value, i32 %size)
 
+define i32 @global.add(i32 %a, i32 %b) {
+entry:
+	%0 = alloca i32
+	store i32 %a, i32* %0
+	%1 = alloca i32
+	store i32 %b, i32* %1
+	%2 = load i32, i32* %0
+	%3 = load i32, i32* %1
+	%4 = add i32 %2, %3
+	ret i32 %4
+}
+
 define void @global.nothing(i32 %a, i32 %b) {
 entry:
 	%0 = alloca i32
@@ -30,5 +42,6 @@ define i32 @main() {
 entry:
 	%0 = getelementptr [12 x i8], [12 x i8]* @string.cb091131e20d7842e7627e8736856b45, i32 0, i32 0
 	%1 = call i32 @puts(i8* %0)
-	ret i32 0
+	%2 = call i32 @global.add(i32 1, i32 2)
+	ret i32 %2
 }

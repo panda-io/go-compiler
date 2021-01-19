@@ -33,7 +33,12 @@ func (i *Identifier) GenerateIR(c *node.Context) ir.Value {
 		c.Block.AddInstruction(load)
 		return load
 
-	case *ir.InstLoad, *ir.InstAlloca:
+	case *ir.InstAlloca:
+		load := ir.NewLoad(t.ElemType, t)
+		c.Block.AddInstruction(load)
+		return load
+
+	case *ir.InstLoad:
 		return t
 	}
 	c.Error(i.Position, fmt.Sprintf("invalid variable: %s", i.Name))
