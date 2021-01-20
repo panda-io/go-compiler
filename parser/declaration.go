@@ -86,7 +86,7 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 		d.TypeParameters = p.parseTypeParameters()
 	}
 	if p.token == token.Colon {
-		d.Parents = p.parseIneritanceTypes()
+		d.Parents = p.parseTypeNames()
 	}
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
@@ -117,7 +117,7 @@ func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declar
 		d.TypeParameters = p.parseTypeParameters()
 	}
 	if p.token == token.Colon {
-		d.Parents = p.parseIneritanceTypes()
+		d.Parents = p.parseTypeNames()
 	}
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
@@ -150,6 +150,10 @@ func (p *Parser) parseModifier() *declaration.Modifier {
 	m := &declaration.Modifier{}
 	if p.token == token.Public {
 		m.Public = true
+		p.next()
+	}
+	if p.token == token.Weak {
+		m.Weak = true
 		p.next()
 	}
 	return m

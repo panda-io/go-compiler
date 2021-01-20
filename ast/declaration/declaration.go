@@ -16,7 +16,7 @@ type Declaration interface {
 
 type Modifier struct {
 	Public bool
-	//TO-DO Inline
+	Weak   bool
 }
 
 func (m0 *Modifier) Equal(m1 *Modifier) bool {

@@ -45,6 +45,7 @@ const (
 	Throw
 	Try
 	Var
+	Weak
 	keywordEnd
 
 	// scalars
@@ -163,6 +164,7 @@ var (
 		Throw:     "throw",
 		Try:       "try",
 		Var:       "var",
+		Weak:      "weak",
 
 		Bool:    "bool",
 		Char:    "char",

@@ -14,6 +14,9 @@ func (p *Parser) parseType() types.Type {
 		p.next()
 		return t
 	}
+	if p.token == token.Function {
+		p.parseFunctionType()
+	}
 	return p.parseTypeName()
 }
 
@@ -92,7 +95,7 @@ func (p *Parser) parseTypeParameter() *types.TypeParameter {
 	return t
 }
 
-func (p *Parser) parseIneritanceTypes() []*types.TypeName {
+func (p *Parser) parseTypeNames() []*types.TypeName {
 	p.next() // skip :
 	result := []*types.TypeName{p.parseTypeName()}
 	for p.token == token.Comma {
@@ -159,5 +162,25 @@ func (p *Parser) parseArguments() *expression.Arguments {
 		}
 	}
 	p.expect(token.RightParen)
+	return t
+}
+
+func (p *Parser) parseFunctionType() *types.TypeFunction {
+	t := &types.TypeFunction{}
+	t.Position = p.position
+	p.expect(token.LeftParen)
+	if p.token == token.RightParen {
+		p.next()
+		return t
+	}
+	t.Parameters = append(t.Parameters, p.parseType())
+	for p.token == token.Comma {
+		p.next()
+		t.Parameters = append(t.Parameters, p.parseType())
+	}
+	p.expect(token.RightParen)
+	if p.token != token.Semi && p.token != token.Assign {
+		t.ReturnType = p.parseType()
+	}
 	return t
 }
