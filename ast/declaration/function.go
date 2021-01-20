@@ -56,7 +56,7 @@ func (f *Function) GenerateIR(c *node.Context) {
 }
 
 func (f *Function) GenerateDeclaration(c *node.Context, declarations map[string]Declaration) *ir.Func {
-	if f.ObjectName != "" {
+	if f.ObjectName != "" && f.Name.Name != node.Constructor {
 		t := ir.NewStructType()
 		t.TypeName = c.Namespace + "." + f.ObjectName
 		param := ir.NewParam(ir.NewPointerType(t))

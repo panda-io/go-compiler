@@ -11,7 +11,7 @@ const (
 	Global      = "global"
 	Entry       = "main"
 	This        = "this"
-	Constructor = "new"
+	Constructor = "create"
 	Destructor  = "destroy"
 
 	Extern  = "extern"

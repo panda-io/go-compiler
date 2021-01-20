@@ -15,7 +15,8 @@ func (p *Parser) parseType() types.Type {
 		return t
 	}
 	if p.token == token.Function {
-		p.parseFunctionType()
+		p.next()
+		return p.parseFunctionType()
 	}
 	return p.parseTypeName()
 }

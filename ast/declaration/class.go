@@ -3,6 +3,7 @@ package declaration
 import (
 	"fmt"
 
+	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/ir"
@@ -97,6 +98,7 @@ func (t *VTable) GenerateIR(ctx *node.Context) {
 		current = current.Class.ResolvedParent.IRVTable
 	}
 	index := 0
+
 	for i := len(vtables) - 1; i > -1; i-- {
 		current = vtables[i]
 		for i, v := range current.Functions {
@@ -145,6 +147,7 @@ func (c *Class) GenerateIR(ctx *node.Context) {
 	for _, v := range c.IRVTable.Functions {
 		v.GenerateIR(ctx)
 	}
+	//TO-DO constructor and destructor
 }
 
 func (c *Class) PreProcess(*node.Context) {
@@ -163,9 +166,35 @@ func (c *Class) PreProcess(*node.Context) {
 		Class:   c,
 		Indexes: make(map[string]int),
 	}
+
+	// first is constructor, second is destructor
+	t.Functions = append(t.Functions, nil, nil)
 	for _, m := range c.Members {
 		if v, ok := m.(*Function); ok {
-			t.Functions = append(t.Functions, v)
+			if v.Name.Name == node.Constructor {
+				t.Functions[0] = v
+			} else if v.Name.Name == node.Destructor {
+				t.Functions[1] = v
+			} else {
+				t.Functions = append(t.Functions, v)
+			}
+		}
+	}
+	if t.Functions[0] == nil {
+		t.Functions[0] = &Function{}
+		t.Functions[0].ObjectName = c.Name.Name
+		t.Functions[0].Name = &expression.Identifier{
+			Name: node.Constructor,
+		}
+	}
+	t.Functions[0].ReturnType = &types.TypeName{
+		Name: c.Name.Name,
+	}
+	if t.Functions[1] == nil {
+		t.Functions[1] = &Function{}
+		t.Functions[1].ObjectName = c.Name.Name
+		t.Functions[1].Name = &expression.Identifier{
+			Name: node.Destructor,
 		}
 	}
 	c.IRVTable = t

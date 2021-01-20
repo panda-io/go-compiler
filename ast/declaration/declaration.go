@@ -153,8 +153,15 @@ func TypeOf(c *node.Context, declarations map[string]Declaration, t types.Type) 
 		//TO-DO deal with top class
 		return ir.Void
 
+	case *types.TypeFunction:
+		var types []ir.Type
+		for _, p := range typ.Parameters {
+			types = append(types, TypeOf(c, declarations, p))
+		}
+		return ir.NewFuncType(TypeOf(c, declarations, typ.ReturnType), types...)
+
 	default:
-		panic("inviad type define")
+		panic("invalid type define")
 	}
 }
 
