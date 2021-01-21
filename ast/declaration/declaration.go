@@ -11,6 +11,8 @@ import (
 type Declaration interface {
 	node.Node
 	Identifier() string
+	External() bool
+	Builtin() bool
 	Qualified(namespace string) string
 }
 
@@ -149,9 +151,12 @@ func TypeOf(c *node.Context, declarations map[string]Declaration, t types.Type) 
 			c.Error(t.GetPosition(), "undefined: "+typ.Name)
 			return ir.Void
 		}
-		//TO-DO use shared, weak
-		//TO-DO deal with top class
-		return ir.Void
+		if d.Builtin() {
+			return d.(*Class).IRStruct.Type
+		}
+		structType := ir.NewStructType()
+		structType.TypeName = node.Counter
+		return structType
 
 	case *types.TypeFunction:
 		var types []ir.Type
