@@ -1,0 +1,1 @@
+clang -emit-llvm -S -o sample.ll sample.c

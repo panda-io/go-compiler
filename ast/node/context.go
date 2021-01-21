@@ -13,7 +13,6 @@ const (
 	This        = "this"
 	Constructor = "create"
 	Destructor  = "destroy"
-	Counter     = "global.counter"
 
 	Extern  = "extern"
 	Builtin = "builtin"

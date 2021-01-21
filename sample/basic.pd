@@ -2,13 +2,15 @@ namespace;
 
 //import libc;
 
+/*
 enum color
 {
     red,
     green,
     blue
-}
+}*/
 
+/*
 public class nothing
 {
 
@@ -17,7 +19,7 @@ public class nothing
 function add(a int, b int) int
 {
     return a + b;
-}
+}*/
 
 public function main() int
 {

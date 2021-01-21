@@ -7,6 +7,14 @@ import (
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
+var (
+	malloc  = ir.NewFunc("malloc", ir.NewPointerType(ir.I8), ir.NewParam(ir.I32))
+	free    = ir.NewFunc("free", ir.Void, ir.NewParam(ir.NewPointerType(ir.I8)))
+	memcpy  = ir.NewFunc("memcpy", ir.NewPointerType(ir.I8), ir.NewParam(ir.NewPointerType(ir.I8)), ir.NewParam(ir.I32))
+	memset  = ir.NewFunc("memset", ir.Void, ir.NewParam(ir.I32), ir.NewParam(ir.I32))
+	counter = ir.NewPointerType(&ir.StructType{TypeName: "global.counter"})
+)
+
 type Function struct {
 	Base
 	TypeParameters *types.TypeParameters
@@ -18,16 +26,6 @@ type Function struct {
 	IRFunction *ir.Func
 }
 
-/*
-define void @add(i32, i32) #0 {
-  %3 = alloca i32, align 4
-  %4 = alloca i32, align 4
-  store i32 %0, i32* %3, align 4
-  store i32 %1, i32* %4, align 4
-  store i32 1, i32* %3, align 4
-  ret void
-}
-*/
 func (f *Function) GenerateIR(c *node.Context) {
 	if f.Body != nil {
 		ctx := c.NewContext()
@@ -47,6 +45,29 @@ func (f *Function) GenerateIR(c *node.Context) {
 			if err != nil {
 				c.Error(f.Position, err.Error())
 			}
+		}
+		if f.ObjectName != "" {
+			if f.Name.Name == node.Constructor {
+				// generate constructor
+				s := ir.NewStructType()
+				s.TypeName = c.Namespace + "." + f.ObjectName
+
+				ptr := ir.NewGetElementPtr(s, ir.NewNull(ir.NewPointerType(s)), ir.NewInt(ir.I32, 1))
+				ctx.Block.AddInstruction(ptr)
+				size := ir.NewPtrToInt(ptr, ir.I32)
+				ctx.Block.AddInstruction(size)
+				address := ir.NewCall(malloc, size)
+				ctx.Block.AddInstruction(address)
+				ctx.Block.AddInstruction(ir.NewCall(memset, address, ir.NewInt(ir.I32, 0), size))
+				instance := ir.NewBitCast(address, ir.NewPointerType(s))
+				ctx.Block.AddInstruction(instance)
+				//set vtable
+				ctx.Block.Term = ir.NewRet(instance)
+			}
+			/*
+				if f.Name.Name == node.Destructor {
+					// generate destructor
+				}*/
 		}
 		f.Body.GenerateIR(ctx)
 		if ctx.Block.Term == nil {
@@ -74,10 +95,6 @@ func (f *Function) GenerateDeclaration(c *node.Context, declarations map[string]
 	n := f.Name.Name
 	if f.ObjectName != "" {
 		n = f.ObjectName + "." + n
-	}
-	err := c.AddObject(n, f.IRFunction)
-	if err != nil {
-		c.Error(f.Position, err.Error())
 	}
 	return f.IRFunction
 }

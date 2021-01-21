@@ -5,6 +5,7 @@ import (
 
 	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/ir"
 )
@@ -65,11 +66,7 @@ func (s *Struct) GenerateIR(ctx *node.Context) {
 
 	qualified := s.Class.Qualified(ctx.Namespace)
 	s.Type = ir.NewStructType(s.MergedMembers...)
-	v := ctx.Program.Module.NewGlobal(qualified, s.Type)
-	err := ctx.AddObject(s.Class.Name.Name, v)
-	if err != nil {
-		ctx.Error(s.Class.Position, fmt.Sprintf("%s redeclared", s.Class.Name.Name))
-	}
+	ctx.Program.Module.NewTypeDef(qualified, s.Type)
 }
 
 type VTable struct {
@@ -82,6 +79,11 @@ type VTable struct {
 	MergedFunctions []*ir.Func
 	Indexes         map[string]int
 }
+
+/*
+for interface
+%Offset = getelementptr {i8,i32*}* null, i32 0, i32 1
+%OffsetI = ptrtoint i32** %Offset to i32*/
 
 //%Foo_vtable_type = type { i32(%Foo*)* }
 func (t *VTable) GenerateDeclaration(ctx *node.Context, declarations map[string]Declaration) {
@@ -123,24 +125,16 @@ func (t *VTable) GenerateIR(ctx *node.Context) {
 	var types []ir.Type
 	var constants []ir.Constant
 	for _, f := range t.MergedFunctions {
-		types = append(types, f.Sig)
+		types = append(types, ir.NewPointerType(f.Sig))
 		constants = append(constants, f)
 	}
 	t.Type = ir.NewStructType(types...)
-	v := ctx.Program.Module.NewGlobal(t.Class.Qualified(ctx.Namespace)+".vtable.type", t.Type)
-	err := ctx.AddObject(t.Class.Name.Name+".vtable.type", v)
-	if err != nil {
-		ctx.Error(t.Class.Position, fmt.Sprintf("%s redeclared", t.Class.Name.Name))
-	}
+	ctx.Program.Module.NewTypeDef(t.Class.Qualified(ctx.Namespace)+".vtable.type", t.Type)
 
 	vtableType := ir.NewStructType()
 	vtableType.TypeName = t.Class.Qualified(ctx.Namespace) + ".vtable.type"
 	t.Data = ir.NewStruct(vtableType, constants...)
-	v = ctx.Program.Module.NewGlobalDef(t.Class.Qualified(ctx.Namespace)+".vtable.data", t.Data)
-	err = ctx.AddObject(t.Class.Name.Name+".vtable.data", v)
-	if err != nil {
-		ctx.Error(t.Class.Position, fmt.Sprintf("%s redeclared", t.Class.Name.Name))
-	}
+	ctx.Program.Module.NewGlobalDef(t.Class.Qualified(ctx.Namespace)+".vtable.data", t.Data)
 }
 
 func (c *Class) GenerateIR(ctx *node.Context) {
@@ -186,6 +180,7 @@ func (c *Class) PreProcess(*node.Context) {
 		t.Functions[0].Name = &expression.Identifier{
 			Name: node.Constructor,
 		}
+		t.Functions[0].Body = &statement.Block{}
 	}
 	t.Functions[0].ReturnType = &types.TypeName{
 		Name: c.Name.Name,
@@ -196,6 +191,7 @@ func (c *Class) PreProcess(*node.Context) {
 		t.Functions[1].Name = &expression.Identifier{
 			Name: node.Destructor,
 		}
+		t.Functions[1].Body = &statement.Block{}
 	}
 	c.IRVTable = t
 }

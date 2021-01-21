@@ -1,67 +1,36 @@
-@global.color.red = global i32 0
-@global.color.green = global i32 1
-@global.color.blue = global i32 2
-@global.counter = global { %global.counter.vtable.type*, i32, i32, i8*, void (i8*) }
-@global.counter.vtable.type = global { <nil> (), void (%global.counter*), void (%global.counter*), void (%global.counter*), void (%global.counter*), void (%global.counter*), i32 (%global.counter*), i32 (%global.counter*), i8* (%global.counter*) }
-@global.counter.vtable.data = global %global.counter.vtable.type { <nil> ()* @global.counter.create, void (%global.counter*)* @global.counter.destroy, void (%global.counter*)* @global.counter.retain_shared, void (%global.counter*)* @global.counter.release_shared, void (%global.counter*)* @global.counter.retain_weak, void (%global.counter*)* @global.counter.release_weak, i32 (%global.counter*)* @global.counter.shared_count, i32 (%global.counter*)* @global.counter.weak_count, i8* (%global.counter*)* @global.counter.get_object }
-@global.nothing = global { %global.nothing.vtable.type* }
-@global.nothing.vtable.type = global { %global.counter (), void (%global.nothing*) }
-@global.nothing.vtable.data = global %global.nothing.vtable.type { %global.counter ()* @global.nothing.create, void (%global.nothing*)* @global.nothing.destroy }
+%global.counter = type { %global.counter.vtable.type*, i32, i32, i8*, void (i8*)* }
+%global.counter.vtable.type = type { %global.counter* ()*, void (%global.counter*)* }
 
-declare <nil> @global.counter.create()
+@global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (%global.counter*)* @global.counter.destroy }
 
-declare void @global.counter.destroy(%global.counter* %this)
+define %global.counter* @global.counter.create() {
+entry:
+	%0 = getelementptr %global.counter, %global.counter* null, i32 1
+	%1 = ptrtoint %global.counter* %0 to i32
+	%2 = call i8* @malloc(i32 %1)
+	call void @memset(i8* %2, i32 0, i32 %1)
+	%3 = bitcast i8* %2 to %global.counter*
+	ret %global.counter* %3
+}
 
-define void @global.counter.retain_shared(%global.counter* %this) {
+define void @global.counter.destroy(%global.counter* %this) {
 entry:
 	ret void
 }
 
-define void @global.counter.release_shared(%global.counter* %this) {
-entry:
-	ret void
-}
+declare i32 @puts(i8* %text)
 
-define void @global.counter.retain_weak(%global.counter* %this) {
-entry:
-	ret void
-}
+declare i8* @malloc(i32 %size)
 
-define void @global.counter.release_weak(%global.counter* %this) {
-entry:
-	ret void
-}
+declare i8* @realloc(i8* %address, i32 %size)
 
-define i32 @global.counter.shared_count(%global.counter* %this) {
-entry:
-	ret void
-}
+declare void @free(i8* %address)
 
-define i32 @global.counter.weak_count(%global.counter* %this) {
-entry:
-	ret void
-}
+declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
 
-define i8* @global.counter.get_object(%global.counter* %this) {
-entry:
-	ret void
-}
+declare void @memcpy(i8* %dest, i8* %source, i32 %size)
 
-declare %global.counter @global.nothing.create()
-
-declare void @global.nothing.destroy(%global.nothing* %this)
-
-define i32 @global.add(i32 %a, i32 %b) {
-entry:
-	%0 = alloca i32
-	store i32 %a, i32* %0
-	%1 = alloca i32
-	store i32 %b, i32* %1
-	%2 = load i32, i32* %0
-	%3 = load i32, i32* %1
-	%4 = add i32 %2, %3
-	ret i32 %4
-}
+declare void @memset(i8* %source, i32 %value, i32 %size)
 
 define i32 @main() {
 entry:

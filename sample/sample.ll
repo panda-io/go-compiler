@@ -3,6 +3,10 @@ source_filename = "sample.c"
 target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
+%struct.ss = type { i32 }
+
+@g = global i32 10, align 4
+
 ; Function Attrs: noinline nounwind optnone uwtable
 define void @add(i32, i32) #0 {
   %3 = alloca i32, align 4
@@ -20,6 +24,9 @@ define void @add(i32, i32) #0 {
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define i32 @main() #0 {
+  %1 = alloca %struct.ss, align 4
+  %2 = getelementptr inbounds %struct.ss, %struct.ss* %1, i32 0, i32 0
+  store i32 10, i32* %2, align 4
   call void @add(i32 1, i32 2)
   ret i32 0
 }

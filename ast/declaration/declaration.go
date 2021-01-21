@@ -146,24 +146,22 @@ func TypeOf(c *node.Context, declarations map[string]Declaration, t types.Type) 
 		}
 
 	case *types.TypeName:
-		_, d := FindDeclaration(c, declarations, typ)
+		qualified, d := FindDeclaration(c, declarations, typ)
 		if d == nil {
 			c.Error(t.GetPosition(), "undefined: "+typ.Name)
 			return ir.Void
 		}
 		if d.Builtin() {
-			return d.(*Class).IRStruct.Type
+			return ir.NewPointerType(&ir.StructType{TypeName: qualified})
 		}
-		structType := ir.NewStructType()
-		structType.TypeName = node.Counter
-		return structType
+		return counter
 
 	case *types.TypeFunction:
 		var types []ir.Type
 		for _, p := range typ.Parameters {
 			types = append(types, TypeOf(c, declarations, p))
 		}
-		return ir.NewFuncType(TypeOf(c, declarations, typ.ReturnType), types...)
+		return ir.NewPointerType(ir.NewFuncType(TypeOf(c, declarations, typ.ReturnType), types...))
 
 	default:
 		panic("invalid type define")
