@@ -10,12 +10,21 @@ entry:
 	%2 = call i8* @malloc(i32 %1)
 	call void @memset(i8* %2, i32 0, i32 %1)
 	%3 = bitcast i8* %2 to %global.counter*
+	%4 = getelementptr %global.counter, %global.counter* %3, i32 0, i32 0
+	store %global.counter.vtable.type* @global.counter.vtable.data, %global.counter.vtable.type** %4
 	ret %global.counter* %3
 }
 
 define void @global.counter.destroy(%global.counter* %this) {
 entry:
+	%0 = bitcast %global.counter* %this to i8*
+	call void @free(i8* %0)
 	ret void
+}
+
+define i32 @main() {
+entry:
+	ret i32 0
 }
 
 declare i32 @puts(i8* %text)
@@ -31,8 +40,3 @@ declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
 declare void @memcpy(i8* %dest, i8* %source, i32 %size)
 
 declare void @memset(i8* %source, i32 %value, i32 %size)
-
-define i32 @main() {
-entry:
-	ret i32 0
-}

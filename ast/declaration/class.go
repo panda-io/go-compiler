@@ -75,7 +75,7 @@ type VTable struct {
 	Members   []*ir.Func
 
 	Type            *ir.StructType
-	Data            *ir.Struct
+	Data            *ir.Global
 	MergedFunctions []*ir.Func
 	Indexes         map[string]int
 }
@@ -133,8 +133,8 @@ func (t *VTable) GenerateIR(ctx *node.Context) {
 
 	vtableType := ir.NewStructType()
 	vtableType.TypeName = t.Class.Qualified(ctx.Namespace) + ".vtable.type"
-	t.Data = ir.NewStruct(vtableType, constants...)
-	ctx.Program.Module.NewGlobalDef(t.Class.Qualified(ctx.Namespace)+".vtable.data", t.Data)
+	vtableData := ir.NewStruct(vtableType, constants...)
+	t.Data = ctx.Program.Module.NewGlobalDef(t.Class.Qualified(ctx.Namespace)+".vtable.data", vtableData)
 }
 
 func (c *Class) GenerateIR(ctx *node.Context) {
@@ -172,6 +172,7 @@ func (c *Class) PreProcess(*node.Context) {
 			} else {
 				t.Functions = append(t.Functions, v)
 			}
+			v.Class = c
 		}
 	}
 	if t.Functions[0] == nil {
@@ -181,6 +182,7 @@ func (c *Class) PreProcess(*node.Context) {
 			Name: node.Constructor,
 		}
 		t.Functions[0].Body = &statement.Block{}
+		t.Functions[0].Class = c
 	}
 	t.Functions[0].ReturnType = &types.TypeName{
 		Name: c.Name.Name,
@@ -192,6 +194,7 @@ func (c *Class) PreProcess(*node.Context) {
 			Name: node.Destructor,
 		}
 		t.Functions[1].Body = &statement.Block{}
+		t.Functions[0].Class = c
 	}
 	c.IRVTable = t
 }

@@ -21,6 +21,7 @@ type Function struct {
 	Parameters     *types.Parameters
 	ReturnType     types.Type
 	Body           *statement.Block
+	Class          *Class
 
 	IRParams   []*ir.Param
 	IRFunction *ir.Func
@@ -47,29 +48,40 @@ func (f *Function) GenerateIR(c *node.Context) {
 			}
 		}
 		if f.ObjectName != "" {
+			// generate constructor
 			if f.Name.Name == node.Constructor {
-				// generate constructor
-				s := ir.NewStructType()
-				s.TypeName = c.Namespace + "." + f.ObjectName
-
-				ptr := ir.NewGetElementPtr(s, ir.NewNull(ir.NewPointerType(s)), ir.NewInt(ir.I32, 1))
+				// malloc struct and set 0
+				ptr := ir.NewGetElementPtr(f.Class.IRStruct.Type, ir.NewNull(ir.NewPointerType(f.Class.IRStruct.Type)), ir.NewInt(ir.I32, 1))
 				ctx.Block.AddInstruction(ptr)
 				size := ir.NewPtrToInt(ptr, ir.I32)
 				ctx.Block.AddInstruction(size)
 				address := ir.NewCall(malloc, size)
 				ctx.Block.AddInstruction(address)
 				ctx.Block.AddInstruction(ir.NewCall(memset, address, ir.NewInt(ir.I32, 0), size))
-				instance := ir.NewBitCast(address, ir.NewPointerType(s))
+
+				// set vtable
+				instance := ir.NewBitCast(address, ir.NewPointerType(f.Class.IRStruct.Type))
 				ctx.Block.AddInstruction(instance)
-				//set vtable
+				vtable := ir.NewGetElementPtr(f.Class.IRStruct.Type, instance, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
+				ctx.Block.AddInstruction(vtable)
+				ctx.Block.AddInstruction(ir.NewStore(f.Class.IRVTable.Data, vtable))
+
+				//TO-DO set default values
 				ctx.Block.Term = ir.NewRet(instance)
 			}
-			/*
-				if f.Name.Name == node.Destructor {
-					// generate destructor
-				}*/
 		}
 		f.Body.GenerateIR(ctx)
+		if f.ObjectName != "" {
+			// generate destructor
+			if f.Name.Name == node.Destructor {
+				//TO-DO call parent destructor
+
+				// free struct
+				address := ir.NewBitCast(f.IRParams[0], ir.NewPointerType(ir.I8))
+				ctx.Block.AddInstruction(address)
+				ctx.Block.AddInstruction(ir.NewCall(free, address))
+			}
+		}
 		if ctx.Block.Term == nil {
 			ctx.Block.Term = ir.NewRet(nil)
 		}
@@ -92,9 +104,5 @@ func (f *Function) GenerateDeclaration(c *node.Context, declarations map[string]
 		}
 	}
 	f.IRFunction = c.Program.Module.NewFunc(f.Qualified(c.Namespace), TypeOf(c, declarations, f.ReturnType), f.IRParams...)
-	n := f.Name.Name
-	if f.ObjectName != "" {
-		n = f.ObjectName + "." + n
-	}
 	return f.IRFunction
 }
