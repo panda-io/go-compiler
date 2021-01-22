@@ -1,11 +1,5 @@
 package ast
 
-import (
-	"github.com/panda-foundation/go-compiler/ast/expression"
-	"github.com/panda-foundation/go-compiler/ast/node"
-	"github.com/panda-foundation/go-compiler/ir"
-)
-
 type Declaration interface {
 	Node
 	Identifier() string
@@ -19,14 +13,14 @@ type Modifier struct {
 }
 
 func (m *Modifier) Equal(target *Modifier) bool {
-	return m.Public == target.Public && m.Weak = target.Weak
+	return m.Public == target.Public && m.Weak == target.Weak
 }
 
 type Attribute struct {
 	Position int
 	Name     string
 	Text     string
-	Values   map[string]*expression.Literal
+	Values   map[string]*Literal
 }
 
 type DeclarationBase struct {
@@ -37,7 +31,7 @@ type DeclarationBase struct {
 	ObjectName string // parent object (class|interface|enum)
 }
 
-func (b *Base) HasAttribute(attribute string) bool {
+func (b *DeclarationBase) HasAttribute(attribute string) bool {
 	for _, a := range b.Attributes {
 		if a.Name == attribute {
 			return true
@@ -46,11 +40,11 @@ func (b *Base) HasAttribute(attribute string) bool {
 	return false
 }
 
-func (b *Base) Identifier() string {
+func (b *DeclarationBase) Identifier() string {
 	return b.Name.Name
 }
 
-func (b *Base) Qualified(namespace string) string {
+func (b *DeclarationBase) Qualified(namespace string) string {
 	name := b.Name.Name
 	if b.HasAttribute(Extern) {
 		if b.ObjectName != "" {
@@ -60,7 +54,7 @@ func (b *Base) Qualified(namespace string) string {
 		if b.ObjectName != "" {
 			name = b.ObjectName + "." + name
 		}
-		if !(namespace == Global && b.Name.Name == Entry) {
+		if !(namespace == Global && b.Name.Name == ProgramEntry) {
 			name = namespace + "." + name
 		}
 	}

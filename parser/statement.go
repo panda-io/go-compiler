@@ -1,28 +1,28 @@
 package parser
 
 import (
-	"github.com/panda-foundation/go-compiler/ast/statement"
+	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseStatement() statement.Statement {
+func (p *Parser) parseStatement() ast.Statement {
 	switch p.token {
 	case token.Break:
-		s := &statement.Break{}
+		s := &ast.Break{}
 		s.Position = p.position
 		p.next()
 		p.expect(token.Semi)
 		return s
 
 	case token.Continue:
-		s := &statement.Continue{}
+		s := &ast.Continue{}
 		s.Position = p.position
 		p.next()
 		p.expect(token.Semi)
 		return s
 
 	case token.Return:
-		s := &statement.Return{}
+		s := &ast.Return{}
 		s.Position = p.position
 		p.next()
 		if p.token != token.Semi {
@@ -32,7 +32,7 @@ func (p *Parser) parseStatement() statement.Statement {
 		return s
 
 	case token.Throw:
-		s := &statement.Throw{}
+		s := &ast.Throw{}
 		s.Position = p.position
 		p.next()
 		s.Expression = p.parseExpression()
@@ -59,10 +59,10 @@ func (p *Parser) parseStatement() statement.Statement {
 	}
 }
 
-func (p *Parser) parseSimpleStatement(consumeSemi bool) statement.Statement {
+func (p *Parser) parseSimpleStatement(consumeSemi bool) ast.Statement {
 	switch p.token {
 	case token.Semi:
-		s := &statement.Empty{}
+		s := &ast.Empty{}
 		s.Position = p.position
 		if consumeSemi {
 			p.expect(token.Semi)
@@ -81,7 +81,7 @@ func (p *Parser) parseSimpleStatement(consumeSemi bool) statement.Statement {
 		if consumeSemi {
 			p.expect(token.Semi)
 		}
-		s := &statement.Expression{}
+		s := &ast.ExpressionStatement{}
 		s.Position = position
 		s.Expression = x
 		return s
@@ -92,8 +92,8 @@ func (p *Parser) parseSimpleStatement(consumeSemi bool) statement.Statement {
 	}
 }
 
-func (p *Parser) parseDeclarationStatement(consumeSemi bool) *statement.Declaration {
-	s := &statement.Declaration{}
+func (p *Parser) parseDeclarationStatement(consumeSemi bool) *ast.DeclarationStatement {
+	s := &ast.DeclarationStatement{}
 	s.Position = p.position
 	p.next()
 	s.Name = p.parseIdentifier()
@@ -110,8 +110,8 @@ func (p *Parser) parseDeclarationStatement(consumeSemi bool) *statement.Declarat
 	return s
 }
 
-func (p *Parser) parseBlockStatement() *statement.Block {
-	s := &statement.Block{}
+func (p *Parser) parseBlockStatement() *ast.Block {
+	s := &ast.Block{}
 	s.Position = p.position
 	p.next()
 	for p.token != token.RightBrace {
@@ -121,8 +121,8 @@ func (p *Parser) parseBlockStatement() *statement.Block {
 	return s
 }
 
-func (p *Parser) parseTryStatement() *statement.Try {
-	s := &statement.Try{}
+func (p *Parser) parseTryStatement() *ast.Try {
+	s := &ast.Try{}
 	s.Position = p.position
 	p.next()
 	s.Try = p.parseStatement()
@@ -136,8 +136,8 @@ func (p *Parser) parseTryStatement() *statement.Try {
 	return s
 }
 
-func (p *Parser) parseIfStatement() *statement.If {
-	s := &statement.If{}
+func (p *Parser) parseIfStatement() *ast.If {
+	s := &ast.If{}
 	p.next()
 	p.expect(token.LeftParen)
 	first := p.parseSimpleStatement(false)
@@ -161,8 +161,8 @@ func (p *Parser) parseIfStatement() *statement.If {
 	return s
 }
 
-func (p *Parser) parseSwitchStatement() *statement.Switch {
-	s := &statement.Switch{}
+func (p *Parser) parseSwitchStatement() *ast.Switch {
+	s := &ast.Switch{}
 	s.Position = p.position
 	p.next()
 	p.expect(token.LeftParen)
@@ -183,8 +183,8 @@ func (p *Parser) parseSwitchStatement() *statement.Switch {
 	return s
 }
 
-func (p *Parser) parseCaseStatement() *statement.Case {
-	s := &statement.Case{}
+func (p *Parser) parseCaseStatement() *ast.Case {
+	s := &ast.Case{}
 	s.Position = p.position
 	s.Token = p.token
 	if p.token == token.Case {
@@ -198,11 +198,11 @@ func (p *Parser) parseCaseStatement() *statement.Case {
 	return s
 }
 
-func (p *Parser) parseForStatement() statement.Statement {
+func (p *Parser) parseForStatement() ast.Statement {
 	position := p.position
 	p.next()
 	if p.token != token.LeftParen {
-		s := &statement.For{}
+		s := &ast.For{}
 		s.Position = position
 		s.Body = p.parseStatement()
 		return s
@@ -211,14 +211,14 @@ func (p *Parser) parseForStatement() statement.Statement {
 		first := p.parseSimpleStatement(false)
 		if p.token == token.RightParen {
 			p.next()
-			s := &statement.For{}
+			s := &ast.For{}
 			s.Position = position
 			s.Condition = first
 			s.Body = p.parseStatement()
 			return s
 		} else if p.token == token.Colon {
 			p.next()
-			s := &statement.Foreach{}
+			s := &ast.Foreach{}
 			s.Position = position
 			s.Item = first
 			s.Iterator = p.parseExpression()
@@ -230,7 +230,7 @@ func (p *Parser) parseForStatement() statement.Statement {
 			second := p.parseSimpleStatement(false)
 			if p.token == token.Colon {
 				p.next()
-				s := &statement.Foreach{}
+				s := &ast.Foreach{}
 				s.Position = position
 				s.Key = first
 				s.Item = second
@@ -240,7 +240,7 @@ func (p *Parser) parseForStatement() statement.Statement {
 				return s
 			} else if p.token == token.RightParen {
 				p.next()
-				s := &statement.For{}
+				s := &ast.For{}
 				s.Position = position
 				s.Initialization = first
 				s.Condition = second
@@ -248,14 +248,14 @@ func (p *Parser) parseForStatement() statement.Statement {
 				return s
 			} else if p.token == token.Semi {
 				p.next()
-				s := &statement.For{}
+				s := &ast.For{}
 				s.Position = position
 				s.Initialization = first
 				s.Condition = second
 				if p.token != token.RightParen {
 					s.Post = p.parseSimpleStatement(false)
 				} else {
-					e := &statement.Empty{}
+					e := &ast.Empty{}
 					e.Position = p.position
 					s.Post = e
 				}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -55,11 +54,11 @@ func (p *Program) GenerateIR() string {
 	// zero pass (register all)
 	for _, m := range p.Modules {
 		// TO-DO check if import is valid // must be valid, cannot import self, cannot duplicated
-		if c, ok := p.Data.Contexts[m.Namespace]; ok {
+		if c, ok := p.Contexts[m.Namespace]; ok {
 			p.Context = c
 		} else {
-			p.Context = p.Data.Contexts[node.Global].NewContext()
-			p.Contexts[m.Namespace] = p.Data.Context
+			p.Context = p.Contexts[Global].NewContext()
+			p.Contexts[m.Namespace] = p.Context
 		}
 		p.Context.Module = m
 
@@ -72,11 +71,11 @@ func (p *Program) GenerateIR() string {
 			}
 
 			switch t := member.(type) {
-			case *declaration.Enum:
-				t.GenerateIR(p.Data.Context)
+			case *Enum:
+				t.GenerateIR(p.Context)
 
-			case *declaration.Class:
-				t.PreProcess(p.Data.Context)
+			case *Class:
+				t.PreProcess(p.Context)
 			}
 		}
 	}
@@ -88,15 +87,15 @@ func (p *Program) GenerateIR() string {
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
-			case *declaration.Interface:
+			case *Interface:
 				// TO-DO save it then check class later
 				// Generate function declaration
 				// resolve parants
 
-			case *declaration.Class:
-				t.ResolveParents(p.Data.Context, p.Declarations)
-				t.IRStruct.GenerateDeclaration(p.Data.Context, p.Declarations)
-				t.IRVTable.GenerateDeclaration(p.Data.Context, p.Declarations)
+			case *Class:
+				t.ResolveParents(p.Context)
+				t.IRStruct.GenerateDeclaration(p.Context)
+				t.IRVTable.GenerateDeclaration(p.Context)
 			}
 		}
 	}
@@ -108,19 +107,19 @@ func (p *Program) GenerateIR() string {
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
-			case *declaration.Variable:
+			case *Variable:
 				// TO-DO
 
-			case *declaration.Function:
-				t.GenerateDeclaration(p.Data.Context, p.Declarations)
+			case *Function:
+				t.GenerateDeclaration(p.Context)
 
-			case *declaration.Interface:
+			case *Interface:
 				// TO-DO save it then check class later
 				// Generate function declaration
 
-			case *declaration.Class:
-				t.IRStruct.GenerateIR(p.Data.Context)
-				t.IRVTable.GenerateIR(p.Data.Context)
+			case *Class:
+				t.IRStruct.GenerateIR(p.Context)
+				t.IRVTable.GenerateIR(p.Context)
 			}
 		}
 	}
@@ -132,14 +131,14 @@ func (p *Program) GenerateIR() string {
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
-			case *declaration.Function:
-				t.GenerateIR(p.Data.Context)
+			case *Function:
+				t.GenerateIR(p.Context)
 
-			case *declaration.Interface:
+			case *Interface:
 				// TO-DO save it then check class later
 
-			case *declaration.Class:
-				t.GenerateIR(p.Data.Context)
+			case *Class:
+				t.GenerateIR(p.Context)
 			}
 		}
 	}
@@ -150,8 +149,4 @@ func (p *Program) GenerateIR() string {
 		panic(err)
 	}
 	return buf.String()
-}
-
-func (p *Program) Errors() []*Error {
-	return p.Errors
 }

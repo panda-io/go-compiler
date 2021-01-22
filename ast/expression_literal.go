@@ -40,7 +40,7 @@ func (l *Literal) GenerateIR(c *Context) ir.Value {
 	// case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL, token.NULL, token.Void:
 	switch l.Typ {
 	case token.STRING:
-		return c.Program.AddString(l.Value[1 : len(l.Value)-1])
+		return c.AddString(l.Value[1 : len(l.Value)-1])
 
 	case token.CHAR:
 		//TO-DO convert char to i32

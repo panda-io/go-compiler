@@ -10,8 +10,12 @@ type TypeFunction struct {
 
 func (f *TypeFunction) Type(c *Context) ir.Type {
 	var types []ir.Type
-	for _, p := range typ.Parameters {
-		types = append(types, TypeOf(c, declarations, p))
+	for _, p := range f.Parameters {
+		types = append(types, p.Type(c))
 	}
-	return ir.NewPointerType(ir.NewFuncType(TypeOf(c, declarations, typ.ReturnType), types...))
+	var t ir.Type = ir.Void
+	if f.ReturnType != nil {
+		t = f.ReturnType.Type(c)
+	}
+	return ir.NewPointerType(ir.NewFuncType(t, types...))
 }

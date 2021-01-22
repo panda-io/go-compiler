@@ -3,13 +3,12 @@ package parser
 import (
 	"fmt"
 
-	"github.com/panda-foundation/go-compiler/ast/declaration"
-	"github.com/panda-foundation/go-compiler/ast/expression"
+	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseVariable(modifier *declaration.Modifier, attributes []*declaration.Attribute, objectName string) *declaration.Variable {
-	d := &declaration.Variable{}
+func (p *Parser) parseVariable(modifier *ast.Modifier, attributes []*ast.Attribute, objectName string) *ast.Variable {
+	d := &ast.Variable{}
 	d.ObjectName = objectName
 	d.Modifier = modifier
 	d.Attributes = attributes
@@ -26,8 +25,8 @@ func (p *Parser) parseVariable(modifier *declaration.Modifier, attributes []*dec
 	return d
 }
 
-func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*declaration.Attribute, objectName string) *declaration.Function {
-	d := &declaration.Function{}
+func (p *Parser) parseFunction(modifier *ast.Modifier, attributes []*ast.Attribute, objectName string) *ast.Function {
+	d := &ast.Function{}
 	d.ObjectName = objectName
 	d.Modifier = modifier
 	d.Attributes = attributes
@@ -48,15 +47,15 @@ func (p *Parser) parseFunction(modifier *declaration.Modifier, attributes []*dec
 	return d
 }
 
-func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Enum {
-	d := &declaration.Enum{}
+func (p *Parser) parseEnum(modifier *ast.Modifier, attributes []*ast.Attribute) *ast.Enum {
+	d := &ast.Enum{}
 	d.Modifier = modifier
 	d.Attributes = attributes
 	p.next()
 	d.Name = p.parseIdentifier()
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
-		v := &declaration.Variable{}
+		v := &ast.Variable{}
 		v.Name = p.parseIdentifier()
 		v.ObjectName = d.Name.Name
 		if p.token == token.Assign {
@@ -76,8 +75,8 @@ func (p *Parser) parseEnum(modifier *declaration.Modifier, attributes []*declara
 	return d
 }
 
-func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Interface {
-	d := &declaration.Interface{}
+func (p *Parser) parseInterface(modifier *ast.Modifier, attributes []*ast.Attribute) *ast.Interface {
+	d := &ast.Interface{}
 	d.Modifier = modifier
 	d.Attributes = attributes
 	p.next()
@@ -107,8 +106,8 @@ func (p *Parser) parseInterface(modifier *declaration.Modifier, attributes []*de
 	return d
 }
 
-func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declaration.Attribute) *declaration.Class {
-	d := &declaration.Class{}
+func (p *Parser) parseClass(modifier *ast.Modifier, attributes []*ast.Attribute) *ast.Class {
+	d := &ast.Class{}
 	d.Modifier = modifier
 	d.Attributes = attributes
 	p.next()
@@ -146,8 +145,8 @@ func (p *Parser) parseClass(modifier *declaration.Modifier, attributes []*declar
 	return d
 }
 
-func (p *Parser) parseModifier() *declaration.Modifier {
-	m := &declaration.Modifier{}
+func (p *Parser) parseModifier() *ast.Modifier {
+	m := &ast.Modifier{}
 	if p.token == token.Public {
 		m.Public = true
 		p.next()
@@ -159,17 +158,17 @@ func (p *Parser) parseModifier() *declaration.Modifier {
 	return m
 }
 
-func (p *Parser) parseAttributes() []*declaration.Attribute {
+func (p *Parser) parseAttributes() []*ast.Attribute {
 	if p.token != token.META {
 		return nil
 	}
-	var attr []*declaration.Attribute
+	var attr []*ast.Attribute
 	for p.token == token.META {
 		p.next()
 		if p.token != token.IDENT {
 			p.expect(token.IDENT)
 		}
-		m := &declaration.Attribute{Position: p.position}
+		m := &ast.Attribute{Position: p.position}
 		m.Name = p.literal
 		p.next()
 
@@ -182,7 +181,7 @@ func (p *Parser) parseAttributes() []*declaration.Attribute {
 				m.Text = p.literal
 				p.next()
 			} else {
-				m.Values = make(map[string]*expression.Literal)
+				m.Values = make(map[string]*ast.Literal)
 				for {
 					if p.token == token.IDENT {
 						name := p.literal
@@ -193,7 +192,7 @@ func (p *Parser) parseAttributes() []*declaration.Attribute {
 							if _, ok := m.Values[name]; ok {
 								p.error(p.position, "duplicated attribute "+name)
 							}
-							m.Values[name] = &expression.Literal{
+							m.Values[name] = &ast.Literal{
 								Typ:   p.token,
 								Value: p.literal,
 							}

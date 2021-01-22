@@ -6,7 +6,7 @@ import (
 
 type Type interface {
 	Node
-	Type() ir.Type
+	Type(*Context) ir.Type
 }
 
 type TypeBase struct {

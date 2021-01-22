@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/panda-foundation/go-compiler/ast/expression"
 	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -21,14 +20,14 @@ func (e *Enum) GenerateIR(c *Context) {
 	for _, m := range e.Members {
 		if v, ok := m.(*Variable); ok {
 			if v.Value == nil {
-				c.Program.Module.NewGlobalDef(v.Qualified(c.Namespace), ir.NewInt(ir.I32, index))
+				c.Program.Module.NewGlobalDef(v.Qualified(c.Module.Namespace), ir.NewInt(ir.I32, index))
 				index++
 			} else {
-				if literal, ok := v.Value.(*expression.Literal); ok {
+				if literal, ok := v.Value.(*Literal); ok {
 					if literal.Typ == token.INT {
 						if i, _ := strconv.Atoi(literal.Value); int64(i) >= index {
 							index = int64(i)
-							c.Program.Module.NewGlobalDef(v.Qualified(c.Namespace), ir.NewInt(ir.I32, index))
+							c.Program.Module.NewGlobalDef(v.Qualified(c.Module.Namespace), ir.NewInt(ir.I32, index))
 							index++
 						} else {
 							c.Error(m.GetPosition(), fmt.Sprintf("enum value here should be greater than %d.", i-1))

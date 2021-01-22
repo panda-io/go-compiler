@@ -14,10 +14,10 @@ type TypeName struct {
 func (n *TypeName) Type(c *Context) ir.Type {
 	qualified, d := c.FindDeclaration(n)
 	if d == nil {
-		c.Error(t.GetPosition(), "undefined: "+typ.Name)
+		c.Error(n.GetPosition(), "undefined: "+n.Name)
 		return ir.Void
 	}
-	if d.Builtin() {
+	if d.HasAttribute(Builtin) {
 		return ir.NewPointerType(&ir.StructType{TypeName: qualified})
 	}
 	return counter

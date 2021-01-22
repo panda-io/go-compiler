@@ -1,16 +1,16 @@
 package parser
 
 import (
-	"github.com/panda-foundation/go-compiler/ast/expression"
+	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseExpression() expression.Expression {
+func (p *Parser) parseExpression() ast.Expression {
 	return p.parseBinaryExpression(0)
 }
 
-func (p *Parser) parseIdentifier() *expression.Identifier {
-	e := &expression.Identifier{}
+func (p *Parser) parseIdentifier() *ast.Identifier {
+	e := &ast.Identifier{}
 	e.Position = p.position
 	if p.token == token.IDENT {
 		e.Name = p.literal
@@ -21,13 +21,13 @@ func (p *Parser) parseIdentifier() *expression.Identifier {
 	return e
 }
 
-func (p *Parser) parseOperand() expression.Expression {
+func (p *Parser) parseOperand() ast.Expression {
 	switch p.token {
 	case token.IDENT:
 		return p.parseIdentifier()
 
 	case token.INT, token.FLOAT, token.CHAR, token.STRING, token.BOOL, token.NULL, token.Void:
-		e := &expression.Literal{}
+		e := &ast.Literal{}
 		e.Position = p.position
 		e.Typ = p.token
 		e.Value = p.literal
@@ -35,19 +35,19 @@ func (p *Parser) parseOperand() expression.Expression {
 		return e
 
 	case token.This:
-		e := &expression.This{}
+		e := &ast.This{}
 		e.Position = p.position
 		p.next()
 		return e
 
 	case token.Base:
-		e := &expression.Super{}
+		e := &ast.Base{}
 		e.Position = p.position
 		p.next()
 		return e
 
 	case token.LeftParen:
-		e := &expression.Parentheses{}
+		e := &ast.Parentheses{}
 		e.Position = p.position
 		p.next()
 		e.Expression = p.parseExpression()
@@ -60,12 +60,12 @@ func (p *Parser) parseOperand() expression.Expression {
 	}
 }
 
-func (p *Parser) parsePrimaryExpression() expression.Expression {
+func (p *Parser) parsePrimaryExpression() ast.Expression {
 	x := p.parseOperand()
 	for {
 		switch p.token {
 		case token.Dot:
-			e := &expression.MemberAccess{}
+			e := &ast.MemberAccess{}
 			e.Position = p.position
 			p.next()
 			e.Parent = x
@@ -73,7 +73,7 @@ func (p *Parser) parsePrimaryExpression() expression.Expression {
 			x = e
 
 		case token.LeftBracket:
-			e := &expression.Subscripting{}
+			e := &ast.Subscripting{}
 			e.Position = p.position
 			p.next()
 			e.Element = p.parseExpression()
@@ -81,21 +81,21 @@ func (p *Parser) parsePrimaryExpression() expression.Expression {
 			x = e
 
 		case token.LeftParen:
-			e := &expression.Invocation{}
+			e := &ast.Invocation{}
 			e.Position = p.position
 			e.Function = x
 			e.Arguments = p.parseArguments()
 			x = e
 
 		case token.PlusPlus:
-			e := &expression.Increment{}
+			e := &ast.Increment{}
 			e.Position = p.position
 			e.Expression = x
 			p.next()
 			return e
 
 		case token.MinusMinus:
-			e := &expression.Decrement{}
+			e := &ast.Decrement{}
 			e.Position = p.position
 			e.Expression = x
 			p.next()
@@ -107,10 +107,10 @@ func (p *Parser) parsePrimaryExpression() expression.Expression {
 	}
 }
 
-func (p *Parser) parseUnaryExpression() expression.Expression {
+func (p *Parser) parseUnaryExpression() ast.Expression {
 	switch p.token {
 	case token.Plus, token.Minus, token.Not, token.Complement:
-		e := &expression.Unary{}
+		e := &ast.Unary{}
 		e.Position = p.position
 		e.Operator = p.token
 		p.next()
@@ -118,7 +118,7 @@ func (p *Parser) parseUnaryExpression() expression.Expression {
 		return e
 
 	case token.New:
-		e := &expression.New{}
+		e := &ast.New{}
 		e.Position = p.position
 		p.next()
 		e.Typ = p.parseType()
@@ -130,7 +130,7 @@ func (p *Parser) parseUnaryExpression() expression.Expression {
 	}
 }
 
-func (p *Parser) parseBinaryExpression(precedence int) expression.Expression {
+func (p *Parser) parseBinaryExpression(precedence int) ast.Expression {
 	x := p.parseUnaryExpression()
 	for {
 		if p.token == token.Semi {
@@ -146,13 +146,13 @@ func (p *Parser) parseBinaryExpression(precedence int) expression.Expression {
 		if op == token.Question {
 			p.expect(token.Colon)
 			z := p.parseBinaryExpression(opPrec)
-			x = &expression.Conditional{
+			x = &ast.Conditional{
 				Condition: x,
 				First:     y,
 				Second:    z,
 			}
 		} else {
-			x = &expression.Binary{
+			x = &ast.Binary{
 				Left:     x,
 				Operator: op,
 				Right:    y,

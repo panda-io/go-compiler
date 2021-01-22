@@ -26,14 +26,14 @@ func (b *Binary) Type(c *Context) ir.Type {
 	// assign
 	case token.Assign, token.MulAssign, token.DivAssign, token.RemAssign, token.PlusAssign, token.MinusAssign,
 		token.LeftShiftAssign, token.RightShiftAssign, token.AndAssign, token.OrAssign, token.XorAssign:
-		return b.Right.Type()
+		return b.Right.Type(c)
 
 	// logic operator
 	case token.Or, token.And, token.Equal, token.NotEqual:
 		if ir.IsNumber(b.Left.Type(c)) && ir.IsNumber(b.Right.Type(c)) {
 			return ir.I1
 		}
-		if ir.IsBool(b.Left.Type(c)) && ir.IsBool(b.Right.Type()) {
+		if ir.IsBool(b.Left.Type(c)) && ir.IsBool(b.Right.Type(c)) {
 			return ir.I1
 		}
 		c.Error(b.Position, "invalid type for binary operator")

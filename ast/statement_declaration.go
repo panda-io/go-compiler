@@ -1,12 +1,12 @@
 package ast
 
-type Declaration struct {
+type DeclarationStatement struct {
 	StatementBase
 	Name  *Identifier
 	Type  Type
 	Value Expression
 }
 
-func (*Declaration) GenerateIR(*Context) {
+func (*DeclarationStatement) GenerateIR(*Context) {
 	//TO-DO
 }

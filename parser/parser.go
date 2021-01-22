@@ -5,9 +5,6 @@ import (
 	"fmt"
 
 	"github.com/panda-foundation/go-compiler/ast"
-	"github.com/panda-foundation/go-compiler/ast/declaration"
-	"github.com/panda-foundation/go-compiler/ast/expression"
-	"github.com/panda-foundation/go-compiler/ast/statement"
 	"github.com/panda-foundation/go-compiler/scanner"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -28,13 +25,13 @@ type Parser struct {
 	scanner *scanner.Scanner
 }
 
-func (p *Parser) ParseExpression(source []byte) expression.Expression {
+func (p *Parser) ParseExpression(source []byte) ast.Expression {
 	file := token.NewFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
 	p.setSource(file, source)
 	return p.parseExpression()
 }
 
-func (p *Parser) ParseStatements(source []byte) statement.Statement {
+func (p *Parser) ParseStatements(source []byte) ast.Statement {
 	file := token.NewFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
 	p.setSource(file, source)
 	return p.parseBlockStatement()
@@ -86,7 +83,7 @@ func (p *Parser) setSource(file *token.File, source []byte) {
 	p.next()
 }
 
-func (p *Parser) redeclared(name string, declarations []declaration.Declaration) bool {
+func (p *Parser) redeclared(name string, declarations []ast.Declaration) bool {
 	for _, d := range declarations {
 		if d.Identifier() == name {
 			return true

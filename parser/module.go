@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/panda-foundation/go-compiler/ast"
-	"github.com/panda-foundation/go-compiler/ast/node"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
@@ -66,18 +65,18 @@ func (p *Parser) parseNamespace() string {
 	p.expect(token.Namespace)
 	if p.token == token.Semi {
 		p.next()
-		return node.Global
+		return ast.Global
 	}
 	namespace := p.parseQualifiedName("")
 	p.expect(token.Semi)
 	return namespace
 }
 
-func (p *Parser) parseImports() []*node.Import {
-	imports := []*node.Import{}
+func (p *Parser) parseImports() []*ast.Import {
+	imports := []*ast.Import{}
 	for p.token == token.Import {
 		p.expect(token.Import)
-		u := &node.Import{}
+		u := &ast.Import{}
 		name := p.parseIdentifier()
 		if p.token == token.Assign {
 			u.Alias = name.Name

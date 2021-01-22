@@ -3,16 +3,13 @@ package ast
 import (
 	"fmt"
 
-	"github.com/panda-foundation/go-compiler/ast/expression"
-	"github.com/panda-foundation/go-compiler/ast/statement"
-	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Class struct {
 	DeclarationBase
-	TypeParameters *types.TypeParameters
-	Parents        []*types.TypeName
+	TypeParameters *TypeParameters
+	Parents        []*TypeName
 	Members        []Declaration
 
 	ResolvedParent     *Class
@@ -32,15 +29,15 @@ type Struct struct {
 	Indexes       map[string]int
 }
 
-func (s *Struct) GenerateDeclaration(ctx *Context, declarations map[string]Declaration) {
+func (s *Struct) GenerateDeclaration(ctx *Context) {
 	for _, v := range s.Variables {
-		s.Members = append(s.Members, TypeOf(ctx, declarations, v.Type))
+		s.Members = append(s.Members, v.Type.Type(ctx))
 	}
 }
 
 func (s *Struct) GenerateIR(ctx *Context) {
 	t := ir.NewStructType()
-	t.TypeName = ctx.Namespace + "." + s.Class.Name.Name + ".vtable.type"
+	t.TypeName = ctx.Module.Namespace + "." + s.Class.Name.Name + ".vtable.type"
 	s.MergedMembers = append(s.MergedMembers, ir.NewPointerType(t))
 
 	structs := []*Struct{s}
@@ -63,7 +60,7 @@ func (s *Struct) GenerateIR(ctx *Context) {
 		}
 	}
 
-	qualified := s.Class.Qualified(ctx.Namespace)
+	qualified := s.Class.Qualified(ctx.Module.Namespace)
 	s.Type = ir.NewStructType(s.MergedMembers...)
 	ctx.Program.Module.NewTypeDef(qualified, s.Type)
 }
@@ -85,9 +82,9 @@ for interface
 %OffsetI = ptrtoint i32** %Offset to i32*/
 
 //%Foo_vtable_type = type { i32(%Foo*)* }
-func (t *VTable) GenerateDeclaration(ctx *Context, declarations map[string]Declaration) {
+func (t *VTable) GenerateDeclaration(ctx *Context) {
 	for _, v := range t.Functions {
-		t.Members = append(t.Members, v.GenerateDeclaration(ctx, declarations))
+		t.Members = append(t.Members, v.GenerateDeclaration(ctx))
 	}
 }
 
@@ -128,12 +125,12 @@ func (t *VTable) GenerateIR(ctx *Context) {
 		constants = append(constants, f)
 	}
 	t.Type = ir.NewStructType(types...)
-	ctx.Program.Module.NewTypeDef(t.Class.Qualified(ctx.Namespace)+".vtable.type", t.Type)
+	ctx.Program.Module.NewTypeDef(t.Class.Qualified(ctx.Module.Namespace)+".vtable.type", t.Type)
 
 	vtableType := ir.NewStructType()
-	vtableType.TypeName = t.Class.Qualified(ctx.Namespace) + ".vtable.type"
+	vtableType.TypeName = t.Class.Qualified(ctx.Module.Namespace) + ".vtable.type"
 	vtableData := ir.NewStruct(vtableType, constants...)
-	t.Data = ctx.Program.Module.NewGlobalDef(t.Class.Qualified(ctx.Namespace)+".vtable.data", vtableData)
+	t.Data = ctx.Program.Module.NewGlobalDef(t.Class.Qualified(ctx.Module.Namespace)+".vtable.data", vtableData)
 }
 
 func (c *Class) GenerateIR(ctx *Context) {
@@ -177,30 +174,30 @@ func (c *Class) PreProcess(*Context) {
 	if t.Functions[0] == nil {
 		t.Functions[0] = &Function{}
 		t.Functions[0].ObjectName = c.Name.Name
-		t.Functions[0].Name = &expression.Identifier{
+		t.Functions[0].Name = &Identifier{
 			Name: Constructor,
 		}
-		t.Functions[0].Body = &statement.Block{}
+		t.Functions[0].Body = &Block{}
 		t.Functions[0].Class = c
 	}
-	t.Functions[0].ReturnType = &types.TypeName{
+	t.Functions[0].ReturnType = &TypeName{
 		Name: c.Name.Name,
 	}
 	if t.Functions[1] == nil {
 		t.Functions[1] = &Function{}
 		t.Functions[1].ObjectName = c.Name.Name
-		t.Functions[1].Name = &expression.Identifier{
+		t.Functions[1].Name = &Identifier{
 			Name: Destructor,
 		}
-		t.Functions[1].Body = &statement.Block{}
+		t.Functions[1].Body = &Block{}
 		t.Functions[0].Class = c
 	}
 	c.IRVTable = t
 }
 
-func (c *Class) ResolveParents(ctx *Context, declarations map[string]Declaration) {
+func (c *Class) ResolveParents(ctx *Context) {
 	for _, p := range c.Parents {
-		_, d := FindDeclaration(ctx, declarations, p)
+		_, d := ctx.FindDeclaration(p)
 		if d == nil {
 			ctx.Error(p.Position, fmt.Sprintf("%s undefined", p.Name))
 		} else {

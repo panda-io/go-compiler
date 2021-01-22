@@ -1,14 +1,13 @@
 package parser
 
 import (
-	"github.com/panda-foundation/go-compiler/ast/expression"
-	"github.com/panda-foundation/go-compiler/ast/types"
+	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseType() types.Type {
+func (p *Parser) parseType() ast.Type {
 	if p.token.IsScalar() {
-		t := &types.BuitinType{}
+		t := &ast.BuitinType{}
 		t.Position = p.position
 		t.Token = p.token
 		p.next()
@@ -21,8 +20,8 @@ func (p *Parser) parseType() types.Type {
 	return p.parseTypeName()
 }
 
-func (p *Parser) parseTypeName() *types.TypeName {
-	t := &types.TypeName{}
+func (p *Parser) parseTypeName() *ast.TypeName {
+	t := &ast.TypeName{}
 	t.Position = p.position
 	t.Name = p.parseIdentifier().Name
 	if p.token == token.Dot {
@@ -36,8 +35,8 @@ func (p *Parser) parseTypeName() *types.TypeName {
 	return t
 }
 
-func (p *Parser) parseTypeArguments() *types.TypeArguments {
-	t := &types.TypeArguments{Ellipsis: -1}
+func (p *Parser) parseTypeArguments() *ast.TypeArguments {
+	t := &ast.TypeArguments{Ellipsis: -1}
 	t.Position = p.position
 	t.Ellipsis = -1
 	p.next() // skip <
@@ -61,8 +60,8 @@ func (p *Parser) parseTypeArguments() *types.TypeArguments {
 	return t
 }
 
-func (p *Parser) parseTypeParameters() *types.TypeParameters {
-	t := &types.TypeParameters{}
+func (p *Parser) parseTypeParameters() *ast.TypeParameters {
+	t := &ast.TypeParameters{}
 	t.Position = p.position
 	p.next() // skip <
 	t.Parameters = append(t.Parameters, p.parseTypeParameter())
@@ -85,8 +84,8 @@ func (p *Parser) parseTypeParameters() *types.TypeParameters {
 	return t
 }
 
-func (p *Parser) parseTypeParameter() *types.TypeParameter {
-	t := &types.TypeParameter{}
+func (p *Parser) parseTypeParameter() *ast.TypeParameter {
+	t := &ast.TypeParameter{}
 	t.Position = p.position
 	t.Name = p.parseIdentifier().Name
 	if p.token == token.Colon {
@@ -96,9 +95,9 @@ func (p *Parser) parseTypeParameter() *types.TypeParameter {
 	return t
 }
 
-func (p *Parser) parseTypeNames() []*types.TypeName {
+func (p *Parser) parseTypeNames() []*ast.TypeName {
 	p.next() // skip :
-	result := []*types.TypeName{p.parseTypeName()}
+	result := []*ast.TypeName{p.parseTypeName()}
 	for p.token == token.Comma {
 		p.next()
 		result = append(result, p.parseTypeName())
@@ -106,8 +105,8 @@ func (p *Parser) parseTypeNames() []*types.TypeName {
 	return result
 }
 
-func (p *Parser) parseParameters() *types.Parameters {
-	t := &types.Parameters{}
+func (p *Parser) parseParameters() *ast.Parameters {
+	t := &ast.Parameters{}
 	t.Position = p.position
 	p.expect(token.LeftParen)
 	if p.token == token.RightParen {
@@ -130,16 +129,16 @@ func (p *Parser) parseParameters() *types.Parameters {
 	return t
 }
 
-func (p *Parser) parseParameter() *types.Parameter {
-	t := &types.Parameter{}
+func (p *Parser) parseParameter() *ast.Parameter {
+	t := &ast.Parameter{}
 	t.Position = p.position
 	t.Name = p.parseIdentifier().Name
 	t.Type = p.parseType()
 	return t
 }
 
-func (p *Parser) parseArguments() *expression.Arguments {
-	t := &expression.Arguments{Ellipsis: -1}
+func (p *Parser) parseArguments() *ast.Arguments {
+	t := &ast.Arguments{Ellipsis: -1}
 	t.Position = p.position
 	p.expect(token.LeftParen)
 	if p.token == token.RightParen {
@@ -166,8 +165,8 @@ func (p *Parser) parseArguments() *expression.Arguments {
 	return t
 }
 
-func (p *Parser) parseFunctionType() *types.TypeFunction {
-	t := &types.TypeFunction{}
+func (p *Parser) parseFunctionType() *ast.TypeFunction {
+	t := &ast.TypeFunction{}
 	t.Position = p.position
 	p.expect(token.LeftParen)
 	if p.token == token.RightParen {

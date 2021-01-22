@@ -1,17 +1,15 @@
 package ast
 
 import (
-	"github.com/panda-foundation/go-compiler/ast/statement"
-	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type Function struct {
 	DeclarationBase
-	TypeParameters *types.TypeParameters
-	Parameters     *types.Parameters
-	ReturnType     types.Type
-	Body           *statement.Block
+	TypeParameters *TypeParameters
+	Parameters     *Parameters
+	ReturnType     Type
+	Body           *Block
 	Class          *Class
 
 	IRParams   []*ir.Param
@@ -79,23 +77,30 @@ func (f *Function) GenerateIR(c *Context) {
 	}
 }
 
-func (f *Function) GenerateDeclaration(c *Context, declarations map[string]Declaration) *ir.Func {
+func (f *Function) GenerateDeclaration(c *Context) *ir.Func {
 	if f.ObjectName != "" && f.Name.Name != Constructor {
 		t := ir.NewStructType()
-		t.TypeName = c.Namespace + "." + f.ObjectName
+		t.TypeName = c.Module.Namespace + "." + f.ObjectName
 		param := ir.NewParam(ir.NewPointerType(t))
 		param.LocalName = ClassThis
 		f.IRParams = append(f.IRParams, param)
 	}
 	if f.Parameters != nil {
 		for _, parameter := range f.Parameters.Parameters {
-			param := ir.NewParam(TypeOf(c, declarations, parameter.Type))
+			param := ir.NewParam(parameter.Type.Type(c))
 			param.LocalName = parameter.Name
 			f.IRParams = append(f.IRParams, param)
 		}
 	}
-	f.IRFunction = c.Program.Module.NewFunc(f.Qualified(c.Namespace), TypeOf(c, declarations, f.ReturnType), f.IRParams...)
-	c.AddObject(f.Qualified(c.Namespace), f.IRFunction)
+	var t ir.Type = ir.Void
+	if f.ReturnType != nil {
+		t = f.ReturnType.Type(c)
+	}
+	f.IRFunction = c.Program.Module.NewFunc(f.Qualified(c.Module.Namespace), t, f.IRParams...)
+	err := c.AddObject(f.Qualified(c.Module.Namespace), f.IRFunction)
+	if err != nil {
+		c.Error(f.Position, err.Error())
+	}
 	return f.IRFunction
 }
 

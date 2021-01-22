@@ -1,13 +1,12 @@
 package ast
 
 import (
-	"github.com/panda-foundation/go-compiler/ast/types"
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
 type New struct {
 	ExpressionBase
-	Typ       types.Type
+	Typ       Type
 	Arguments *Arguments
 }
 

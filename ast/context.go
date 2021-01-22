@@ -56,7 +56,7 @@ func (c *Context) FindSelector(parent string, member string) (parentValue ir.Val
 	parentValue = c.FindObject(parent)
 	if parentValue == nil {
 		// find from imports
-		for _, i := range c.Program.Context.Imports {
+		for _, i := range c.Module.Imports {
 			if i.Alias == parent {
 				ctx := c.Program.Contexts[i.Namespace]
 				if ctx == nil {
@@ -103,7 +103,7 @@ func (c *Context) FindDeclaration(t *TypeName) (string, Declaration) {
 		return qualified, c.Program.Declarations[qualified]
 	} else {
 		// search imports
-		for _, i := range c.Imports {
+		for _, i := range c.Module.Imports {
 			if i.Alias == t.Selector {
 				qualified := i.Namespace + "." + t.Name
 				return qualified, c.Program.Declarations[qualified]

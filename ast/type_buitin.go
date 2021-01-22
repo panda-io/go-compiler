@@ -10,8 +10,8 @@ type BuitinType struct {
 	Token token.Token
 }
 
-func (b *BuitlinType) Type(c *Context) ir.Type {
-	switch typ.Token {
+func (b *BuitinType) Type(c *Context) ir.Type {
+	switch b.Token {
 	case token.Bool:
 		return ir.I1
 

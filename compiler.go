@@ -38,12 +38,10 @@ func (c *Compiler) ParseFile(file string) {
 
 func (c *Compiler) Compile(file string) {
 	content := c.program.GenerateIR()
-	errors := c.program.Errors()
+	errors := c.program.Errors
 	if len(errors) > 0 {
-		fmt.Println("found compile errors:")
 		for _, e := range errors {
-			//panic(fmt.Sprintf("error: %s \n %s \n", p.scanner.Position(position).String(), message))
-			//TO-DO use global position and fileset
+			fmt.Println(e.Position.String())
 			fmt.Println(e.Message)
 		}
 		panic("compile failed.")
