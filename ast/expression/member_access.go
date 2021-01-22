@@ -15,8 +15,7 @@ type MemberAccess struct {
 }
 
 func (m *MemberAccess) Type(c *node.Context) ir.Type {
-	//TO-DO
-	return nil
+	return m.GenerateIR(c).Type()
 }
 
 func (m *MemberAccess) GenerateParentIR(c *node.Context) ir.Value {
@@ -36,6 +35,9 @@ func (m *MemberAccess) GenerateIR(c *node.Context) ir.Value {
 			c.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
 		}
 		return obj
+	} else if _, ok := m.Parent.(*This); ok {
+		this := c.FindObject(node.This)
+		fmt.Println(this.Type())
 	} /* else {
 		// TO-DO
 		// generate parent firstly, then check type of parent, then generate ir

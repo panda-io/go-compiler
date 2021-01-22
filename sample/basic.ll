@@ -1,7 +1,7 @@
 %global.counter = type { %global.counter.vtable.type*, i32, i32, i8*, void (i8*)* }
-%global.counter.vtable.type = type { %global.counter* ()*, void (%global.counter*)* }
+%global.counter.vtable.type = type { %global.counter* ()*, void (%global.counter*)*, void (%global.counter*)* }
 
-@global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (%global.counter*)* @global.counter.destroy }
+@global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (%global.counter*)* @global.counter.destroy, void (%global.counter*)* @global.counter.retain_shared }
 
 define %global.counter* @global.counter.create() {
 entry:
@@ -22,9 +22,9 @@ entry:
 	ret void
 }
 
-define i32 @main() {
+define void @global.counter.retain_shared(%global.counter* %this) {
 entry:
-	ret i32 0
+	ret void
 }
 
 declare i32 @puts(i8* %text)
@@ -40,3 +40,8 @@ declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
 declare void @memcpy(i8* %dest, i8* %source, i32 %size)
 
 declare void @memset(i8* %source, i32 %value, i32 %size)
+
+define i32 @main() {
+entry:
+	ret i32 0
+}

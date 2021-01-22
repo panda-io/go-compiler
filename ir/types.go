@@ -39,11 +39,15 @@ var (
 	Token = &TokenType{} // token
 
 	// Integer types.
-	I1  = &IntType{BitSize: 1}  // i1
-	I8  = &IntType{BitSize: 8}  // i8
-	I16 = &IntType{BitSize: 16} // i16
-	I32 = &IntType{BitSize: 32} // i32
-	I64 = &IntType{BitSize: 64} // i64
+	I1   = &IntType{BitSize: 1}                  // i1
+	I8   = &IntType{BitSize: 8}                  // i8
+	I16  = &IntType{BitSize: 16}                 // i16
+	I32  = &IntType{BitSize: 32}                 // i32
+	I64  = &IntType{BitSize: 64}                 // i64
+	UI8  = &IntType{BitSize: 8, Unsigned: true}  // i8
+	UI16 = &IntType{BitSize: 16, Unsigned: true} // i16
+	UI32 = &IntType{BitSize: 32, Unsigned: true} // i32
+	UI64 = &IntType{BitSize: 64, Unsigned: true} // i64
 
 	// Floating-point types.
 	Float32 = &FloatType{Kind: FloatKindFloat}  // float
@@ -254,6 +258,8 @@ type IntType struct {
 	TypeName string
 	// Integer size in number of bits.
 	BitSize uint64
+	// If int is unsigned
+	Unsigned bool
 }
 
 // NewIntType returns a new integer type based on the given integer bit size.

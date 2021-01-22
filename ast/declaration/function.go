@@ -104,5 +104,6 @@ func (f *Function) GenerateDeclaration(c *node.Context, declarations map[string]
 		}
 	}
 	f.IRFunction = c.Program.Module.NewFunc(f.Qualified(c.Namespace), TypeOf(c, declarations, f.ReturnType), f.IRParams...)
+	c.AddObject(f.Qualified(c.Namespace), f.IRFunction)
 	return f.IRFunction
 }
