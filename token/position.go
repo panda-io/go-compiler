@@ -4,8 +4,6 @@ import (
 	"fmt"
 )
 
-type WalkFile func(*File)
-
 type Position struct {
 	file   *File
 	offset int
@@ -15,6 +13,10 @@ func (p Position) String() string {
 	path := p.file.Name
 	line, column := p.file.location(p.offset)
 	return fmt.Sprintf("%s:%d:%d", path, line, column)
+}
+
+func (p Position) Global() int {
+	return p.file.Base + p.offset
 }
 
 type File struct {
@@ -41,6 +43,10 @@ func (f *File) Position(offset int) *Position {
 		file:   f,
 		offset: offset,
 	}
+}
+
+func (f *File) Global(offset int) int {
+	return f.Base + offset
 }
 
 func (f *File) location(offset int) (line, column int) {
@@ -78,7 +84,7 @@ func (s *FileSet) AddFile(filename string, size int) *File {
 	return f
 }
 
-func (s *FileSet) UpdateFile(filename string, size int) bool {
+func (s *FileSet) UpdateFile(filename string, size int) {
 	found := false
 	for _, f := range s.files {
 		if f.Name == filename {
@@ -93,7 +99,6 @@ func (s *FileSet) UpdateFile(filename string, size int) bool {
 			s.base += f.Size + 1
 		}
 	}
-	return found
 }
 
 func (s *FileSet) File(position int) *File {
@@ -110,10 +115,4 @@ func (s *FileSet) Position(position int) *Position {
 		return f.Position(position - f.Base)
 	}
 	return nil
-}
-
-func (s *FileSet) Walk(w WalkFile) {
-	for _, f := range s.files {
-		w(f)
-	}
 }

@@ -73,8 +73,19 @@ func IsFunc(t Type) bool {
 
 // IsInt reports whether the given type is an integer type.
 func IsInt(t Type) bool {
-	_, ok := t.(*IntType)
-	return ok
+	if i, ok := t.(*IntType); ok {
+		// bit size == 1, bool
+		return i.BitSize > 1
+	}
+	return false
+}
+
+// IsBool reports whether the given type is an integer type.
+func IsBool(t Type) bool {
+	if i, ok := t.(*IntType); ok {
+		return i.BitSize == 1
+	}
+	return false
 }
 
 // IsFloat reports whether the given type is a floating-point type.

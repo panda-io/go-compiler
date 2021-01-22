@@ -4,14 +4,27 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/panda-foundation/go-compiler/ast/declaration"
 	"github.com/panda-foundation/go-compiler/ast/node"
+	"github.com/panda-foundation/go-compiler/ir"
+	"github.com/panda-foundation/go-compiler/token"
 )
 
+type Error struct {
+	Position *token.Position
+	Message  string
+}
+
 type Program struct {
-	Modules      map[string]*Module
-	Data         *node.ProgramData
-	Declarations map[string]declaration.Declaration
+	Modules map[string]*Module
+
+	Module   *ir.Module
+	Context  *Context
+	Contexts map[string]*Context
+
+	Declarations map[string]Declaration
+	Strings      map[string]*ir.Global
+
+	Errors []*Error
 }
 
 func NewProgram() *Program {
@@ -24,34 +37,38 @@ func (p *Program) AddModule(file string, m *Module) {
 	p.Modules[file] = m
 }
 
-// TO-DO rebuild (language server)
 func (p *Program) Reset() {
-	p.Data = node.NewProgramData()
 	p.Modules = make(map[string]*Module)
-	p.Declarations = make(map[string]declaration.Declaration)
+
+	p.Module = ir.NewModule()
+	p.Context = nil
+	p.Contexts = make(map[string]*Context)
+	p.Contexts[Global] = NewContext(p)
+
+	p.Declarations = make(map[string]Declaration)
+	p.Strings = make(map[string]*ir.Global)
+
+	p.Errors = p.Errors[:0]
 }
 
 func (p *Program) GenerateIR() string {
-	// TO-DO check if import is valid // must be valid, cannot import self, cannot duplicated
-
 	// zero pass (register all)
 	for _, m := range p.Modules {
+		// TO-DO check if import is valid // must be valid, cannot import self, cannot duplicated
 		if c, ok := p.Data.Contexts[m.Namespace]; ok {
-			p.Data.Context = c
+			p.Context = c
 		} else {
-			p.Data.Context = p.Data.Contexts[node.Global].NewContext()
-			p.Data.Contexts[m.Namespace] = p.Data.Context
+			p.Context = p.Data.Contexts[node.Global].NewContext()
+			p.Contexts[m.Namespace] = p.Data.Context
 		}
-		p.Data.Context.Imports = m.Imports
-		p.Data.Context.Namespace = m.Namespace
+		p.Context.Module = m
 
 		for _, member := range m.Members {
 			qualified := member.Qualified(m.Namespace)
 			if p.Declarations[qualified] == nil {
 				p.Declarations[qualified] = member
 			} else {
-				p.Data.Context.Error(member.GetPosition(), fmt.Sprintf("%s redeclared", member.Identifier()))
-				//TO-DO get another redeclaration position
+				p.Context.Error(member.GetPosition(), fmt.Sprintf("%s redeclared", member.Identifier()))
 			}
 
 			switch t := member.(type) {
@@ -66,9 +83,8 @@ func (p *Program) GenerateIR() string {
 
 	// first pass (resolve oop)
 	for _, m := range p.Modules {
-		p.Data.Context = p.Data.Contexts[m.Namespace]
-		p.Data.Context.Imports = m.Imports
-		p.Data.Context.Namespace = m.Namespace
+		p.Context = p.Contexts[m.Namespace]
+		p.Context.Module = m
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
@@ -87,9 +103,8 @@ func (p *Program) GenerateIR() string {
 
 	// second pass (generate declarations)
 	for _, m := range p.Modules {
-		p.Data.Context = p.Data.Contexts[m.Namespace]
-		p.Data.Context.Imports = m.Imports
-		p.Data.Context.Namespace = m.Namespace
+		p.Context = p.Contexts[m.Namespace]
+		p.Context.Module = m
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
@@ -112,9 +127,8 @@ func (p *Program) GenerateIR() string {
 
 	// third pass (generate functions)
 	for _, m := range p.Modules {
-		p.Data.Context = p.Data.Contexts[m.Namespace]
-		p.Data.Context.Imports = m.Imports
-		p.Data.Context.Namespace = m.Namespace
+		p.Context = p.Contexts[m.Namespace]
+		p.Context.Module = m
 
 		for _, member := range m.Members {
 			switch t := member.(type) {
@@ -131,13 +145,13 @@ func (p *Program) GenerateIR() string {
 	}
 
 	buf := &strings.Builder{}
-	_, err := p.Data.Context.Program.Module.WriteTo(buf)
+	_, err := p.Module.WriteTo(buf)
 	if err != nil {
 		panic(err)
 	}
 	return buf.String()
 }
 
-func (p *Program) Errors() []*node.Error {
-	return p.Data.Context.Program.Errors
+func (p *Program) Errors() []*Error {
+	return p.Errors
 }

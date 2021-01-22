@@ -1,5 +1,7 @@
 package token
 
+//TO-DO use array instead map
+
 var operatorRoot *operatorNode
 
 func ReadOperator(bytes []byte) (Token, int) {
