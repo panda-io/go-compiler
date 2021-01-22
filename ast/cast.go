@@ -6,6 +6,8 @@ import (
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
+//TO-DO refactor later
+
 func PromoteNumberType(c *Context, e1 Expression, e2 Expression) ir.Type {
 	t1 := e1.Type(c)
 	t2 := e2.Type(c)

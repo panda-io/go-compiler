@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"fmt"
-
 	"github.com/panda-foundation/go-compiler/ast"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -48,44 +46,44 @@ func (p *Parser) parseFunction(modifier *ast.Modifier, attributes []*ast.Attribu
 }
 
 func (p *Parser) parseEnum(modifier *ast.Modifier, attributes []*ast.Attribute) *ast.Enum {
-	d := &ast.Enum{}
-	d.Modifier = modifier
-	d.Attributes = attributes
+	e := &ast.Enum{}
+	e.Modifier = modifier
+	e.Attributes = attributes
 	p.next()
-	d.Name = p.parseIdentifier()
+	e.Name = p.parseIdentifier()
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
 		v := &ast.Variable{}
 		v.Name = p.parseIdentifier()
-		v.ObjectName = d.Name.Name
+		v.ObjectName = e.Name.Name
 		if p.token == token.Assign {
 			p.next()
 			v.Value = p.parseExpression()
 		}
-		if p.redeclared(v.Name.Name, d.Members) {
-			p.error(v.Name.Position, fmt.Sprintf("enum %s redeclared", v.Name.Name))
+		err := e.AddVariable(v)
+		if err != nil {
+			p.error(v.Position, err.Error())
 		}
-		d.Members = append(d.Members, v)
 		if p.token != token.Comma {
 			break
 		}
 		p.next()
 	}
 	p.expect(token.RightBrace)
-	return d
+	return e
 }
 
 func (p *Parser) parseInterface(modifier *ast.Modifier, attributes []*ast.Attribute) *ast.Interface {
-	d := &ast.Interface{}
-	d.Modifier = modifier
-	d.Attributes = attributes
+	i := &ast.Interface{}
+	i.Modifier = modifier
+	i.Attributes = attributes
 	p.next()
-	d.Name = p.parseIdentifier()
+	i.Name = p.parseIdentifier()
 	if p.token == token.Less {
-		d.TypeParameters = p.parseTypeParameters()
+		i.TypeParameters = p.parseTypeParameters()
 	}
 	if p.token == token.Colon {
-		d.Parents = p.parseTypeNames()
+		i.Parents = p.parseTypeNames()
 	}
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
@@ -93,30 +91,30 @@ func (p *Parser) parseInterface(modifier *ast.Modifier, attributes []*ast.Attrib
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Function:
-			m := p.parseFunction(modifier, attr, d.Name.Name)
-			if p.redeclared(m.Name.Name, d.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
+			f := p.parseFunction(modifier, attr, i.Name.Name)
+			err := i.AddFunction(f)
+			if err != nil {
+				p.error(f.Position, err.Error())
 			}
-			d.Members = append(d.Members, m)
 		default:
-			p.expectedError(p.position, "declaration")
+			p.expectedError(p.position, "function declaration")
 		}
 	}
 	p.expect(token.RightBrace)
-	return d
+	return i
 }
 
 func (p *Parser) parseClass(modifier *ast.Modifier, attributes []*ast.Attribute) *ast.Class {
-	d := &ast.Class{}
-	d.Modifier = modifier
-	d.Attributes = attributes
+	c := &ast.Class{}
+	c.Modifier = modifier
+	c.Attributes = attributes
 	p.next()
-	d.Name = p.parseIdentifier()
+	c.Name = p.parseIdentifier()
 	if p.token == token.Less {
-		d.TypeParameters = p.parseTypeParameters()
+		c.TypeParameters = p.parseTypeParameters()
 	}
 	if p.token == token.Colon {
-		d.Parents = p.parseTypeNames()
+		c.Parents = p.parseTypeNames()
 	}
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
@@ -124,25 +122,25 @@ func (p *Parser) parseClass(modifier *ast.Modifier, attributes []*ast.Attribute)
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
-			m := p.parseVariable(modifier, attr, d.Name.Name)
-			if p.redeclared(m.Name.Name, d.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("variable %s redeclared", m.Name.Name))
+			v := p.parseVariable(modifier, attr, c.Name.Name)
+			err := c.AddVariable(v)
+			if err != nil {
+				p.error(v.Position, err.Error())
 			}
-			d.Members = append(d.Members, m)
 
 		case token.Function:
-			m := p.parseFunction(modifier, attr, d.Name.Name)
-			if p.redeclared(m.Name.Name, d.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
+			f := p.parseFunction(modifier, attr, c.Name.Name)
+			err := c.AddFunction(f)
+			if err != nil {
+				p.error(f.Position, err.Error())
 			}
-			d.Members = append(d.Members, m)
 
 		default:
-			p.expectedError(p.position, "declaration")
+			p.expectedError(p.position, "member declaration")
 		}
 	}
 	p.expect(token.RightBrace)
-	return d
+	return c
 }
 
 func (p *Parser) parseModifier() *ast.Modifier {

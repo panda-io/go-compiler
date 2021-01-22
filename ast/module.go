@@ -15,5 +15,9 @@ type Module struct {
 	Imports   []*Import
 
 	Attributes []*Attribute
-	Members    []Declaration
+	Variables  []*Variable
+	Functions  []*Function
+	Enums      []*Enum
+	Interfaces []*Interface
+	Classes    []*Class
 }

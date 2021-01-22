@@ -34,6 +34,18 @@ func (c *Context) NewContext() *Context {
 	}
 }
 
+func (c *Context) StructType(qualified string) *ir.StructType {
+	t := ir.NewStructType()
+	t.TypeName = qualified
+	return t
+}
+
+func (c *Context) StructPointer(qualified string) *ir.PointerType {
+	t := ir.NewStructType()
+	t.TypeName = qualified
+	return ir.NewPointerType(t)
+}
+
 func (c *Context) AddObject(name string, value ir.Value) error {
 	if _, ok := c.objects[name]; ok {
 		return fmt.Errorf("redeclared variable: %s", name)

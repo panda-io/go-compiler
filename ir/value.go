@@ -40,3 +40,8 @@ type Named interface {
 	// SetName sets the name of the value.
 	SetName(name string)
 }
+
+func IsConstant(v Value) bool {
+	_, ok := v.(Constant)
+	return ok
+}

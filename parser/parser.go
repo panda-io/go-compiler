@@ -10,8 +10,9 @@ import (
 )
 
 // NewParser create new parser
-func NewParser(flags []string) *Parser {
+func NewParser(flags []string, program *ast.Program) *Parser {
 	p := &Parser{
+		program: program,
 		scanner: scanner.NewScanner(flags),
 	}
 	return p
@@ -22,7 +23,19 @@ type Parser struct {
 	token    token.Token
 	literal  string
 
+	program *ast.Program
 	scanner *scanner.Scanner
+}
+
+func (p *Parser) ParseBytes(source []byte) {
+	file := token.NewFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
+	p.setSource(file, source)
+	p.parseSourceFile(file)
+}
+
+func (p *Parser) ParseFile(file *token.File, source []byte) {
+	p.setSource(file, source)
+	p.parseSourceFile(file)
 }
 
 func (p *Parser) ParseExpression(source []byte) ast.Expression {
@@ -35,17 +48,6 @@ func (p *Parser) ParseStatements(source []byte) ast.Statement {
 	file := token.NewFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
 	p.setSource(file, source)
 	return p.parseBlockStatement()
-}
-
-func (p *Parser) ParseBytes(source []byte) *ast.Module {
-	file := token.NewFile("<input>"+fmt.Sprintf("%x", md5.Sum(source)), len(source))
-	p.setSource(file, source)
-	return p.parseSourceFile()
-}
-
-func (p *Parser) ParseFile(file *token.File, source []byte) *ast.Module {
-	p.setSource(file, source)
-	return p.parseSourceFile()
 }
 
 func (p *Parser) next() {
@@ -74,20 +76,11 @@ func (p *Parser) expectedError(position int, expect string) {
 	p.error(position, expect)
 }
 
-func (p *Parser) error(position int, message string) {
-	panic(fmt.Sprintf("error: %s \n %s \n", p.scanner.Position(position).String(), message))
-}
-
 func (p *Parser) setSource(file *token.File, source []byte) {
 	p.scanner.SetFile(file, source)
 	p.next()
 }
 
-func (p *Parser) redeclared(name string, declarations []ast.Declaration) bool {
-	for _, d := range declarations {
-		if d.Identifier() == name {
-			return true
-		}
-	}
-	return false
+func (p *Parser) error(position int, message string) {
+	panic(fmt.Sprintf("error: %s \n %s \n", p.scanner.Position(position).String(), message))
 }

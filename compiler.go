@@ -17,10 +17,11 @@ type Compiler struct {
 }
 
 func NewCompiler(flags []string) *Compiler {
+	p := ast.NewProgram()
 	return &Compiler{
-		parser:  parser.NewParser(flags),
+		parser:  parser.NewParser(flags, p),
 		fileset: &token.FileSet{},
-		program: ast.NewProgram(),
+		program: p,
 	}
 }
 
@@ -32,8 +33,7 @@ func (c *Compiler) ParseFile(file string) {
 		panic(err)
 	}
 	f := c.fileset.AddFile(file, len(b))
-	m := c.parser.ParseFile(f, b)
-	c.program.AddModule(file, m)
+	c.parser.ParseFile(f, b)
 }
 
 func (c *Compiler) Compile(file string) {

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/panda-foundation/go-compiler/ast"
 )
 
 func isNil(i interface{}) bool {
@@ -20,7 +22,7 @@ func assertEqual(t *testing.T, a interface{}, b interface{}) {
 }
 
 func TestStatement(t *testing.T) {
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseStatements([]byte("{i++;}"))
 	p.ParseStatements([]byte("{;var i int = 1; var j float = 1.0; i++; j = i + 1; return i;}"))
 	p.ParseStatements([]byte("{{var i int = 0;}}"))
@@ -44,12 +46,12 @@ func TestStatementFail1(t *testing.T) {
 			t.Errorf("raw statement did not panic")
 		}
 	}()
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseStatements([]byte("{@what}"))
 }
 
 func TestDeclaration(t *testing.T) {
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseBytes([]byte("@doc \"some package doc\" \nnamespace; var i int = 1; function print() { console.print_line(i); }"))
 	p.ParseBytes([]byte("namespace; @meta(a = true, b = \"yes\", c = 1) \npublic enum test { blue, yello, red = 10 }"))
 	p.ParseBytes([]byte("namespace; interface ia {} interface ib : ia {}"))
@@ -63,7 +65,7 @@ func TestDeclarationFail1(t *testing.T) {
 			t.Errorf("destructor did not panic")
 		}
 	}()
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseBytes([]byte("@doc(\"some package doc\")\nnamespace; function ~gen_int() int { return 1; }"))
 }
 
@@ -73,7 +75,7 @@ func TestDeclarationFail2(t *testing.T) {
 			t.Errorf("destructor did not panic")
 		}
 	}()
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseBytes([]byte("namespace; class test { function ~test1(){} }"))
 }
 
@@ -83,7 +85,7 @@ func TestDeclarationFail3(t *testing.T) {
 			t.Errorf("interface redeclare did not panic")
 		}
 	}()
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseBytes([]byte("namespace; interface a { b() int; b() int}"))
 }
 
@@ -93,7 +95,7 @@ func TestDeclarationFail4(t *testing.T) {
 			t.Errorf("class member redeclare did not panic")
 		}
 	}()
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseBytes([]byte("namespace; class a { function b() int; function b() int}"))
 }
 
@@ -103,16 +105,16 @@ func TestDeclarationFail5(t *testing.T) {
 			t.Errorf("class redeclare did not panic")
 		}
 	}()
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseBytes([]byte("namespace; class a { var b int; var b int; }"))
 }
 
 func TestNamespace(t *testing.T) {
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseBytes([]byte("@doc \"package document here\" \nnamespace first.second.third;"))
 }
 
 func TestExpression(t *testing.T) {
-	p := NewParser([]string{"cpp"})
+	p := NewParser([]string{}, ast.NewProgram())
 	p.ParseStatements([]byte("{ this.call_back(); var a = new vector<int>(); }"))
 }

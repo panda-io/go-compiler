@@ -8,57 +8,69 @@ import (
 	"github.com/panda-foundation/go-compiler/token"
 )
 
-func (p *Parser) parseSourceFile() *ast.Module {
-	s := &ast.Module{}
-	s.Attributes = p.parseAttributes()
-	s.Namespace = p.parseNamespace()
-	s.Imports = p.parseImports()
+func (p *Parser) parseSourceFile(file *token.File) {
+	m := &ast.Module{
+		File: file,
+	}
+	m.Attributes = p.parseAttributes()
+	m.Namespace = p.parseNamespace()
+	m.Imports = p.parseImports()
 
 	for p.token != token.EOF {
 		attr := p.parseAttributes()
 		modifier := p.parseModifier()
 		switch p.token {
 		case token.Const, token.Var:
-			m := p.parseVariable(modifier, attr, "")
-			if p.redeclared(m.Name.Name, s.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("variable %s redeclared", m.Name.Name))
+			v := p.parseVariable(modifier, attr, "")
+			qualified := m.Namespace + "." + v.Name.Name
+			if p.program.Declarations[qualified] != nil {
+				p.error(v.Name.Position, fmt.Sprintf("variable %s redeclared", v.Name.Name))
 			}
-			s.Members = append(s.Members, m)
+			m.Variables = append(m.Variables, v)
+			p.program.Declarations[qualified] = v
 
 		case token.Function:
-			m := p.parseFunction(modifier, attr, "")
-			if p.redeclared(m.Name.Name, s.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("function %s redeclared", m.Name.Name))
+			f := p.parseFunction(modifier, attr, "")
+			qualified := m.Namespace + "." + f.Name.Name
+			if p.program.Declarations[qualified] != nil {
+				p.error(f.Name.Position, fmt.Sprintf("function %s redeclared", f.Name.Name))
 			}
-			s.Members = append(s.Members, m)
+			m.Functions = append(m.Functions, f)
+			p.program.Declarations[qualified] = f
 
 		case token.Enum:
-			m := p.parseEnum(modifier, attr)
-			if p.redeclared(m.Name.Name, s.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("enum %s redeclared", m.Name.Name))
+			e := p.parseEnum(modifier, attr)
+			qualified := m.Namespace + "." + e.Name.Name
+			if p.program.Declarations[qualified] != nil {
+				p.error(e.Name.Position, fmt.Sprintf("enum %s redeclared", e.Name.Name))
 			}
-			s.Members = append(s.Members, m)
+			m.Enums = append(m.Enums, e)
+			p.program.Declarations[qualified] = e
 
 		case token.Interface:
-			m := p.parseInterface(modifier, attr)
-			if p.redeclared(m.Name.Name, s.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("interface %s redeclared", m.Name.Name))
+			i := p.parseInterface(modifier, attr)
+			qualified := m.Namespace + "." + i.Name.Name
+			if p.program.Declarations[qualified] != nil {
+				p.error(i.Name.Position, fmt.Sprintf("interface %s redeclared", i.Name.Name))
 			}
-			s.Members = append(s.Members, m)
+			m.Interfaces = append(m.Interfaces, i)
+			p.program.Declarations[qualified] = i
 
 		case token.Class:
-			m := p.parseClass(modifier, attr)
-			if p.redeclared(m.Name.Name, s.Members) {
-				p.error(m.Name.Position, fmt.Sprintf("class %s redeclared", m.Name.Name))
+			c := p.parseClass(modifier, attr)
+			qualified := m.Namespace + "." + c.Name.Name
+			if p.program.Declarations[qualified] != nil {
+				p.error(c.Name.Position, fmt.Sprintf("class %s redeclared", c.Name.Name))
 			}
-			s.Members = append(s.Members, m)
+			m.Classes = append(m.Classes, c)
+			p.program.Declarations[qualified] = c
 
 		default:
 			p.expectedError(p.position, "declaration")
 		}
 	}
 
-	return s
+	p.program.Modules[file.Name] = m
 }
 
 func (p *Parser) parseNamespace() string {

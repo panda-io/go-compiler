@@ -10,109 +10,117 @@ type Class struct {
 	DeclarationBase
 	TypeParameters *TypeParameters
 	Parents        []*TypeName
-	Members        []Declaration
+	Functions      []*Function
+	Variables      []*Variable
 
-	ResolvedParent     *Class
-	ResolvedInterfaces []*Interface
+	Parent     *Class
+	Interfaces []*Interface
 
-	IRStruct *Struct
-	IRVTable *VTable
+	IRStruct        *ir.StructType
+	IRVariables     []ir.Type
+	VariableIndexes map[string]int
+
+	IRVTable        *ir.StructType
+	IRFunctions     []*ir.Func
+	IRVTableData    *ir.Global
+	FunctionIndexes map[string]int
 }
 
-type Struct struct {
-	Class     *Class
-	Variables []*Variable
-	Members   []ir.Type
-
-	Type          *ir.StructType
-	MergedMembers []ir.Type
-	Indexes       map[string]int
+func (c *Class) AddVariable(v *Variable) error {
+	for _, variable := range c.Variables {
+		if v.Name.Name == variable.Name.Name {
+			return fmt.Errorf("%s redeclared", v.Name.Name)
+		}
+	}
+	for _, function := range c.Functions {
+		if v.Name.Name == function.Name.Name {
+			return fmt.Errorf("%s redeclared", v.Name.Name)
+		}
+	}
+	c.Variables = append(c.Variables, v)
+	return nil
 }
 
-func (s *Struct) GenerateDeclaration(ctx *Context) {
-	for _, v := range s.Variables {
-		s.Members = append(s.Members, v.Type.Type(ctx))
+func (c *Class) AddFunction(f *Function) error {
+	for _, variable := range c.Variables {
+		if f.Name.Name == variable.Name.Name {
+			return fmt.Errorf("%s redeclared", f.Name.Name)
+		}
+	}
+	for _, function := range c.Functions {
+		if f.Name.Name == function.Name.Name {
+			return fmt.Errorf("%s redeclared", f.Name.Name)
+		}
+	}
+	c.Functions = append(c.Functions, f)
+	return nil
+}
+
+func (c *Class) GenerateIRDeclaration(ctx *Context) {
+	for _, v := range c.Variables {
+		c.IRVariables = append(c.IRVariables, v.Type.Type(ctx))
+	}
+	for _, f := range c.Functions {
+		c.IRFunctions = append(c.IRFunctions, f.GenerateIRDeclaration(ctx))
 	}
 }
 
-func (s *Struct) GenerateIR(ctx *Context) {
-	t := ir.NewStructType()
-	t.TypeName = ctx.Module.Namespace + "." + s.Class.Name.Name + ".vtable.type"
-	s.MergedMembers = append(s.MergedMembers, ir.NewPointerType(t))
+func (c *Class) GenerateIRStruct(ctx *Context) {
+	c.VariableIndexes = make(map[string]int)
 
-	structs := []*Struct{s}
-	current := s
-	for current.Class.ResolvedParent != nil {
-		structs = append(structs, current.Class.ResolvedParent.IRStruct)
-		current = current.Class.ResolvedParent.IRStruct
+	variables := []ir.Type{ctx.StructPointer(ctx.Module.Namespace + "." + c.Name.Name + ".vtable.type")}
+	classes := []*Class{c}
+	current := c
+	for current.Parent != nil {
+		classes = append(classes, current.Parent)
+		current = current.Parent
 	}
 	index := 0
-	for i := len(structs) - 1; i > -1; i-- {
-		current = structs[i]
-		for i, v := range current.Variables {
-			s.MergedMembers = append(s.MergedMembers, current.Members[i])
-			if _, ok := s.Indexes[v.Name.Name]; ok {
+	for i := len(classes) - 1; i > -1; i-- {
+		current = classes[i]
+		for j, v := range current.Variables {
+			variables = append(variables, current.IRVariables[j])
+			if _, ok := c.VariableIndexes[v.Name.Name]; ok {
 				ctx.Error(v.Position, fmt.Sprintf("duplicate class member: %s", v.Name.Name))
 			} else {
-				s.Indexes[v.Name.Name] = index
+				c.VariableIndexes[v.Name.Name] = index
 			}
 			index++
 		}
 	}
 
-	qualified := s.Class.Qualified(ctx.Module.Namespace)
-	s.Type = ir.NewStructType(s.MergedMembers...)
-	ctx.Program.Module.NewTypeDef(qualified, s.Type)
+	qualified := c.Qualified(ctx.Module.Namespace)
+	c.IRStruct = ir.NewStructType(variables...)
+	ctx.Program.Module.NewTypeDef(qualified, c.IRStruct)
 }
 
-type VTable struct {
-	Class     *Class
-	Functions []*Function
-	Members   []*ir.Func
+func (c *Class) GenerateIRVTable(ctx *Context) {
+	c.FunctionIndexes = make(map[string]int)
 
-	Type            *ir.StructType
-	Data            *ir.Global
-	MergedFunctions []*ir.Func
-	Indexes         map[string]int
-}
-
-/*
-for interface
-%Offset = getelementptr {i8,i32*}* null, i32 0, i32 1
-%OffsetI = ptrtoint i32** %Offset to i32*/
-
-//%Foo_vtable_type = type { i32(%Foo*)* }
-func (t *VTable) GenerateDeclaration(ctx *Context) {
-	for _, v := range t.Functions {
-		t.Members = append(t.Members, v.GenerateDeclaration(ctx))
-	}
-}
-
-func (t *VTable) GenerateIR(ctx *Context) {
-	vtables := []*VTable{t}
-	current := t
-	for current.Class.ResolvedParent != nil {
-		vtables = append(vtables, current.Class.ResolvedParent.IRVTable)
-		current = current.Class.ResolvedParent.IRVTable
+	functions := []*ir.Func{}
+	classes := []*Class{c}
+	current := c
+	for current.Parent != nil {
+		classes = append(classes, current.Parent)
+		current = current.Parent
 	}
 	index := 0
-
-	for i := len(vtables) - 1; i > -1; i-- {
-		current = vtables[i]
-		for i, v := range current.Functions {
-			if existing, ok := t.Indexes[v.Name.Name]; ok {
+	for i := len(classes) - 1; i > -1; i-- {
+		current = classes[i]
+		for j, f := range current.Functions {
+			if existing, ok := c.FunctionIndexes[f.Name.Name]; ok {
 				// existing function
-				f := t.MergedFunctions[existing]
-				if !CompareMemberFunction(f.Sig, current.Members[i].Sig) {
-					ctx.Error(v.Position, fmt.Sprintf("member function %s does not match its parent class", v.Name.Name))
+				function := functions[existing]
+				if !c.CompareFunction(function, current.IRFunctions[j], f.Name.Name == Constructor) {
+					ctx.Error(f.Position, fmt.Sprintf("member function %s does not match its parent class", f.Name.Name))
 					//TO-DO print more params details here
 				} else {
-					t.MergedFunctions[existing] = current.Members[i]
+					functions[existing] = current.IRFunctions[j]
 				}
 			} else {
 				// new function
-				t.MergedFunctions = append(t.MergedFunctions, current.Members[i])
-				t.Indexes[v.Name.Name] = index
+				functions = append(functions, current.IRFunctions[j])
+				c.FunctionIndexes[f.Name.Name] = index
 				index++
 			}
 		}
@@ -120,79 +128,77 @@ func (t *VTable) GenerateIR(ctx *Context) {
 
 	var types []ir.Type
 	var constants []ir.Constant
-	for _, f := range t.MergedFunctions {
+	for _, f := range functions {
 		types = append(types, ir.NewPointerType(f.Sig))
 		constants = append(constants, f)
 	}
-	t.Type = ir.NewStructType(types...)
-	ctx.Program.Module.NewTypeDef(t.Class.Qualified(ctx.Module.Namespace)+".vtable.type", t.Type)
+	c.IRVTable = ir.NewStructType(types...)
+	ctx.Program.Module.NewTypeDef(c.Qualified(ctx.Module.Namespace)+".vtable.type", c.IRVTable)
 
-	vtableType := ir.NewStructType()
-	vtableType.TypeName = t.Class.Qualified(ctx.Module.Namespace) + ".vtable.type"
-	vtableData := ir.NewStruct(vtableType, constants...)
-	t.Data = ctx.Program.Module.NewGlobalDef(t.Class.Qualified(ctx.Module.Namespace)+".vtable.data", vtableData)
+	data := ir.NewStruct(ctx.StructType(c.Qualified(ctx.Module.Namespace)+".vtable.type"), constants...)
+	c.IRVTableData = ctx.Program.Module.NewGlobalDef(c.Qualified(ctx.Module.Namespace)+".vtable.data", data)
 }
 
 func (c *Class) GenerateIR(ctx *Context) {
-	for _, v := range c.IRVTable.Functions {
+	for _, v := range c.Functions {
 		v.GenerateIR(ctx)
 	}
-	//TO-DO constructor and destructor
 }
 
 func (c *Class) PreProcess(*Context) {
-	s := &Struct{
-		Class:   c,
-		Indexes: make(map[string]int),
-	}
-	for _, m := range c.Members {
-		if v, ok := m.(*Variable); ok {
-			s.Variables = append(s.Variables, v)
-		}
-	}
-	c.IRStruct = s
-
-	t := &VTable{
-		Class:   c,
-		Indexes: make(map[string]int),
-	}
-
 	// first is constructor, second is destructor
-	t.Functions = append(t.Functions, nil, nil)
-	for _, m := range c.Members {
-		if v, ok := m.(*Function); ok {
-			if v.Name.Name == Constructor {
-				t.Functions[0] = v
-			} else if v.Name.Name == Destructor {
-				t.Functions[1] = v
-			} else {
-				t.Functions = append(t.Functions, v)
-			}
-			v.Class = c
+	functions := []*Function{nil, nil}
+	for _, f := range c.Functions {
+		f.Class = c
+		if f.Name.Name == Constructor {
+			functions[0] = f
+		} else if f.Name.Name == Destructor {
+			functions[1] = f
+		} else {
+			functions = append(functions, f)
 		}
 	}
-	if t.Functions[0] == nil {
-		t.Functions[0] = &Function{}
-		t.Functions[0].ObjectName = c.Name.Name
-		t.Functions[0].Name = &Identifier{
-			Name: Constructor,
-		}
-		t.Functions[0].Body = &Block{}
-		t.Functions[0].Class = c
+	c.Functions = functions
+	if c.Functions[0] == nil {
+		c.Functions[0] = c.CreateEmptyFunction(Constructor)
 	}
-	t.Functions[0].ReturnType = &TypeName{
+	c.Functions[0].ReturnType = &TypeName{
 		Name: c.Name.Name,
 	}
-	if t.Functions[1] == nil {
-		t.Functions[1] = &Function{}
-		t.Functions[1].ObjectName = c.Name.Name
-		t.Functions[1].Name = &Identifier{
-			Name: Destructor,
-		}
-		t.Functions[1].Body = &Block{}
-		t.Functions[0].Class = c
+	if c.Functions[1] == nil {
+		c.Functions[1] = c.CreateEmptyFunction(Destructor)
 	}
-	c.IRVTable = t
+}
+
+func (c *Class) CreateEmptyFunction(name string) *Function {
+	f := &Function{}
+	f.ObjectName = c.Name.Name
+	f.Name = &Identifier{
+		Name: name,
+	}
+	f.Body = &Block{}
+	f.Class = c
+	return f
+}
+
+func (c *Class) CompareFunction(f0 *ir.Func, f1 *ir.Func, isConstructor bool) bool {
+	sig0 := f0.Sig
+	sig1 := f1.Sig
+	if isConstructor {
+		return sig0.Equal(sig1)
+	}
+	if !sig0.RetType.Equal(sig1.RetType) {
+		return false
+	}
+	if len(sig0.Params) != len(sig1.Params) {
+		return false
+	}
+	for i := 1; i < len(sig0.Params); i++ {
+		if !sig0.Params[i].Equal(sig1.Params[i]) {
+			return false
+		}
+	}
+	return sig0.Variadic == sig1.Variadic
 }
 
 func (c *Class) ResolveParents(ctx *Context) {
@@ -203,14 +209,16 @@ func (c *Class) ResolveParents(ctx *Context) {
 		} else {
 			switch t := d.(type) {
 			case *Class:
-				if c.ResolvedParent == nil {
-					c.ResolvedParent = t
+				if c.Parent == nil {
+					c.Parent = t
 					//TO-DO check, cannot self inherit, cycle inherit
 				} else {
 					ctx.Error(p.Position, "class can only inherit 1 other class")
 				}
+
 			case *Interface:
-				c.ResolvedInterfaces = append(c.ResolvedInterfaces, t)
+				c.Interfaces = append(c.Interfaces, t)
+
 			default:
 				ctx.Error(p.Position, fmt.Sprintf("invalid parent type: %s", t.Identifier()))
 			}
