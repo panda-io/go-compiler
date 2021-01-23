@@ -227,3 +227,37 @@ func (c *Class) ResolveParents(ctx *Context) {
 		}
 	}
 }
+
+func (c *Class) HasMember(member string) bool {
+	_, ok := c.VariableIndexes[member]
+	if !ok {
+		_, ok = c.FunctionIndexes[member]
+	}
+	return ok
+}
+
+func (c *Class) MemberType(member string) ir.Type {
+	if index, ok := c.VariableIndexes[member]; ok {
+		return ir.GepInstType(c.IRStruct, []ir.Value{ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index))})
+	} else if index, ok := c.FunctionIndexes[member]; ok {
+		return ir.GepInstType(c.IRVTable, []ir.Value{ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index))})
+	}
+	return nil
+}
+
+func (c *Class) GetMember(ctx *Context, this ir.Value, member string) ir.Value {
+	if index, ok := c.VariableIndexes[member]; ok {
+		v := ir.NewGetElementPtr(c.IRStruct, ctx.FindObject(ClassThis), ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
+		ctx.Block.AddInstruction(v)
+		return v
+	} else if index, ok := c.FunctionIndexes[member]; ok {
+		vtable := ir.NewGetElementPtr(c.IRStruct, ctx.FindObject(ClassThis), ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
+		ctx.Block.AddInstruction(vtable)
+		f := ir.NewGetElementPtr(c.IRVTable, vtable, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
+		ctx.Block.AddInstruction(f)
+		return f
+	}
+	return nil
+}
+
+//TO-DO set member

@@ -23,18 +23,11 @@ func (m *MemberAccess) Type(c *Context) ir.Type {
 		}
 		return obj.Type()
 	} else if _, ok := m.Parent.(*This); ok {
-		class := c.Class
-		if index, ok := class.VariableIndexes[m.Member.Name]; ok {
-			v := ir.NewGetElementPtr(class.IRStruct, c.FindObject(ClassThis), ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
-			return v.Type()
-		} else if index, ok := class.FunctionIndexes[m.Member.Name]; ok {
-			vtable := ir.NewGetElementPtr(class.IRStruct, c.FindObject(ClassThis), ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
-			f := ir.NewGetElementPtr(class.IRVTable, vtable, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
-			return f.Type()
-		} else {
-			c.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
-			return nil
+		t := c.ObjectType(m.Member.Name)
+		if t == nil {
+			c.Error(m.Position, fmt.Sprintf("%s undefined", m.Member.Name))
 		}
+		return t
 	} /* else {
 		// TO-DO
 		// generate parent firstly, then check type of parent, then generate ir
@@ -60,21 +53,12 @@ func (m *MemberAccess) GenerateIR(c *Context) ir.Value {
 		}
 		return obj
 	} else if _, ok := m.Parent.(*This); ok {
-		class := c.Class
-		if index, ok := class.VariableIndexes[m.Member.Name]; ok {
-			v := ir.NewGetElementPtr(class.IRStruct, c.FindObject(ClassThis), ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
-			c.Block.AddInstruction(v)
-			return v
-		} else if index, ok := class.FunctionIndexes[m.Member.Name]; ok {
-			vtable := ir.NewGetElementPtr(class.IRStruct, c.FindObject(ClassThis), ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
-			c.Block.AddInstruction(vtable)
-			f := ir.NewGetElementPtr(class.IRVTable, vtable, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
-			c.Block.AddInstruction(f)
-			return f
-		} else {
+		member := c.Class.GetMember(c, c.FindObject(ClassThis), m.Member.Name)
+		if member == nil {
 			c.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
 			return nil
 		}
+		return member
 	} /* else {
 		// TO-DO
 		// generate parent firstly, then check type of parent, then generate ir

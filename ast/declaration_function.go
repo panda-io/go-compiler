@@ -6,6 +6,8 @@ import (
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
+//TO-DO validate function declaration and actual return type
+
 type Function struct {
 	DeclarationBase
 	TypeParameters *TypeParameters
@@ -49,6 +51,7 @@ func (f *Function) GenerateIRDeclaration(c *Context) *ir.Func {
 func (f *Function) GenerateIR(c *Context) {
 	if f.Body != nil {
 		ctx := c.NewContext()
+		ctx.Function = f
 		ctx.Block = f.IRFunction.NewBlock(FunctionEntry)
 
 		// prepare params

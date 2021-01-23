@@ -36,7 +36,7 @@ func NewGepIndex(val int64) GepIndex {
 // constant expression.
 //
 //    getelementptr (ElemType, Src, Indices)
-func ResultType(elemType, src Type, indices []GepIndex) Type {
+func ResultType(elemType Type, indices []GepIndex) Type {
 	// ref: http://llvm.org/docs/GetElementPtr.html#what-effect-do-address-spaces-have-on-geps
 	//
 	// > the address space qualifier on the second operand pointer type always

@@ -118,5 +118,5 @@ func gepExprType(elemType, src Type, indices []Constant) Type {
 		}
 		idxs = append(idxs, idx)
 	}
-	return ResultType(elemType, src, idxs)
+	return ResultType(elemType, idxs)
 }

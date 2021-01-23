@@ -337,7 +337,7 @@ func (inst *InstGetElementPtr) String() string {
 func (inst *InstGetElementPtr) Type() Type {
 	// Cache type if not present.
 	if inst.Typ == nil {
-		inst.Typ = gepInstType(inst.ElemType, inst.Src.Type(), inst.Indices)
+		inst.Typ = GepInstType(inst.ElemType, inst.Indices)
 	}
 	return inst.Typ
 }
@@ -360,8 +360,8 @@ func (inst *InstGetElementPtr) LLString() string {
 
 // gepInstType computes the result type of a getelementptr instruction.
 //
-//    getelementptr ElemType, Src, Indices
-func gepInstType(elemType, src Type, indices []Value) Type {
+//    getelementptr ElemType, Indices
+func GepInstType(elemType Type, indices []Value) Type {
 	var idxs []GepIndex
 	for _, index := range indices {
 		var idx GepIndex
@@ -377,7 +377,7 @@ func gepInstType(elemType, src Type, indices []Value) Type {
 		}
 		idxs = append(idxs, idx)
 	}
-	return ResultType(elemType, src, idxs)
+	return ResultType(elemType, idxs)
 }
 
 // NOTE: keep getIndex in sync with getIndex in:

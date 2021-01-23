@@ -18,8 +18,9 @@ type Context struct {
 	Program *Program
 	Module  *Module
 
-	Block *ir.Block
-	Class *Class
+	Block    *ir.Block
+	Class    *Class
+	Function *Function
 
 	parent  *Context
 	objects map[string]ir.Value
@@ -27,9 +28,10 @@ type Context struct {
 
 func (c *Context) NewContext() *Context {
 	return &Context{
-		Program: c.Program,
-		Module:  c.Module,
-		Class:   c.Class,
+		Program:  c.Program,
+		Module:   c.Module,
+		Class:    c.Class,
+		Function: c.Function,
 
 		parent:  c,
 		objects: make(map[string]ir.Value),
@@ -56,13 +58,25 @@ func (c *Context) AddObject(name string, value ir.Value) error {
 	return nil
 }
 
+func (c *Context) ObjectType(name string) ir.Type {
+	if v, ok := c.objects[name]; ok {
+		return v.Type()
+	} else if c.Class != nil && c.Class.HasMember(name) {
+		return c.Class.MemberType(name)
+	} else if c.parent != nil {
+		return c.parent.ObjectType(name)
+	}
+	return nil
+}
+
 func (c *Context) FindObject(name string) ir.Value {
 	if v, ok := c.objects[name]; ok {
 		return v
+	} else if c.Class != nil && c.Class.HasMember(name) {
+		return c.Class.GetMember(c, c.FindObject(ClassThis), name)
 	} else if c.parent != nil {
 		return c.parent.FindObject(name)
 	}
-	//TO-DO find from this
 	return nil
 }
 

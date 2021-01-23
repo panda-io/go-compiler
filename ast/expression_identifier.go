@@ -12,12 +12,11 @@ type Identifier struct {
 }
 
 func (i *Identifier) Type(c *Context) ir.Type {
-	v := c.FindObject(i.Name)
-	if v != nil {
-		return v.Type()
+	t := c.ObjectType(i.Name)
+	if t == nil {
+		c.Error(i.Position, fmt.Sprintf("%s undefined", i.Name))
 	}
-	c.Error(i.Position, fmt.Sprintf("%s undefined", i.Name))
-	return nil
+	return t
 }
 
 func (i *Identifier) GenerateIR(c *Context) ir.Value {
@@ -38,6 +37,9 @@ func (i *Identifier) GenerateIR(c *Context) ir.Value {
 		return load
 
 	case *ir.InstLoad:
+		return t
+
+	case *ir.InstGetElementPtr:
 		return t
 	}
 	c.Error(i.Position, fmt.Sprintf("invalid variable: %s", i.Name))
