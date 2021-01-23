@@ -75,7 +75,7 @@ func (c *Class) GenerateIRStruct(ctx *Context) {
 		classes = append(classes, current.Parent)
 		current = current.Parent
 	}
-	index := 0
+	index := 1
 	for i := len(classes) - 1; i > -1; i-- {
 		current = classes[i]
 		for j, v := range current.Variables {
@@ -140,9 +140,11 @@ func (c *Class) GenerateIRVTable(ctx *Context) {
 }
 
 func (c *Class) GenerateIR(ctx *Context) {
+	ctx.Class = c
 	for _, v := range c.Functions {
 		v.GenerateIR(ctx)
 	}
+	ctx.Class = nil
 }
 
 func (c *Class) PreProcess(*Context) {

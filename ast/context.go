@@ -19,6 +19,7 @@ type Context struct {
 	Module  *Module
 
 	Block *ir.Block
+	Class *Class
 
 	parent  *Context
 	objects map[string]ir.Value
@@ -28,6 +29,7 @@ func (c *Context) NewContext() *Context {
 	return &Context{
 		Program: c.Program,
 		Module:  c.Module,
+		Class:   c.Class,
 
 		parent:  c,
 		objects: make(map[string]ir.Value),
