@@ -19,18 +19,27 @@ declare void @memset(i8* %source, i32 %value, i32 %size)
 
 define %global.counter* @global.counter.create() {
 entry:
-	%0 = getelementptr %global.counter, %global.counter* null, i32 1
-	%1 = ptrtoint %global.counter* %0 to i32
-	%2 = call i8* @malloc(i32 %1)
-	call void @memset(i8* %2, i32 0, i32 %1)
-	%3 = bitcast i8* %2 to %global.counter*
-	%4 = getelementptr %global.counter, %global.counter* %3, i32 0, i32 0
-	store %global.counter.vtable.type* @global.counter.vtable.data, %global.counter.vtable.type** %4
-	ret %global.counter* %3
+	%0 = alloca %global.counter*
+	%1 = getelementptr %global.counter, %global.counter* null, i32 1
+	%2 = ptrtoint %global.counter* %1 to i32
+	%3 = call i8* @malloc(i32 %2)
+	call void @memset(i8* %3, i32 0, i32 %2)
+	%4 = bitcast i8* %3 to %global.counter*
+	%5 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 0
+	store %global.counter.vtable.type* @global.counter.vtable.data, %global.counter.vtable.type** %5
+	store %global.counter* %4, %global.counter** %0
+	br label %exit
+
+exit:
+	%6 = load %global.counter*, %global.counter** %0
+	ret %global.counter* %6
 }
 
 define void @global.counter.destroy(%global.counter* %this) {
 entry:
+	br label %exit
+
+exit:
 	%0 = bitcast %global.counter* %this to i8*
 	call void @free(i8* %0)
 	ret void
@@ -42,6 +51,9 @@ entry:
 	%1 = load i32, i32* %0
 	%2 = add i32 %1, 1
 	store i32 %2, i32* %0
+	br label %exit
+
+exit:
 	ret void
 }
 
@@ -51,6 +63,9 @@ entry:
 	%1 = load i32, i32* %0
 	%2 = add i32 %1, 1
 	store i32 %2, i32* %0
+	br label %exit
+
+exit:
 	ret void
 }
 
@@ -60,31 +75,58 @@ entry:
 	%1 = load i32, i32* %0
 	%2 = sub i32 %1, 1
 	store i32 %2, i32* %0
+	br label %exit
+
+exit:
 	ret void
 }
 
 define i32 @global.counter.shared_count(%global.counter* %this) {
 entry:
-	%0 = getelementptr %global.counter, %global.counter* %this, i32 0, i32 1
-	%1 = load i32, i32* %0
-	ret i32 %1
+	%0 = alloca i32
+	%1 = getelementptr %global.counter, %global.counter* %this, i32 0, i32 1
+	%2 = load i32, i32* %1
+	store i32 %2, i32* %0
+	br label %exit
+
+exit:
+	%3 = load i32, i32* %0
+	ret i32 %3
 }
 
 define i32 @global.counter.weak_count(%global.counter* %this) {
 entry:
-	%0 = getelementptr %global.counter, %global.counter* %this, i32 0, i32 2
-	%1 = load i32, i32* %0
-	ret i32 %1
+	%0 = alloca i32
+	%1 = getelementptr %global.counter, %global.counter* %this, i32 0, i32 2
+	%2 = load i32, i32* %1
+	store i32 %2, i32* %0
+	br label %exit
+
+exit:
+	%3 = load i32, i32* %0
+	ret i32 %3
 }
 
 define i8* @global.counter.get_object(%global.counter* %this) {
 entry:
-	%0 = getelementptr %global.counter, %global.counter* %this, i32 0, i32 3
-	%1 = load i8*, i8** %0
-	ret i8* %1
+	%0 = alloca i8*
+	%1 = getelementptr %global.counter, %global.counter* %this, i32 0, i32 3
+	%2 = load i8*, i8** %1
+	store i8* %2, i8** %0
+	br label %exit
+
+exit:
+	%3 = load i8*, i8** %0
+	ret i8* %3
 }
 
 define i32 @main() {
 entry:
-	ret i32 0
+	%0 = alloca i32
+	store i32 0, i32* %0
+	br label %exit
+
+exit:
+	%1 = load i32, i32* %0
+	ret i32 %1
 }

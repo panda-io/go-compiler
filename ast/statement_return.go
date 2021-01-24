@@ -16,13 +16,13 @@ func (r *Return) GenerateIR(c *Context) {
 		t = c.Function.ReturnType.Type(c)
 	}
 	if value.Type().Equal(t) {
-		c.Block.Term = ir.NewRet(value)
+		c.Block.AddInstruction(ir.NewStore(value, c.Function.Return))
 	} else if p, ok := value.Type().(*ir.PointerType); ok && p.ElemType.Equal(t) {
 		load := ir.NewLoad(p.ElemType, value)
 		c.Block.AddInstruction(load)
-		c.Block.Term = ir.NewRet(load)
+		c.Block.AddInstruction(ir.NewStore(load, c.Function.Return))
 	} else {
 		c.Error(r.Position, "return type mismatch with function define")
-		c.Block.Term = ir.NewRet(nil)
 	}
+	c.Block.Term = ir.NewBr(c.Function.Exit)
 }

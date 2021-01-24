@@ -19,6 +19,9 @@ type Function struct {
 
 	IRParams   []*ir.Param
 	IRFunction *ir.Func
+	Entry      *ir.Block
+	Exit       *ir.Block
+	Return     ir.Value
 }
 
 func (f *Function) GenerateIRDeclaration(c *Context) *ir.Func {
@@ -52,7 +55,9 @@ func (f *Function) GenerateIR(c *Context) {
 	if f.Body != nil {
 		ctx := c.NewContext()
 		ctx.Function = f
-		ctx.Block = f.IRFunction.NewBlock(FunctionEntry)
+		f.Entry = f.IRFunction.NewBlock(FunctionEntry)
+		f.Exit = f.IRFunction.NewBlock(FunctionExit)
+		ctx.Block = f.Entry
 
 		// prepare params
 		for _, param := range f.IRParams {
@@ -70,6 +75,15 @@ func (f *Function) GenerateIR(c *Context) {
 			if err != nil {
 				c.Error(f.Position, err.Error())
 			}
+		}
+
+		// prepare return value
+		if f.ReturnType == nil {
+			f.Exit.Term = ir.NewRet(nil)
+		} else {
+			alloca := ir.NewAlloca(f.ReturnType.Type(c))
+			f.Entry.AddInstruction(alloca)
+			f.Return = alloca
 		}
 
 		// generate constructor
@@ -107,27 +121,29 @@ func (f *Function) GenerateIR(c *Context) {
 				}
 				current = current.Parent
 			}
-			ctx.Block.Term = ir.NewRet(instance)
-		}
-
-		// call parent destructor
-		if f.ObjectName != "" && f.Name.Name == Destructor {
-			// TO-DO send if free memory
+			ctx.Block.AddInstruction(ir.NewStore(instance, ctx.Function.Return))
 		}
 
 		f.Body.GenerateIR(ctx)
+		ctx.Block.Term = ir.NewBr(f.Exit)
 
-		// free memory
+		// TO-DO clean up function variables in exit block
+
+		// generate destructor
 		if f.ObjectName != "" && f.Name.Name == Destructor {
+			// TO-DO call parent destructor
+			// TO-DO clean up members
 			// TO-DO check if free memory
 			address := ir.NewBitCast(f.IRParams[0], ir.NewPointerType(ir.I8))
-			ctx.Block.AddInstruction(address)
-			ctx.Block.AddInstruction(ir.NewCall(free, address))
+			f.Exit.AddInstruction(address)
+			f.Exit.AddInstruction(ir.NewCall(free, address))
 		}
 
-		// return void
-		if ctx.Block.Term == nil {
-			ctx.Block.Term = ir.NewRet(nil)
+		// return
+		if f.ReturnType != nil {
+			load := ir.NewLoad(f.ReturnType.Type(c), f.Return)
+			f.Exit.AddInstruction(load)
+			f.Exit.Term = ir.NewRet(load)
 		}
 	}
 }

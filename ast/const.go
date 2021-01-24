@@ -5,6 +5,7 @@ import "github.com/panda-foundation/go-compiler/ir"
 const (
 	Global        = "global"
 	FunctionEntry = "entry"
+	FunctionExit  = "exit"
 	ProgramEntry  = "main"
 	ClassThis     = "this"
 	Constructor   = "create"
