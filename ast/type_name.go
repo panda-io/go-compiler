@@ -11,10 +11,10 @@ type TypeName struct {
 	TypeArguments *TypeArguments
 }
 
-func (n *TypeName) Type(c *Context) ir.Type {
-	qualified, d := c.FindDeclaration(n)
+func (n *TypeName) Type(p *Program) ir.Type {
+	qualified, d := p.FindDeclaration(n)
 	if d == nil {
-		c.Error(n.GetPosition(), "undefined: "+n.Name)
+		p.Error(n.GetPosition(), "undefined: "+n.Name)
 		return ir.Void
 	}
 	if d.HasAttribute(Builtin) {

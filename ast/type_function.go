@@ -8,14 +8,14 @@ type TypeFunction struct {
 	Parameters []Type
 }
 
-func (f *TypeFunction) Type(c *Context) ir.Type {
+func (f *TypeFunction) Type(p *Program) ir.Type {
 	var types []ir.Type
-	for _, p := range f.Parameters {
-		types = append(types, p.Type(c))
+	for _, param := range f.Parameters {
+		types = append(types, param.Type(p))
 	}
 	var t ir.Type = ir.Void
 	if f.ReturnType != nil {
-		t = f.ReturnType.Type(c)
+		t = f.ReturnType.Type(p)
 	}
 	return ir.NewPointerType(ir.NewFuncType(t, types...))
 }

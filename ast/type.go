@@ -6,9 +6,21 @@ import (
 
 type Type interface {
 	Node
-	Type(*Context) ir.Type
+	Type(*Program) ir.Type
 }
 
 type TypeBase struct {
 	NodeBase
+}
+
+func CreateStructType(qualified string) *ir.StructType {
+	t := ir.NewStructType()
+	t.TypeName = qualified
+	return t
+}
+
+func CreateStructPointerType(qualified string) *ir.PointerType {
+	t := ir.NewStructType()
+	t.TypeName = qualified
+	return ir.NewPointerType(t)
 }

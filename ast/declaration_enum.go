@@ -25,27 +25,27 @@ func (e *Enum) AddVariable(m *Variable) error {
 	return nil
 }
 
-func (e *Enum) GenerateIR(c *Context) {
+func (e *Enum) GenerateIR(p *Program) {
 	var index int64 = 0
 	for _, v := range e.Members {
 		if v.Value == nil {
-			c.Program.Module.NewGlobalDef(v.Qualified(c.Module.Namespace), ir.NewInt(ir.I32, index))
+			p.IRModule.NewGlobalDef(v.Qualified(p.Module.Namespace), ir.NewInt(ir.I32, index))
 			index++
 		} else {
 			if literal, ok := v.Value.(*Literal); ok {
 				if literal.Typ == token.INT {
 					if i, _ := strconv.Atoi(literal.Value); int64(i) >= index {
 						index = int64(i)
-						c.Program.Module.NewGlobalDef(v.Qualified(c.Module.Namespace), ir.NewInt(ir.I32, index))
+						p.IRModule.NewGlobalDef(v.Qualified(p.Module.Namespace), ir.NewInt(ir.I32, index))
 						index++
 					} else {
-						c.Error(v.Position, fmt.Sprintf("enum value here should be greater than %d.", i-1))
+						p.Error(v.Position, fmt.Sprintf("enum value here should be greater than %d.", i-1))
 					}
 				} else {
-					c.Error(v.Position, "enum value must be integer.")
+					p.Error(v.Position, "enum value must be integer.")
 				}
 			} else {
-				c.Error(v.Position, "enum value must be integer.")
+				p.Error(v.Position, "enum value must be integer.")
 			}
 		}
 	}

@@ -20,7 +20,7 @@ func PromoteNumberType(c *Context, e1 Expression, e2 Expression) ir.Type {
 		} else if ir.IsFloat(t2) {
 			return t2
 		}
-		c.Error(e2.GetPosition(), "invalid number")
+		c.Program.Error(e2.GetPosition(), "invalid number")
 		return nil
 	} else if ir.IsFloat(t1) {
 		if ir.IsInt(t2) {
@@ -31,10 +31,10 @@ func PromoteNumberType(c *Context, e1 Expression, e2 Expression) ir.Type {
 			}
 			return t2
 		}
-		c.Error(e2.GetPosition(), "invalid number")
+		c.Program.Error(e2.GetPosition(), "invalid number")
 		return nil
 	}
-	c.Error(e1.GetPosition(), "invalid number")
+	c.Program.Error(e1.GetPosition(), "invalid number")
 	return nil
 }
 

@@ -20,7 +20,7 @@ func (b *Binary) Type(c *Context) ir.Type {
 		if ir.IsInt(b.Left.Type(c)) && ir.IsInt(b.Right.Type(c)) {
 			return b.Left.Type(c)
 		}
-		c.Error(b.Position, "only int are valid for bitwise operator")
+		c.Program.Error(b.Position, "only int are valid for bitwise operator")
 		return nil
 
 	// assign
@@ -36,14 +36,14 @@ func (b *Binary) Type(c *Context) ir.Type {
 		if ir.IsBool(b.Left.Type(c)) && ir.IsBool(b.Right.Type(c)) {
 			return ir.I1
 		}
-		c.Error(b.Position, "invalid type for binary operator")
+		c.Program.Error(b.Position, "invalid type for binary operator")
 		return nil
 
 	case token.Less, token.LessEqual, token.Greater, token.GreaterEqual:
 		if ir.IsNumber(b.Left.Type(c)) && ir.IsNumber(b.Right.Type(c)) {
 			return ir.I1
 		}
-		c.Error(b.Position, "invalid type for binary operator")
+		c.Program.Error(b.Position, "invalid type for binary operator")
 		return nil
 
 	//arithmetic operator
@@ -51,7 +51,7 @@ func (b *Binary) Type(c *Context) ir.Type {
 		return PromoteNumberType(c, b.Left, b.Right)
 
 	default:
-		c.Error(b.Position, "invalid type for binary expression")
+		c.Program.Error(b.Position, "invalid type for binary expression")
 		return nil
 	}
 }
@@ -146,7 +146,7 @@ func (b *Binary) GenerateIR(c *Context) ir.Value {
 			c.Block.AddInstruction(add)
 			return add
 		} else {
-			c.Error(b.Left.GetPosition(), "type mismatch for add")
+			c.Program.Error(b.Left.GetPosition(), "type mismatch for add")
 		}
 
 		//TO-DO convert int to float

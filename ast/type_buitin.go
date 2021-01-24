@@ -10,7 +10,7 @@ type BuitinType struct {
 	Token token.Token
 }
 
-func (b *BuitinType) Type(c *Context) ir.Type {
+func (b *BuitinType) Type(*Program) ir.Type {
 	switch b.Token {
 	case token.Bool:
 		return ir.I1

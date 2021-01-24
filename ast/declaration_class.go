@@ -56,19 +56,19 @@ func (c *Class) AddFunction(f *Function) error {
 	return nil
 }
 
-func (c *Class) GenerateIRDeclaration(ctx *Context) {
+func (c *Class) GenerateIRDeclaration(p *Program) {
 	for _, v := range c.Variables {
-		c.IRVariables = append(c.IRVariables, v.Type.Type(ctx))
+		c.IRVariables = append(c.IRVariables, v.Type.Type(p))
 	}
 	for _, f := range c.Functions {
-		c.IRFunctions = append(c.IRFunctions, f.GenerateIRDeclaration(ctx))
+		c.IRFunctions = append(c.IRFunctions, f.GenerateIRDeclaration(p))
 	}
 }
 
-func (c *Class) GenerateIRStruct(ctx *Context) {
+func (c *Class) GenerateIRStruct(p *Program) {
 	c.VariableIndexes = make(map[string]int)
 
-	variables := []ir.Type{ctx.StructPointer(ctx.Module.Namespace + "." + c.Name.Name + ".vtable.type")}
+	variables := []ir.Type{CreateStructPointerType(p.Module.Namespace + "." + c.Name.Name + ".vtable.type")}
 	classes := []*Class{c}
 	current := c
 	for current.Parent != nil {
@@ -81,7 +81,7 @@ func (c *Class) GenerateIRStruct(ctx *Context) {
 		for j, v := range current.Variables {
 			variables = append(variables, current.IRVariables[j])
 			if _, ok := c.VariableIndexes[v.Name.Name]; ok {
-				ctx.Error(v.Position, fmt.Sprintf("duplicate class member: %s", v.Name.Name))
+				p.Error(v.Position, fmt.Sprintf("duplicate class member: %s", v.Name.Name))
 			} else {
 				c.VariableIndexes[v.Name.Name] = index
 			}
@@ -89,12 +89,12 @@ func (c *Class) GenerateIRStruct(ctx *Context) {
 		}
 	}
 
-	qualified := c.Qualified(ctx.Module.Namespace)
+	qualified := c.Qualified(p.Module.Namespace)
 	c.IRStruct = ir.NewStructType(variables...)
-	ctx.Program.Module.NewTypeDef(qualified, c.IRStruct)
+	p.IRModule.NewTypeDef(qualified, c.IRStruct)
 }
 
-func (c *Class) GenerateIRVTable(ctx *Context) {
+func (c *Class) GenerateIRVTable(p *Program) {
 	c.FunctionIndexes = make(map[string]int)
 
 	functions := []*ir.Func{}
@@ -112,7 +112,7 @@ func (c *Class) GenerateIRVTable(ctx *Context) {
 				// existing function
 				function := functions[existing]
 				if !c.CompareFunction(function, current.IRFunctions[j], f.Name.Name == Constructor) {
-					ctx.Error(f.Position, fmt.Sprintf("member function %s does not match its parent class", f.Name.Name))
+					p.Error(f.Position, fmt.Sprintf("member function %s does not match its parent class", f.Name.Name))
 					//TO-DO print more params details here
 				} else {
 					functions[existing] = current.IRFunctions[j]
@@ -133,21 +133,19 @@ func (c *Class) GenerateIRVTable(ctx *Context) {
 		constants = append(constants, f)
 	}
 	c.IRVTable = ir.NewStructType(types...)
-	ctx.Program.Module.NewTypeDef(c.Qualified(ctx.Module.Namespace)+".vtable.type", c.IRVTable)
+	p.IRModule.NewTypeDef(c.Qualified(p.Module.Namespace)+".vtable.type", c.IRVTable)
 
-	data := ir.NewStruct(ctx.StructType(c.Qualified(ctx.Module.Namespace)+".vtable.type"), constants...)
-	c.IRVTableData = ctx.Program.Module.NewGlobalDef(c.Qualified(ctx.Module.Namespace)+".vtable.data", data)
+	data := ir.NewStruct(CreateStructType(c.Qualified(p.Module.Namespace)+".vtable.type"), constants...)
+	c.IRVTableData = p.IRModule.NewGlobalDef(c.Qualified(p.Module.Namespace)+".vtable.data", data)
 }
 
-func (c *Class) GenerateIR(ctx *Context) {
-	ctx.Class = c
+func (c *Class) GenerateIR(p *Program) {
 	for _, v := range c.Functions {
-		v.GenerateIR(ctx)
+		v.GenerateIR(p)
 	}
-	ctx.Class = nil
 }
 
-func (c *Class) PreProcess(*Context) {
+func (c *Class) PreProcess(*Program) {
 	// first is constructor, second is destructor
 	functions := []*Function{nil, nil}
 	for _, f := range c.Functions {
@@ -203,11 +201,11 @@ func (c *Class) CompareFunction(f0 *ir.Func, f1 *ir.Func, isConstructor bool) bo
 	return sig0.Variadic == sig1.Variadic
 }
 
-func (c *Class) ResolveParents(ctx *Context) {
-	for _, p := range c.Parents {
-		_, d := ctx.FindDeclaration(p)
+func (c *Class) ResolveParents(p *Program) {
+	for _, parent := range c.Parents {
+		_, d := p.FindDeclaration(parent)
 		if d == nil {
-			ctx.Error(p.Position, fmt.Sprintf("%s undefined", p.Name))
+			p.Error(parent.Position, fmt.Sprintf("%s undefined", parent.Name))
 		} else {
 			switch t := d.(type) {
 			case *Class:
@@ -215,14 +213,14 @@ func (c *Class) ResolveParents(ctx *Context) {
 					c.Parent = t
 					//TO-DO check, cannot self inherit, cycle inherit
 				} else {
-					ctx.Error(p.Position, "class can only inherit 1 other class")
+					p.Error(parent.Position, "class can only inherit 1 other class")
 				}
 
 			case *Interface:
 				c.Interfaces = append(c.Interfaces, t)
 
 			default:
-				ctx.Error(p.Position, fmt.Sprintf("invalid parent type: %s", t.Identifier()))
+				p.Error(parent.Position, fmt.Sprintf("invalid parent type: %s", t.Identifier()))
 			}
 		}
 	}

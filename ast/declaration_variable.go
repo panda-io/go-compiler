@@ -14,19 +14,16 @@ type Variable struct {
 	IRVariable *ir.Global
 }
 
-func (v *Variable) GenerateIR(c *Context) {
+func (v *Variable) GenerateIR(p *Program) {
 	if v.Value != nil {
-		v.IRVariable = c.Program.Module.NewGlobal(v.Qualified(c.Module.Namespace), v.Type.Type(c))
+		v.IRVariable = p.IRModule.NewGlobal(v.Qualified(p.Module.Namespace), v.Type.Type(p))
 	} else {
-		value := v.Value.GenerateIR(c)
+		/* TO-DO
+		value := v.Value.GenerateIR(c) // GenerateConstantIR
 		if constValue, ok := value.(ir.Constant); ok {
-			v.IRVariable = c.Program.Module.NewGlobalDef(v.Qualified(c.Module.Namespace), constValue)
+			v.IRVariable = p.IRModule.NewGlobalDef(v.Qualified(c.Module.Namespace), constValue)
 		} else {
-			c.Error(v.Position, "variable initialize value must be constant type")
-		}
-	}
-	err := c.AddObject(v.Name.Name, v.IRVariable)
-	if err != nil {
-		c.Error(v.Position, err.Error())
+			p.Error(v.Position, "variable initialize value must be constant type")
+		}*/
 	}
 }

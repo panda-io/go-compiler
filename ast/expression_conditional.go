@@ -19,7 +19,7 @@ func (c *Conditional) Type(ctx *Context) ir.Type {
 			return PromoteNumberType(ctx, c.First, c.Second)
 		}
 	}
-	ctx.Error(c.Position, "invalid type of condition expression")
+	ctx.Program.Error(c.Position, "invalid type of condition expression")
 	return nil
 }
 

@@ -13,7 +13,7 @@ func (r *Return) GenerateIR(c *Context) {
 	value := r.Expression.GenerateIR(c)
 	var t ir.Type = ir.Void
 	if c.Function.ReturnType != nil {
-		t = c.Function.ReturnType.Type(c)
+		t = c.Function.ReturnType.Type(c.Program)
 	}
 	if value.Type().Equal(t) {
 		c.Block.AddInstruction(ir.NewStore(value, c.Function.Return))
@@ -22,7 +22,7 @@ func (r *Return) GenerateIR(c *Context) {
 		c.Block.AddInstruction(load)
 		c.Block.AddInstruction(ir.NewStore(load, c.Function.Return))
 	} else {
-		c.Error(r.Position, "return type mismatch with function define")
+		c.Program.Error(r.Position, "return type mismatch with function define")
 	}
 	c.Block.Term = ir.NewBr(c.Function.Exit)
 }

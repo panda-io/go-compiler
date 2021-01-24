@@ -18,14 +18,14 @@ func (m *MemberAccess) Type(c *Context) ir.Type {
 		// resolve here
 		_, obj := c.FindSelector(ident.Name, m.Member.Name)
 		if obj == nil {
-			c.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
+			c.Program.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
 			return nil
 		}
 		return obj.Type()
 	} else if _, ok := m.Parent.(*This); ok {
 		t := c.ObjectType(m.Member.Name)
 		if t == nil {
-			c.Error(m.Position, fmt.Sprintf("%s undefined", m.Member.Name))
+			c.Program.Error(m.Position, fmt.Sprintf("%s undefined", m.Member.Name))
 		}
 		return t
 	} /* else {
@@ -49,13 +49,13 @@ func (m *MemberAccess) GenerateIR(c *Context) ir.Value {
 		// resolve here
 		_, obj := c.FindSelector(ident.Name, m.Member.Name)
 		if obj == nil {
-			c.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
+			c.Program.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
 		}
 		return obj
 	} else if _, ok := m.Parent.(*This); ok {
-		member := c.Class.GetMember(c, c.FindObject(ClassThis), m.Member.Name)
+		member := c.Function.Class.GetMember(c, c.FindObject(ClassThis), m.Member.Name)
 		if member == nil {
-			c.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
+			c.Program.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
 			return nil
 		}
 		return member

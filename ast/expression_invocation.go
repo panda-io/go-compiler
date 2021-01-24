@@ -17,7 +17,7 @@ func (i *Invocation) Type(c *Context) ir.Type {
 	if f, ok := t.(*ir.FuncType); ok {
 		return f.RetType
 	}
-	c.Error(i.Position, fmt.Sprintf("%s is not a function", t.Name()))
+	c.Program.Error(i.Position, fmt.Sprintf("%s is not a function", t.Name()))
 	return nil
 }
 
@@ -31,7 +31,7 @@ func (i *Invocation) GenerateIR(c *Context) ir.Value {
 		if f, ok := d.(*ir.Func); ok {
 			function = f
 		} else {
-			c.Error(t.Position, fmt.Sprintf("%s is not a function", t.Member.Name))
+			c.Program.Error(t.Position, fmt.Sprintf("%s is not a function", t.Member.Name))
 		}
 		parent = t.GenerateParentIR(c)
 
@@ -39,12 +39,12 @@ func (i *Invocation) GenerateIR(c *Context) ir.Value {
 		//TO-DO if class, search member function and parent function
 		d := c.FindObject(t.Name)
 		if d == nil {
-			c.Error(t.Position, fmt.Sprintf("%s undefined", t.Name))
+			c.Program.Error(t.Position, fmt.Sprintf("%s undefined", t.Name))
 		} else {
 			if f, ok := d.(*ir.Func); ok {
 				function = f
 			} else {
-				c.Error(t.Position, fmt.Sprintf("%s is not a function", t.Name))
+				c.Program.Error(t.Position, fmt.Sprintf("%s is not a function", t.Name))
 			}
 		}
 	}

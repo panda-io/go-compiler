@@ -13,11 +13,9 @@ type Error struct {
 }
 
 type Program struct {
-	Modules map[string]*Module
-
-	Module   *ir.Module
-	Context  *Context
-	Contexts map[string]*Context
+	Modules  map[string]*Module
+	Module   *Module
+	IRModule *ir.Module
 
 	Declarations map[string]Declaration
 	Strings      map[string]*ir.Global
@@ -33,11 +31,7 @@ func NewProgram() *Program {
 
 func (p *Program) Reset() {
 	p.Modules = make(map[string]*Module)
-
-	p.Module = ir.NewModule()
-	p.Context = nil
-	p.Contexts = make(map[string]*Context)
-	p.Contexts[Global] = NewContext(p)
+	p.IRModule = ir.NewModule()
 
 	p.Declarations = make(map[string]Declaration)
 	p.Strings = make(map[string]*ir.Global)
@@ -45,64 +39,92 @@ func (p *Program) Reset() {
 	p.Errors = p.Errors[:0]
 }
 
+func (p *Program) FindSelector(selector, member string) (string, Declaration) {
+	if selector == "" {
+		// search current package
+		if p.Module.Namespace != Global {
+			qualified := p.Module.Namespace + "." + member
+			d := p.Declarations[qualified]
+			if d != nil {
+				return qualified, d
+			}
+		}
+		// search global
+		qualified := Global + "." + member
+		return qualified, p.Declarations[qualified]
+	} else {
+		// search imports
+		for _, i := range p.Module.Imports {
+			if i.Alias == selector {
+				qualified := i.Namespace + "." + member
+				return qualified, p.Declarations[qualified]
+			}
+		}
+		return "", nil
+	}
+}
+
+func (p *Program) FindDeclaration(t *TypeName) (string, Declaration) {
+	return p.FindSelector(t.Selector, t.Name)
+}
+
+func (p *Program) Error(offset int, message string) {
+	p.Errors = append(p.Errors, &Error{
+		Position: p.Module.File.Position(offset),
+		Message:  message,
+	})
+}
+
 func (p *Program) GenerateIR() string {
 	// zero pass (generate declarations)
 	for _, m := range p.Modules {
 		// TO-DO check if import is valid // must be valid, cannot import self, cannot duplicated
-		if c, ok := p.Contexts[m.Namespace]; ok {
-			p.Context = c
-		} else {
-			p.Context = p.Contexts[Global].NewContext()
-			p.Contexts[m.Namespace] = p.Context
-		}
-		p.Context.Module = m
+		p.Module = m
 
 		for _, f := range m.Functions {
-			f.GenerateIRDeclaration(p.Context)
+			f.GenerateIRDeclaration(p)
 		}
 
 		for _, e := range m.Enums {
-			e.GenerateIR(p.Context)
+			e.GenerateIR(p)
 		}
 
 		for _, i := range m.Interfaces {
-			i.ResolveParents(p.Context)
+			i.ResolveParents(p)
 		}
 
 		for _, c := range m.Classes {
-			c.ResolveParents(p.Context)
-			c.PreProcess(p.Context)
-			c.GenerateIRDeclaration(p.Context)
+			c.ResolveParents(p)
+			c.PreProcess(p)
+			c.GenerateIRDeclaration(p)
 		}
 	}
 
 	// first pass (resolve oop)
 	for _, m := range p.Modules {
-		p.Context = p.Contexts[m.Namespace]
-		p.Context.Module = m
+		p.Module = m
 
 		for _, c := range m.Classes {
-			c.GenerateIRStruct(p.Context)
-			c.GenerateIRVTable(p.Context)
+			c.GenerateIRStruct(p)
+			c.GenerateIRVTable(p)
 		}
 	}
 
 	// second pass (generate functions)
 	for _, m := range p.Modules {
-		p.Context = p.Contexts[m.Namespace]
-		p.Context.Module = m
+		p.Module = m
 
 		for _, f := range m.Functions {
-			f.GenerateIR(p.Context)
+			f.GenerateIR(p)
 		}
 
 		for _, c := range m.Classes {
-			c.GenerateIR(p.Context)
+			c.GenerateIR(p)
 		}
 	}
 
 	buf := &strings.Builder{}
-	_, err := p.Module.WriteTo(buf)
+	_, err := p.IRModule.WriteTo(buf)
 	if err != nil {
 		panic(err)
 	}

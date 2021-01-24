@@ -17,7 +17,7 @@ func (d *Decrement) Type(c *Context) ir.Type {
 			return e
 		}
 	}
-	c.Error(d.Position, "invalid type for decrement expression")
+	c.Program.Error(d.Position, "invalid type for decrement expression")
 	return nil
 }
 
@@ -40,6 +40,6 @@ func (d *Decrement) GenerateIR(c *Context) ir.Value {
 			return sub
 		}
 	}
-	c.Error(d.Position, "invalid type for decrement")
+	c.Program.Error(d.Position, "invalid type for decrement")
 	return nil
 }

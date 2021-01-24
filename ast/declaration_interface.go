@@ -21,18 +21,18 @@ func (i *Interface) AddFunction(f *Function) error {
 	return nil
 }
 
-func (i *Interface) ResolveParents(ctx *Context) {
-	for _, p := range i.Parents {
-		_, d := ctx.FindDeclaration(p)
+func (i *Interface) ResolveParents(p *Program) {
+	for _, parent := range i.Parents {
+		_, d := p.FindDeclaration(parent)
 		if d == nil {
-			ctx.Error(p.Position, fmt.Sprintf("%s undefined", p.Name))
+			p.Error(parent.Position, fmt.Sprintf("%s undefined", parent.Name))
 		} else {
 			switch t := d.(type) {
 			case *Interface:
 				i.Interfaces = append(i.Interfaces, t)
 
 			default:
-				ctx.Error(p.Position, fmt.Sprintf("invalid parent type: %s", t.Identifier()))
+				p.Error(parent.Position, fmt.Sprintf("invalid parent type: %s", t.Identifier()))
 			}
 		}
 	}

@@ -15,13 +15,11 @@ func NewContext(p *Program) *Context {
 }
 
 type Context struct {
-	Program *Program
-	Module  *Module
+	Program  *Program
+	Function *Function
 
 	Block      *ir.Block
 	LeaveBlock *ir.Block
-	Class      *Class
-	Function   *Function
 
 	parent  *Context
 	objects map[string]ir.Value
@@ -30,8 +28,6 @@ type Context struct {
 func (c *Context) NewContext() *Context {
 	return &Context{
 		Program:  c.Program,
-		Module:   c.Module,
-		Class:    c.Class,
 		Function: c.Function,
 
 		parent:  c,
@@ -39,16 +35,15 @@ func (c *Context) NewContext() *Context {
 	}
 }
 
-func (c *Context) StructType(qualified string) *ir.StructType {
-	t := ir.NewStructType()
-	t.TypeName = qualified
-	return t
-}
-
-func (c *Context) StructPointer(qualified string) *ir.PointerType {
-	t := ir.NewStructType()
-	t.TypeName = qualified
-	return ir.NewPointerType(t)
+func (c *Context) ObjectType(name string) ir.Type {
+	if v, ok := c.objects[name]; ok {
+		return v.Type()
+	} else if c.Function.Class != nil && c.Function.Class.HasMember(name) {
+		return c.Function.Class.MemberType(name)
+	} else if c.parent != nil {
+		return c.parent.ObjectType(name)
+	}
+	return nil
 }
 
 func (c *Context) AddObject(name string, value ir.Value) error {
@@ -59,22 +54,11 @@ func (c *Context) AddObject(name string, value ir.Value) error {
 	return nil
 }
 
-func (c *Context) ObjectType(name string) ir.Type {
-	if v, ok := c.objects[name]; ok {
-		return v.Type()
-	} else if c.Class != nil && c.Class.HasMember(name) {
-		return c.Class.MemberType(name)
-	} else if c.parent != nil {
-		return c.parent.ObjectType(name)
-	}
-	return nil
-}
-
 func (c *Context) FindObject(name string) ir.Value {
 	if v, ok := c.objects[name]; ok {
 		return v
-	} else if c.Class != nil && c.Class.HasMember(name) {
-		return c.Class.GetMember(c, c.FindObject(ClassThis), name)
+	} else if c.Function.Class != nil && c.Function.Class.HasMember(name) {
+		return c.Function.Class.GetMember(c, c.FindObject(ClassThis), name)
 	} else if c.parent != nil {
 		return c.parent.FindObject(name)
 	}
@@ -84,17 +68,26 @@ func (c *Context) FindObject(name string) ir.Value {
 func (c *Context) FindSelector(parent string, member string) (parentValue ir.Value, memberValue ir.Value) {
 	parentValue = c.FindObject(parent)
 	if parentValue == nil {
-		// find from imports
-		for _, i := range c.Module.Imports {
-			if i.Alias == parent {
-				ctx := c.Program.Contexts[i.Namespace]
-				if ctx == nil {
-					c.Error(i.Position, "invalid import")
-					return
-				}
-				memberValue = ctx.objects[member]
-				return
-			}
+		_, d := c.Program.FindSelector(parent, member)
+		if d == nil {
+			return
+		}
+		// TO-DO can be enum, function, variable
+		// cannot be interface, class, they has no static member
+		switch t := d.(type) {
+		case *Enum:
+			//TO-DO
+			return nil, nil
+
+		case *Variable:
+			//TO-DO
+			return nil, nil
+
+		case *Function:
+			return nil, t.IRFunction
+
+		default:
+			return nil, nil
 		}
 	} /*else {
 		// TO-DO parent is an object, find its member then
@@ -111,40 +104,8 @@ func (c *Context) AddString(value string) *ir.Global {
 	if s, ok := c.Program.Strings[hash]; ok {
 		return s
 	}
-	s := c.Program.Module.NewGlobalDef("string."+hash, ir.NewCharArray(bytes))
+	s := c.Program.IRModule.NewGlobalDef("string."+hash, ir.NewCharArray(bytes))
 	s.Immutable = true
 	c.Program.Strings[hash] = s
 	return s
-}
-
-func (c *Context) FindDeclaration(t *TypeName) (string, Declaration) {
-	if t.Selector == "" {
-		// search current package
-		if c.Module.Namespace != Global {
-			qualified := c.Module.Namespace + "." + t.Name
-			d := c.Program.Declarations[qualified]
-			if d != nil {
-				return qualified, d
-			}
-		}
-		// search global
-		qualified := Global + "." + t.Name
-		return qualified, c.Program.Declarations[qualified]
-	} else {
-		// search imports
-		for _, i := range c.Module.Imports {
-			if i.Alias == t.Selector {
-				qualified := i.Namespace + "." + t.Name
-				return qualified, c.Program.Declarations[qualified]
-			}
-		}
-		return "", nil
-	}
-}
-
-func (c *Context) Error(offset int, message string) {
-	c.Program.Errors = append(c.Program.Errors, &Error{
-		Position: c.Module.File.Position(offset),
-		Message:  message,
-	})
 }

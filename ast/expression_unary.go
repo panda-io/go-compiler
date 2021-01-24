@@ -20,14 +20,14 @@ func (u *Unary) Type(c *Context) ir.Type {
 		if ir.IsNumber(t) {
 			return t
 		}
-		c.Error(u.Position, fmt.Sprintf("%s is not valid for '%s' operator", t.String(), u.Operator.String()))
+		c.Program.Error(u.Position, fmt.Sprintf("%s is not valid for '%s' operator", t.String(), u.Operator.String()))
 		return nil
 
 	case token.Not:
 		if ir.IsBool(u.Expression.Type(c)) {
 			return ir.I1
 		}
-		c.Error(u.Position, "only bool type can use '!' (not) operator")
+		c.Program.Error(u.Position, "only bool type can use '!' (not) operator")
 		return nil
 
 	case token.Complement:
@@ -53,7 +53,7 @@ func (u *Unary) GenerateIR(c *Context) ir.Value {
 			c.Block.AddInstruction(value)
 			return value
 		}
-		c.Error(u.Position, "only float or int is allowed in negative unary expression")
+		c.Program.Error(u.Position, "only float or int is allowed in negative unary expression")
 		return nil
 
 	case token.Not:
@@ -69,7 +69,7 @@ func (u *Unary) GenerateIR(c *Context) ir.Value {
 
 				return ext, nil*/
 		}
-		c.Error(u.Position, "only int or bool can use '!' (not) operator")
+		c.Program.Error(u.Position, "only int or bool can use '!' (not) operator")
 		return nil
 
 	case token.Complement:

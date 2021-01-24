@@ -17,7 +17,7 @@ func (i *Increment) Type(c *Context) ir.Type {
 			return e
 		}
 	}
-	c.Error(i.Position, "invalid type for increment expression")
+	c.Program.Error(i.Position, "invalid type for increment expression")
 	return nil
 }
 
@@ -40,6 +40,6 @@ func (i *Increment) GenerateIR(c *Context) ir.Value {
 			return add
 		}
 	}
-	c.Error(i.Position, "invalid type for increment")
+	c.Program.Error(i.Position, "invalid type for increment")
 	return nil
 }
