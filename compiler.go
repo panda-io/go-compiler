@@ -50,7 +50,12 @@ func (c *Compiler) Compile(file string) {
 		panic(err)
 	}
 
-	cmd := exec.Command("llc-10", "-filetype=obj", "-o", file+".o", file+".ll")
+	cmd := exec.Command("opt-10", "-o", file+".opt.ll", "-S", "--O2", file+".ll")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	cmd = exec.Command("llc-10", "-filetype=obj", "-o", file+".o", file+".opt.ll")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
