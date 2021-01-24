@@ -144,9 +144,18 @@ func (p *Parser) parseIfStatement() *ast.If {
 	if p.token == token.Semi {
 		p.next()
 		s.Initialization = first
-		s.Condition = p.parseSimpleStatement(false)
+		condition := p.parseSimpleStatement(false)
+		if expr, ok := condition.(*ast.ExpressionStatement); ok {
+			s.Condition = expr.Expression
+		} else {
+			p.error(condition.GetPosition(), "if condition must be an expression")
+		}
 	} else {
-		s.Condition = first
+		if expr, ok := first.(*ast.ExpressionStatement); ok {
+			s.Condition = expr.Expression
+		} else {
+			p.error(first.GetPosition(), "if condition must be an expression")
+		}
 	}
 	p.expect(token.RightParen)
 	s.Body = p.parseStatement()

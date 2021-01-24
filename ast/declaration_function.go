@@ -141,6 +141,8 @@ func (f *Function) GenerateIR(c *Context) {
 
 		// return
 		if f.ReturnType != nil {
+			//TO-DO check if all branches store data to return value
+			//TO-DO check multi return
 			load := ir.NewLoad(f.ReturnType.Type(c), f.Return)
 			f.Exit.AddInstruction(load)
 			f.Exit.Term = ir.NewRet(load)

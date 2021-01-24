@@ -18,9 +18,10 @@ type Context struct {
 	Program *Program
 	Module  *Module
 
-	Block    *ir.Block
-	Class    *Class
-	Function *Function
+	Block      *ir.Block
+	LeaveBlock *ir.Block
+	Class      *Class
+	Function   *Function
 
 	parent  *Context
 	objects map[string]ir.Value
