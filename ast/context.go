@@ -20,6 +20,7 @@ type Context struct {
 
 	Block      *ir.Block
 	LeaveBlock *ir.Block
+	Terminated bool
 
 	parent  *Context
 	objects map[string]ir.Value
@@ -65,10 +66,10 @@ func (c *Context) FindObject(name string) ir.Value {
 	return nil
 }
 
-func (c *Context) FindSelector(parent string, member string) (parentValue ir.Value, memberValue ir.Value) {
-	parentValue = c.FindObject(parent)
-	if parentValue == nil {
-		_, d := c.Program.FindSelector(parent, member)
+func (c *Context) FindSelector(selector string, member string) (parent ir.Value, value ir.Value) {
+	parent = c.FindObject(selector)
+	if parent == nil {
+		_, d := c.Program.FindSelector(selector, member)
 		if d == nil {
 			return
 		}
@@ -90,7 +91,7 @@ func (c *Context) FindSelector(parent string, member string) (parentValue ir.Val
 			return nil, nil
 		}
 	} /*else {
-		// TO-DO parent is an object, find its member then
+		// TO-DO parent is class or interface, find its member then
 		//parent is "this", "base"
 		//parent is an object //class instance
 	}*/

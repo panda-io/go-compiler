@@ -8,5 +8,5 @@ type DeclarationStatement struct {
 }
 
 func (*DeclarationStatement) GenerateIR(*Context) {
-	//TO-DO
+	//TO-DO // zero initialize
 }

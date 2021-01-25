@@ -103,7 +103,7 @@ func (f *Function) GenerateIR(p *Program) {
 			for current != nil {
 				for _, v := range current.Variables {
 					if v.Value != nil {
-						value := v.Value.GenerateIR(c) // constant expr
+						value := v.Value.GenerateIR(c) // constant expr //TO-DO use generate const expr instead
 						if !ir.IsConstant(value) {
 							p.Error(v.Position, "initialize value must be const expression")
 						}
@@ -119,6 +119,13 @@ func (f *Function) GenerateIR(p *Program) {
 		}
 
 		f.Body.GenerateIR(c)
+
+		if f.ObjectName != "" && f.Name.Name == Constructor {
+			c.Terminated = true
+		}
+		if f.ReturnType != nil && !c.Terminated {
+			c.Program.Error(f.Position, "missing return")
+		}
 		c.Block.Term = ir.NewBr(f.Exit)
 
 		// TO-DO clean up function variables in exit block
@@ -135,8 +142,6 @@ func (f *Function) GenerateIR(p *Program) {
 
 		// return
 		if f.ReturnType != nil {
-			//TO-DO check if all branches store data to return value
-			//TO-DO check multi return
 			load := ir.NewLoad(f.ReturnType.Type(p), f.Return)
 			f.Exit.AddInstruction(load)
 			f.Exit.Term = ir.NewRet(load)
@@ -163,7 +168,7 @@ type Arguments struct {
 }
 
 // TO-DO not finished
-func (args *Arguments) GenerateIR(c *Context, parent ir.Value, function *ir.Func) []ir.Value {
+func (args *Arguments) GenerateIR(c *Context, this ir.Value, function *ir.Func) []ir.Value {
 	arguments := []ir.Value{}
 	//TO-DO if parent != nil, add and convert "this"
 	if args == nil {
@@ -171,7 +176,7 @@ func (args *Arguments) GenerateIR(c *Context, parent ir.Value, function *ir.Func
 	}
 	//TO-DO if parent != nil, arguments number +1
 	length := len(args.Arguments)
-	if parent != nil {
+	if this != nil {
 		length++
 	}
 	if length > len(function.Params) {
@@ -189,7 +194,7 @@ func (args *Arguments) GenerateIR(c *Context, parent ir.Value, function *ir.Func
 			newArg := Cast(c, arg, function.Params[i].Typ)
 			if newArg == nil {
 				index := i
-				if parent != nil {
+				if this != nil {
 					index--
 				}
 				c.Program.Error(args.Arguments[index].GetPosition(), fmt.Sprintf("cannot convert %s to %s", arg.Type().String(), function.Params[i].Typ.String()))

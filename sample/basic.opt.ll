@@ -8,6 +8,13 @@ source_filename = "./sample/basic.ll"
 @string.cb091131e20d7842e7627e8736856b45 = constant [12 x i8] c"hello world\00"
 
 ; Function Attrs: nofree nounwind
+define i32 @main() local_unnamed_addr #0 {
+entry:
+  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([12 x i8], [12 x i8]* @string.cb091131e20d7842e7627e8736856b45, i64 0, i64 0))
+  ret i32 0
+}
+
+; Function Attrs: nofree nounwind
 declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #0
 
 ; Function Attrs: nofree nounwind
@@ -88,13 +95,6 @@ entry:
   %0 = getelementptr %global.counter, %global.counter* %this, i64 0, i32 3
   %1 = load i8*, i8** %0, align 8
   ret i8* %1
-}
-
-; Function Attrs: nofree nounwind
-define i32 @main() local_unnamed_addr #0 {
-entry:
-  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([12 x i8], [12 x i8]* @string.cb091131e20d7842e7627e8736856b45, i64 0, i64 0))
-  ret i32 0
 }
 
 attributes #0 = { nofree nounwind }

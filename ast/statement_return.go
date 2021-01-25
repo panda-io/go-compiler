@@ -24,5 +24,6 @@ func (r *Return) GenerateIR(c *Context) {
 	} else {
 		c.Program.Error(r.Position, "return type mismatch with function define")
 	}
+	c.Terminated = true
 	c.Block.Term = ir.NewBr(c.Function.Exit)
 }

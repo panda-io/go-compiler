@@ -4,6 +4,19 @@
 @global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (%global.counter*)* @global.counter.destroy, void (%global.counter*)* @global.counter.retain_shared, void (%global.counter*)* @global.counter.retain_weak, void (%global.counter*)* @global.counter.release_weak, i32 (%global.counter*)* @global.counter.shared_count, i32 (%global.counter*)* @global.counter.weak_count, i8* (%global.counter*)* @global.counter.get_object }
 @string.cb091131e20d7842e7627e8736856b45 = constant [12 x i8] c"hello world\00"
 
+define i32 @main() {
+entry:
+	%0 = alloca i32
+	%1 = getelementptr [12 x i8], [12 x i8]* @string.cb091131e20d7842e7627e8736856b45, i32 0, i32 0
+	%2 = call i32 @puts(i8* %1)
+	store i32 0, i32* %0
+	br label %exit
+
+exit:
+	%3 = load i32, i32* %0
+	ret i32 %3
+}
+
 declare i32 @puts(i8* %text)
 
 declare i8* @malloc(i32 %size)
@@ -119,17 +132,4 @@ entry:
 exit:
 	%3 = load i8*, i8** %0
 	ret i8* %3
-}
-
-define i32 @main() {
-entry:
-	%0 = alloca i32
-	%1 = getelementptr [12 x i8], [12 x i8]* @string.cb091131e20d7842e7627e8736856b45, i32 0, i32 0
-	%2 = call i32 @puts(i8* %1)
-	store i32 0, i32* %0
-	br label %exit
-
-exit:
-	%3 = load i32, i32* %0
-	ret i32 %3
 }
