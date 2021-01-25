@@ -4,6 +4,11 @@ type Break struct {
 	StatementBase
 }
 
-func (*Break) GenerateIR(*Context) {
-	//TO-DO
+func (b *Break) GenerateIR(c *Context) bool {
+	/*
+		if c.LeaveBlock == nil {
+			c.Program.Error(b.Position, "invalid break")
+		}
+		c.Block.Term = ir.NewBr(c.LeaveBlock)*/
+	return true
 }

@@ -7,6 +7,7 @@ type DeclarationStatement struct {
 	Value Expression
 }
 
-func (*DeclarationStatement) GenerateIR(*Context) {
+func (*DeclarationStatement) GenerateIR(*Context) bool {
 	//TO-DO // zero initialize
+	return false
 }

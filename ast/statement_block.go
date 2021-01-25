@@ -5,8 +5,14 @@ type Block struct {
 	Statements []Statement
 }
 
-func (b *Block) GenerateIR(c *Context) {
+func (b *Block) GenerateIR(c *Context) bool {
+	terminated := false
 	for _, stmt := range b.Statements {
-		stmt.GenerateIR(c)
+		terminated = stmt.GenerateIR(c)
+		if terminated {
+			//TO-DO warning: unreachable codes
+			break
+		}
 	}
+	return terminated
 }

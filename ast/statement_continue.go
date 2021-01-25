@@ -4,6 +4,7 @@ type Continue struct {
 	StatementBase
 }
 
-func (*Continue) GenerateIR(*Context) {
+func (*Continue) GenerateIR(*Context) bool {
 	//TO-DO
+	return true
 }

@@ -8,6 +8,7 @@ type For struct {
 	Body           Statement
 }
 
-func (*For) GenerateIR(*Context) {
+func (*For) GenerateIR(*Context) bool {
 	//TO-DO
+	return false // TO-DO check if child terminated
 }

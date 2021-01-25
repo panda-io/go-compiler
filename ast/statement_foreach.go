@@ -8,6 +8,7 @@ type Foreach struct {
 	Body     Statement
 }
 
-func (*Foreach) GenerateIR(*Context) {
+func (*Foreach) GenerateIR(*Context) bool {
 	//TO-DO
+	return false // TO-DO check if child terminated
 }

@@ -10,34 +10,49 @@ type If struct {
 	Else           Statement
 }
 
-func (i *If) GenerateIR(c *Context) {
+func (i *If) GenerateIR(c *Context) bool {
+	ctx := c.NewContext()
+	ctx.Block = c.Block
 	if i.Initialization != nil {
-		i.Initialization.GenerateIR(c)
+		i.Initialization.GenerateIR(ctx)
 	}
 
-	leaveBlock := c.Function.IRFunction.NewBlock("")
-	leaveContext := c.NewContext()
-	leaveContext.Block = leaveBlock
+	var leaveBlock *ir.Block
 
 	bodyBlock := c.Function.IRFunction.NewBlock("")
-	bodyContext := c.NewContext()
+	bodyContext := ctx.NewContext()
 	bodyContext.Block = bodyBlock
 	i.Body.GenerateIR(bodyContext)
-	if bodyBlock.Term == nil {
-		bodyBlock.Term = ir.NewBr(leaveBlock)
+	if bodyContext.Terminated {
+		ctx.Terminated = true
+	} else {
+		leaveBlock = c.Function.IRFunction.NewBlock("")
+		bodyContext.Block.Term = ir.NewBr(leaveBlock)
 	}
 
 	elseBlock := leaveBlock
-	if i.Else != nil {
+	if i.Else == nil {
+		if leaveBlock == nil {
+			leaveBlock = c.Function.IRFunction.NewBlock("")
+		}
+		ctx.Terminated = false
+	} else {
 		elseBlock = c.Function.IRFunction.NewBlock("")
-		elseContext := c.NewContext()
+		elseContext := ctx.NewContext()
 		elseContext.Block = elseBlock
 		i.Else.GenerateIR(elseContext)
-		if elseBlock.Term == nil {
+		if !elseContext.Terminated {
+			ctx.Terminated = false
+			if leaveBlock == nil {
+				leaveBlock = c.Function.IRFunction.NewBlock("")
+			}
 			elseBlock.Term = ir.NewBr(leaveBlock)
 		}
 	}
 
 	c.Block.Term = ir.NewCondBr(i.Condition.GenerateIR(c), bodyBlock, elseBlock)
 	c.Block = leaveBlock
+	c.Terminated = ctx.Terminated
+
+	return ctx.Terminated
 }

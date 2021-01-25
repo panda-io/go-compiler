@@ -19,9 +19,10 @@ type Function struct {
 
 	IRParams   []*ir.Param
 	IRFunction *ir.Func
-	Entry      *ir.Block
-	Exit       *ir.Block
-	Return     ir.Value
+	IREntry    *ir.Block
+	IRBody     *ir.Block
+	IRExit     *ir.Block
+	IRReturn   ir.Value
 }
 
 func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
@@ -49,9 +50,10 @@ func (f *Function) GenerateIR(p *Program) {
 	if f.Body != nil {
 		c := NewContext(p)
 		c.Function = f
-		f.Entry = f.IRFunction.NewBlock(FunctionEntry)
-		f.Exit = f.IRFunction.NewBlock(FunctionExit)
-		c.Block = f.Entry
+		f.IREntry = f.IRFunction.NewBlock(FunctionEntry)
+		f.IRBody = f.IRFunction.NewBlock(FunctionBody)
+		f.IRExit = f.IRFunction.NewBlock(FunctionExit)
+		c.Block = f.IREntry
 
 		// prepare params
 		for _, param := range f.IRParams {
@@ -60,9 +62,9 @@ func (f *Function) GenerateIR(p *Program) {
 				value = param
 			} else {
 				alloc := ir.NewAlloca(param.Typ)
-				c.Block.AddInstruction(alloc)
+				f.IREntry.AddInstruction(alloc)
 				store := ir.NewStore(param, alloc)
-				c.Block.AddInstruction(store)
+				f.IREntry.AddInstruction(store)
 				value = alloc
 			}
 			err := c.AddObject(param.LocalName, value)
@@ -70,33 +72,34 @@ func (f *Function) GenerateIR(p *Program) {
 				p.Error(f.Position, err.Error())
 			}
 		}
+		f.IREntry.Term = ir.NewBr(f.IRBody)
 
 		// prepare return value
 		if f.ReturnType == nil {
-			f.Exit.Term = ir.NewRet(nil)
+			f.IRExit.Term = ir.NewRet(nil)
 		} else {
 			alloca := ir.NewAlloca(f.ReturnType.Type(p))
-			f.Entry.AddInstruction(alloca)
-			f.Return = alloca
+			f.IREntry.AddInstruction(alloca)
+			f.IRReturn = alloca
 		}
 
 		// generate constructor
 		if f.ObjectName != "" && f.Name.Name == Constructor {
 			// malloc struct and set 0
 			ptr := ir.NewGetElementPtr(f.Class.IRStruct, ir.NewNull(ir.NewPointerType(f.Class.IRStruct)), ir.NewInt(ir.I32, 1))
-			c.Block.AddInstruction(ptr)
+			f.IREntry.AddInstruction(ptr)
 			size := ir.NewPtrToInt(ptr, ir.I32)
-			c.Block.AddInstruction(size)
+			f.IREntry.AddInstruction(size)
 			address := ir.NewCall(malloc, size)
-			c.Block.AddInstruction(address)
-			c.Block.AddInstruction(ir.NewCall(memset, address, ir.NewInt(ir.I32, 0), size))
+			f.IREntry.AddInstruction(address)
+			f.IREntry.AddInstruction(ir.NewCall(memset, address, ir.NewInt(ir.I32, 0), size))
 
 			// set vtable
 			instance := ir.NewBitCast(address, ir.NewPointerType(f.Class.IRStruct))
-			c.Block.AddInstruction(instance)
+			f.IREntry.AddInstruction(instance)
 			vtable := ir.NewGetElementPtr(f.Class.IRStruct, instance, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
-			c.Block.AddInstruction(vtable)
-			c.Block.AddInstruction(ir.NewStore(f.Class.IRVTableData, vtable))
+			f.IREntry.AddInstruction(vtable)
+			f.IREntry.AddInstruction(ir.NewStore(f.Class.IRVTableData, vtable))
 
 			// set default values
 			current := f.Class
@@ -109,15 +112,16 @@ func (f *Function) GenerateIR(p *Program) {
 						}
 						index := f.Class.VariableIndexes[v.Name.Name]
 						offset := ir.NewGetElementPtr(f.Class.IRStruct, instance, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
-						c.Block.AddInstruction(offset)
-						c.Block.AddInstruction(ir.NewStore(value, offset))
+						f.IREntry.AddInstruction(offset)
+						f.IREntry.AddInstruction(ir.NewStore(value, offset))
 					}
 				}
 				current = current.Parent
 			}
-			c.Block.AddInstruction(ir.NewStore(instance, c.Function.Return))
+			f.IREntry.AddInstruction(ir.NewStore(instance, f.IRReturn))
 		}
 
+		c.Block = f.IRBody
 		f.Body.GenerateIR(c)
 
 		if f.ObjectName != "" && f.Name.Name == Constructor {
@@ -126,7 +130,7 @@ func (f *Function) GenerateIR(p *Program) {
 		if f.ReturnType != nil && !c.Terminated {
 			c.Program.Error(f.Position, "missing return")
 		}
-		c.Block.Term = ir.NewBr(f.Exit)
+		c.Block.Term = ir.NewBr(f.IRExit)
 
 		// TO-DO clean up function variables in exit block
 
@@ -136,15 +140,15 @@ func (f *Function) GenerateIR(p *Program) {
 			// TO-DO clean up members
 			// TO-DO check if free memory
 			address := ir.NewBitCast(f.IRParams[0], ir.NewPointerType(ir.I8))
-			f.Exit.AddInstruction(address)
-			f.Exit.AddInstruction(ir.NewCall(free, address))
+			f.IRExit.AddInstruction(address)
+			f.IRExit.AddInstruction(ir.NewCall(free, address))
 		}
 
 		// return
 		if f.ReturnType != nil {
-			load := ir.NewLoad(f.ReturnType.Type(p), f.Return)
-			f.Exit.AddInstruction(load)
-			f.Exit.Term = ir.NewRet(load)
+			load := ir.NewLoad(f.ReturnType.Type(p), f.IRReturn)
+			f.IRExit.AddInstruction(load)
+			f.IRExit.Term = ir.NewRet(load)
 		}
 	}
 }

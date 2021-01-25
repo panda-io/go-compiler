@@ -5,6 +5,7 @@ type Throw struct {
 	Expression Expression
 }
 
-func (*Throw) GenerateIR(*Context) {
+func (*Throw) GenerateIR(*Context) bool {
 	//TO-DO
+	return true // ? TO-DO
 }

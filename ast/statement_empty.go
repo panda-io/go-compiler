@@ -4,5 +4,6 @@ type Empty struct {
 	StatementBase
 }
 
-func (*Empty) GenerateIR(*Context) {
+func (*Empty) GenerateIR(*Context) bool {
+	return false
 }

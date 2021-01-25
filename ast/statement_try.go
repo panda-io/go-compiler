@@ -8,6 +8,7 @@ type Try struct {
 	Finally Statement
 }
 
-func (*Try) GenerateIR(*Context) {
+func (*Try) GenerateIR(*Context) bool {
 	//TO-DO
+	return false //Check children
 }

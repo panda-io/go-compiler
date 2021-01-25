@@ -18,6 +18,7 @@ type Case struct {
 	Body  Statement
 }
 
-func (*Switch) GenerateIR(*Context) {
+func (*Switch) GenerateIR(*Context) bool {
 	//TO-DO
+	return false //TO-DO Check children
 }
