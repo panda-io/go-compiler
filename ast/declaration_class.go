@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/panda-foundation/go-compiler/ir"
+	"github.com/panda-foundation/go-compiler/token"
 )
 
 type Class struct {
@@ -167,6 +168,16 @@ func (c *Class) PreProcess(*Program) {
 	}
 	if c.Functions[1] == nil {
 		c.Functions[1] = c.CreateEmptyFunction(Destructor)
+	}
+	c.Functions[1].Parameters = &Parameters{
+		Parameters: []*Parameter{
+			&Parameter{
+				Name: "free",
+				Type: &BuitinType{
+					Token: token.Bool,
+				},
+			},
+		},
 	}
 }
 
