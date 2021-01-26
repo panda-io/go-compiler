@@ -78,12 +78,12 @@ func (u *Unary) GenerateIR(c *Context) ir.Value {
 	return nil
 }
 
-func (*Unary) IsConstant() bool {
+func (*Unary) IsConstant(p *Program) bool {
 	//TO-DO
 	return false
 }
 
-func (*Unary) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
+func (*Unary) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 	//TO-DO
 	return nil
 }

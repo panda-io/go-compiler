@@ -44,12 +44,20 @@ func (d *Decrement) GenerateIR(c *Context) ir.Value {
 	return nil
 }
 
-func (*Decrement) IsConstant() bool {
-	//TO-DO
-	return false
+func (d *Decrement) IsConstant(p *Program) bool {
+	return d.Expression.IsConstant(p)
 }
 
-func (*Decrement) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
-	//TO-DO
+func (d *Decrement) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
+	expr := d.Expression.GenerateConstIR(p, nil)
+	if expr != nil {
+		t := expr.Type()
+		if ir.IsInt(t) {
+			return ir.NewExprSub(expr, ir.NewInt(t.(*ir.IntType), 1))
+		} else if ir.IsFloat(t) {
+			return ir.NewExprFSub(expr, ir.NewFloat(t.(*ir.FloatType), 1))
+		}
+	}
+	p.Error(d.Position, "invalid decrement")
 	return nil
 }

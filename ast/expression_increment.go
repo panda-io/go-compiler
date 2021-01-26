@@ -44,12 +44,20 @@ func (i *Increment) GenerateIR(c *Context) ir.Value {
 	return nil
 }
 
-func (*Increment) IsConstant() bool {
-	//TO-DO
-	return false
+func (i *Increment) IsConstant(p *Program) bool {
+	return i.Expression.IsConstant(p)
 }
 
-func (*Increment) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
-	//TO-DO
+func (i *Increment) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
+	expr := i.Expression.GenerateConstIR(p, nil)
+	if expr != nil {
+		t := expr.Type()
+		if ir.IsInt(t) {
+			return ir.NewExprAdd(expr, ir.NewInt(t.(*ir.IntType), 1))
+		} else if ir.IsFloat(t) {
+			return ir.NewExprFAdd(expr, ir.NewFloat(t.(*ir.FloatType), 1))
+		}
+	}
+	p.Error(i.Position, "invalid increment")
 	return nil
 }

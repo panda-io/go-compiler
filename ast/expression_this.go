@@ -24,10 +24,10 @@ func (t *This) GenerateIR(c *Context) ir.Value {
 	return nil
 }
 
-func (*This) IsConstant() bool {
+func (*This) IsConstant(p *Program) bool {
 	return false
 }
 
-func (*This) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
+func (*This) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 	return nil
 }

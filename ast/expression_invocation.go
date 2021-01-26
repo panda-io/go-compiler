@@ -58,10 +58,10 @@ func (i *Invocation) GenerateIR(c *Context) ir.Value {
 	return nil
 }
 
-func (*Invocation) IsConstant() bool {
+func (*Invocation) IsConstant(p *Program) bool {
 	return false
 }
 
-func (*Invocation) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
+func (*Invocation) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 	return nil
 }

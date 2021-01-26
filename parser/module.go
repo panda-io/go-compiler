@@ -22,6 +22,12 @@ func (p *Parser) parseSourceFile(file *token.File) {
 		switch p.token {
 		case token.Const, token.Var:
 			v := p.parseVariable(modifier, attr, "")
+			if p.token == token.Const {
+				v.Const = true
+				if v.Value == nil {
+					p.error(v.Position, "constant declaration must be initalized")
+				}
+			}
 			qualified := m.Namespace + "." + v.Name.Name
 			if p.program.Declarations[qualified] != nil {
 				p.error(v.Name.Position, fmt.Sprintf("variable %s redeclared", v.Name.Name))

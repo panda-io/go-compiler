@@ -33,12 +33,12 @@ func (c *Conditional) GenerateIR(ctx *Context) ir.Value {
 	return nil
 }
 
-func (*Conditional) IsConstant() bool {
+func (*Conditional) IsConstant(p *Program) bool {
 	//TO-DO
 	return false
 }
 
-func (*Conditional) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
+func (*Conditional) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 	//TO-DO
 	return nil
 }

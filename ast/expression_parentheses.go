@@ -14,16 +14,13 @@ func (p *Parentheses) Type(c *Context) ir.Type {
 }
 
 func (p *Parentheses) GenerateIR(c *Context) ir.Value {
-	//TO-DO
-	return nil
+	return p.Expression.GenerateIR(c)
 }
 
-func (*Parentheses) IsConstant() bool {
-	//TO-DO
-	return false
+func (p *Parentheses) IsConstant(program *Program) bool {
+	return p.Expression.IsConstant(program)
 }
 
-func (*Parentheses) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
-	//TO-DO
-	return nil
+func (p *Parentheses) GenerateConstIR(program *Program, expected ir.Type) ir.Constant {
+	return p.Expression.GenerateConstIR(program, expected)
 }

@@ -10,6 +10,7 @@ type Variable struct {
 	Token token.Token
 	Type  Type
 	Value Expression
+	Const bool
 
 	IRVariable *ir.Global
 }

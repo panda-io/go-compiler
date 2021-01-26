@@ -123,6 +123,12 @@ func (p *Parser) parseClass(modifier *ast.Modifier, attributes []*ast.Attribute)
 		switch p.token {
 		case token.Const, token.Var:
 			v := p.parseVariable(modifier, attr, c.Name.Name)
+			if p.token == token.Const {
+				v.Const = true
+				if v.Value == nil {
+					p.error(v.Position, "constant declaration must be initalized")
+				}
+			}
 			err := c.AddVariable(v)
 			if err != nil {
 				p.error(v.Position, err.Error())

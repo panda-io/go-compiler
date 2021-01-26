@@ -63,11 +63,11 @@ func (l *Literal) GenerateIR(c *Context) ir.Value {
 	}
 }
 
-func (*Literal) IsConstant() bool {
+func (*Literal) IsConstant(p *Program) bool {
 	return true
 }
 
-func (*Literal) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
+func (*Literal) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 	//TO-DO
 	return nil
 }

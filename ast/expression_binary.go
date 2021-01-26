@@ -42,6 +42,7 @@ type Binary struct {
 }
 
 //TO-DO operator override
+//TO-DO check if const
 func (b *Binary) Type(c *Context) ir.Type {
 	switch b.Operator {
 	// bitwise code
@@ -529,12 +530,12 @@ func (b *Binary) GenerateIR1(c *Context) ir.Value {
 
 }*/
 
-func (*Binary) IsConstant() bool {
+func (*Binary) IsConstant(p *Program) bool {
 	//TO-DO
 	return false
 }
 
-func (*Binary) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
+func (*Binary) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 	//TO-DO
 	return nil
 }

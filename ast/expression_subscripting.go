@@ -20,12 +20,12 @@ func (e *Subscripting) GenerateIR(c *Context) ir.Value {
 	return nil
 }
 
-func (*Subscripting) IsConstant() bool {
-	//TO-DO
+func (*Subscripting) IsConstant(p *Program) bool {
+	//TO-DO enum
 	return false
 }
 
-func (*Subscripting) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
+func (*Subscripting) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 	//TO-DO
 	return nil
 }
