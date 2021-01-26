@@ -2,6 +2,10 @@ namespace;
 
 import libc;
 
+var a int;
+var b int = 1;
+const c int = 2;
+
 /*
 enum color
 {

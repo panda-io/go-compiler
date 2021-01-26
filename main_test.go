@@ -37,7 +37,7 @@ func TestBasic(t *testing.T) {
 	c.ParseFile("../panda/libc/libc.pd")
 	//c.ParseFile("../panda/core/allocator.pd")
 	//c.ParseFile("../panda/core/string.pd")
-	c.ParseFile("../panda/core/counter.pd")
+	//c.ParseFile("../panda/core/counter.pd")
 	c.ParseFile("./sample/basic.pd")
 	c.Compile("./sample/basic")
 }

@@ -11,6 +11,9 @@ func (p *Parser) parseVariable(modifier *ast.Modifier, attributes []*ast.Attribu
 	d.Modifier = modifier
 	d.Attributes = attributes
 	d.Token = p.token
+	if p.token == token.Const {
+		d.Const = true
+	}
 	p.next()
 	d.Name = p.parseIdentifier()
 	d.Type = p.parseType()
@@ -18,6 +21,9 @@ func (p *Parser) parseVariable(modifier *ast.Modifier, attributes []*ast.Attribu
 	if p.token == token.Assign {
 		p.next()
 		d.Value = p.parseExpression()
+	}
+	if d.Const && d.Value == nil {
+		p.error(d.Name.Position, "constant declaration must be initalized")
 	}
 	p.expect(token.Semi)
 	return d
@@ -123,12 +129,6 @@ func (p *Parser) parseClass(modifier *ast.Modifier, attributes []*ast.Attribute)
 		switch p.token {
 		case token.Const, token.Var:
 			v := p.parseVariable(modifier, attr, c.Name.Name)
-			if p.token == token.Const {
-				v.Const = true
-				if v.Value == nil {
-					p.error(v.Position, "constant declaration must be initalized")
-				}
-			}
 			err := c.AddVariable(v)
 			if err != nil {
 				p.error(v.Position, err.Error())
