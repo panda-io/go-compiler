@@ -45,3 +45,13 @@ func (i *Identifier) GenerateIR(c *Context) ir.Value {
 	c.Program.Error(i.Position, fmt.Sprintf("invalid variable: %s", i.Name))
 	return nil
 }
+
+func (*Identifier) IsConstant() bool {
+	//TO-DO
+	return false
+}
+
+func (*Identifier) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	//TO-DO
+	return nil
+}

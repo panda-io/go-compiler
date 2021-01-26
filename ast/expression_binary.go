@@ -528,3 +528,13 @@ func (b *Binary) GenerateIR1(c *Context) ir.Value {
 	return;
 
 }*/
+
+func (*Binary) IsConstant() bool {
+	//TO-DO
+	return false
+}
+
+func (*Binary) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	//TO-DO
+	return nil
+}

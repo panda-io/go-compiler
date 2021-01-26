@@ -43,3 +43,13 @@ func (i *Increment) GenerateIR(c *Context) ir.Value {
 	c.Program.Error(i.Position, "invalid type for increment")
 	return nil
 }
+
+func (*Increment) IsConstant() bool {
+	//TO-DO
+	return false
+}
+
+func (*Increment) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	//TO-DO
+	return nil
+}

@@ -57,3 +57,11 @@ func (i *Invocation) GenerateIR(c *Context) ir.Value {
 	}
 	return nil
 }
+
+func (*Invocation) IsConstant() bool {
+	return false
+}
+
+func (*Invocation) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	return nil
+}

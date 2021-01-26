@@ -65,3 +65,13 @@ func (m *MemberAccess) GenerateIR(c *Context) ir.Value {
 	}*/
 	return nil
 }
+
+func (*MemberAccess) IsConstant() bool {
+	//TO-DO
+	return false
+}
+
+func (*MemberAccess) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	//TO-DO
+	return nil
+}

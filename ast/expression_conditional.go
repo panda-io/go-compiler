@@ -32,3 +32,13 @@ func (c *Conditional) GenerateIR(ctx *Context) ir.Value {
 	//TO-DO
 	return nil
 }
+
+func (*Conditional) IsConstant() bool {
+	//TO-DO
+	return false
+}
+
+func (*Conditional) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	//TO-DO
+	return nil
+}

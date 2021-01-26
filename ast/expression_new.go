@@ -19,3 +19,11 @@ func (n *New) GenerateIR(c *Context) ir.Value {
 	//TO-DO
 	return nil
 }
+
+func (*New) IsConstant() bool {
+	return false
+}
+
+func (*New) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	return nil
+}

@@ -43,3 +43,13 @@ func (d *Decrement) GenerateIR(c *Context) ir.Value {
 	c.Program.Error(d.Position, "invalid type for decrement")
 	return nil
 }
+
+func (*Decrement) IsConstant() bool {
+	//TO-DO
+	return false
+}
+
+func (*Decrement) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	//TO-DO
+	return nil
+}

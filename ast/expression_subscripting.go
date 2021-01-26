@@ -19,3 +19,13 @@ func (e *Subscripting) GenerateIR(c *Context) ir.Value {
 	//TO-DO
 	return nil
 }
+
+func (*Subscripting) IsConstant() bool {
+	//TO-DO
+	return false
+}
+
+func (*Subscripting) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	//TO-DO
+	return nil
+}

@@ -7,8 +7,9 @@ import (
 type Expression interface {
 	Node
 	Type(*Context) ir.Type
-	//IsConstant() bool //TO-DO
+	IsConstant() bool
 	GenerateIR(*Context) ir.Value
+	GenerateConstIR(c Context, exprect ir.Type) ir.Value
 }
 
 type ExpressionBase struct {

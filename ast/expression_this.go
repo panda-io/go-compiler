@@ -23,3 +23,11 @@ func (t *This) GenerateIR(c *Context) ir.Value {
 	c.Program.Error(t.Position, "'this' is not defined")
 	return nil
 }
+
+func (*This) IsConstant() bool {
+	return false
+}
+
+func (*This) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	return nil
+}

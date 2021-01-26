@@ -15,3 +15,11 @@ func (*Base) Type(c *Context) ir.Type {
 func (*Base) GenerateIR(c *Context) ir.Value {
 	return nil
 }
+
+func (*Base) IsConstant() bool {
+	return false
+}
+
+func (*Base) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+	return nil
+}
