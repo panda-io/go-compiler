@@ -6,13 +6,14 @@ type Block struct {
 }
 
 func (b *Block) GenerateIR(c *Context) bool {
-	terminated := false
 	for _, stmt := range b.Statements {
-		terminated = stmt.GenerateIR(c)
-		if terminated {
-			//TO-DO warning: unreachable codes
-			break
+		ctx := c
+		if _, ok := stmt.(*Block); ok {
+			ctx = c.NewContext()
+		}
+		if stmt.GenerateIR(ctx) {
+			return true
 		}
 	}
-	return terminated
+	return false
 }

@@ -171,14 +171,15 @@ type Arguments struct {
 	Ellipsis  int
 }
 
-// TO-DO not finished
 func (args *Arguments) GenerateIR(c *Context, this ir.Value, function *ir.Func) []ir.Value {
 	arguments := []ir.Value{}
-	//TO-DO if parent != nil, add and convert "this"
+	if this != nil {
+		arguments = append(arguments, Cast(c, this, function.Params[0].Typ))
+	}
 	if args == nil {
 		return arguments
 	}
-	//TO-DO if parent != nil, arguments number +1
+
 	length := len(args.Arguments)
 	if this != nil {
 		length++
@@ -199,9 +200,14 @@ func (args *Arguments) GenerateIR(c *Context, this ir.Value, function *ir.Func) 
 			if newArg == nil {
 				index := i
 				if this != nil {
+					if i == 0 {
+						c.Program.Error(args.Arguments[index].GetPosition(), fmt.Sprintf("cannot convert %s to %s", arg.Type().String(), function.Params[i].Typ.String()))
+					}
 					index--
 				}
-				c.Program.Error(args.Arguments[index].GetPosition(), fmt.Sprintf("cannot convert %s to %s", arg.Type().String(), function.Params[i].Typ.String()))
+				if index >= 0 {
+					c.Program.Error(args.Arguments[index].GetPosition(), fmt.Sprintf("cannot convert %s to %s", arg.Type().String(), function.Params[i].Typ.String()))
+				}
 			} else {
 				arguments[i] = newArg
 			}

@@ -62,3 +62,5 @@ func (l *Literal) GenerateIR(c *Context) ir.Value {
 		return nil
 	}
 }
+
+//TO-DO expect type

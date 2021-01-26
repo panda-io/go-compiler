@@ -5,6 +5,35 @@ import (
 	"github.com/panda-foundation/go-compiler/token"
 )
 
+var (
+	ICMP = map[token.Token]ir.IPred{
+		token.Equal:        ir.IPredEQ,
+		token.NotEqual:     ir.IPredNE,
+		token.Less:         ir.IPredSLT,
+		token.LessEqual:    ir.IPredSLE,
+		token.Greater:      ir.IPredSGT,
+		token.GreaterEqual: ir.IPredSGE,
+	}
+
+	UICMP = map[token.Token]ir.IPred{
+		token.Equal:        ir.IPredEQ,
+		token.NotEqual:     ir.IPredNE,
+		token.Less:         ir.IPredULT,
+		token.LessEqual:    ir.IPredULE,
+		token.Greater:      ir.IPredUGT,
+		token.GreaterEqual: ir.IPredUGE,
+	}
+
+	FCMP = map[token.Token]ir.FPred{
+		token.Equal:        ir.FPredOEQ,
+		token.NotEqual:     ir.FPredONE,
+		token.Less:         ir.FPredOLT,
+		token.LessEqual:    ir.FPredOLE,
+		token.Greater:      ir.FPredOGT,
+		token.GreaterEqual: ir.FPredOGE,
+	}
+)
+
 type Binary struct {
 	ExpressionBase
 	Left     Expression
@@ -17,8 +46,17 @@ func (b *Binary) Type(c *Context) ir.Type {
 	switch b.Operator {
 	// bitwise code
 	case token.LeftShift, token.RightShift, token.BitXor, token.BitOr, token.BitAnd, token.Not:
-		if ir.IsInt(b.Left.Type(c)) && ir.IsInt(b.Right.Type(c)) {
-			return b.Left.Type(c)
+		t, err := PromoteNumberType(c, b.Left.Type(c), b.Right.Type(c))
+		if err != nil {
+			c.Program.Error(b.Position, err.Error())
+			return nil
+		}
+		if ir.IsInt(t) {
+			t1 := b.Left.Type(c)
+			if ir.IsPointer(t1) {
+				return t1.(*ir.PointerType).ElemType
+			}
+			return t1
 		}
 		c.Program.Error(b.Position, "only int are valid for bitwise operator")
 		return nil
@@ -26,21 +64,24 @@ func (b *Binary) Type(c *Context) ir.Type {
 	// assign
 	case token.Assign, token.MulAssign, token.DivAssign, token.RemAssign, token.PlusAssign, token.MinusAssign,
 		token.LeftShiftAssign, token.RightShiftAssign, token.AndAssign, token.OrAssign, token.XorAssign:
+		// TO-DO assert left type
 		return b.Right.Type(c)
 
 	// logic operator
-	case token.Or, token.And, token.Equal, token.NotEqual:
-		if ir.IsNumber(b.Left.Type(c)) && ir.IsNumber(b.Right.Type(c)) {
-			return ir.I1
-		}
+	case token.Or, token.And:
 		if ir.IsBool(b.Left.Type(c)) && ir.IsBool(b.Right.Type(c)) {
 			return ir.I1
 		}
 		c.Program.Error(b.Position, "invalid type for binary operator")
 		return nil
 
-	case token.Less, token.LessEqual, token.Greater, token.GreaterEqual:
-		if ir.IsNumber(b.Left.Type(c)) && ir.IsNumber(b.Right.Type(c)) {
+	case token.Less, token.LessEqual, token.Greater, token.GreaterEqual, token.Equal, token.NotEqual:
+		t, err := PromoteNumberType(c, b.Left.Type(c), b.Right.Type(c))
+		if err != nil {
+			c.Program.Error(b.Position, err.Error())
+			return nil
+		}
+		if ir.IsNumber(t) {
 			return ir.I1
 		}
 		c.Program.Error(b.Position, "invalid type for binary operator")
@@ -48,7 +89,11 @@ func (b *Binary) Type(c *Context) ir.Type {
 
 	//arithmetic operator
 	case token.Plus, token.Minus, token.Mul, token.Div, token.Rem:
-		return PromoteNumberType(c, b.Left, b.Right)
+		t, err := PromoteNumberType(c, b.Left.Type(c), b.Right.Type(c))
+		if err != nil {
+			c.Program.Error(b.Position, err.Error())
+		}
+		return t
 
 	default:
 		c.Program.Error(b.Position, "invalid type for binary expression")
@@ -58,9 +103,6 @@ func (b *Binary) Type(c *Context) ir.Type {
 
 //TO-DO operator overload
 func (b *Binary) GenerateIR(c *Context) ir.Value {
-	l := b.Left.GenerateIR(c)
-	r := b.Right.GenerateIR(c)
-
 	//shiftOperation := false
 	//integerOperation := false
 
@@ -124,30 +166,49 @@ func (b *Binary) GenerateIR(c *Context) ir.Value {
 		//TO-DO
 		return nil
 
-	case token.Equal, token.NotEqual:
-		//TO-DO
-		return nil
+	case token.Equal, token.NotEqual, token.Less, token.LessEqual, token.Greater, token.GreaterEqual:
+		t, v1, v2, err := PromoteNumberValue(c, b.Left, b.Right)
+		if err != nil {
+			c.Program.Error(b.Position, err.Error())
+		}
+		if t == nil {
+			return nil
+		}
 
-	case token.Less, token.LessEqual, token.Greater, token.GreaterEqual:
-		//TO-DO
-		return nil
+		if ir.IsInt(t) {
+			var icmp ir.IPred
+			if t.(*ir.IntType).Unsigned {
+				icmp = UICMP[b.Operator]
+			} else {
+				icmp = ICMP[b.Operator]
+			}
+			cmp := ir.NewICmp(icmp, v1, v2)
+			c.Block.AddInstruction(cmp)
+			return cmp
+		}
+
+		fmp := FCMP[b.Operator]
+		cmp := ir.NewFCmp(fmp, v1, v2)
+		c.Block.AddInstruction(cmp)
+		return cmp
 
 	case token.LeftShift, token.RightShift:
 		//TO-DO
 		return nil
 
 	case token.Plus:
-		if ir.IsInt(l.Type()) && ir.IsInt(r.Type()) {
-			add := ir.NewAdd(l, r)
-			c.Block.AddInstruction(add)
-			return add
-		} else if ir.IsFloat(l.Type()) && ir.IsFloat(r.Type()) {
-			add := ir.NewFAdd(l, r)
-			c.Block.AddInstruction(add)
-			return add
-		} else {
-			c.Program.Error(b.Left.GetPosition(), "type mismatch for add")
-		}
+		/*
+			if ir.IsInt(l.Type()) && ir.IsInt(r.Type()) {
+				add := ir.NewAdd(l, r)
+				c.Block.AddInstruction(add)
+				return add
+			} else if ir.IsFloat(l.Type()) && ir.IsFloat(r.Type()) {
+				add := ir.NewFAdd(l, r)
+				c.Block.AddInstruction(add)
+				return add
+			} else {
+				c.Program.Error(b.Left.GetPosition(), "type mismatch for add")
+			}*/
 
 		//TO-DO convert int to float
 		//TO-DO vector add

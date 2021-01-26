@@ -23,6 +23,6 @@ function add(a int, b int) int
 
 public function main() int
 {
-    libc.puts("hello world");
+    //libc.puts("hello world");
     return 0;
 }

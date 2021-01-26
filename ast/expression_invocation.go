@@ -50,8 +50,6 @@ func (i *Invocation) GenerateIR(c *Context) ir.Value {
 	}
 
 	if function != nil {
-		//TO-DO compare sig
-		//TO-DO automatically convert type if possible
 		args := i.Arguments.GenerateIR(c, parent, function)
 		value := ir.NewCall(function, args...)
 		c.Block.AddInstruction(value)

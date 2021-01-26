@@ -6,36 +6,74 @@ import (
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
-//TO-DO refactor later
-
-func PromoteNumberType(c *Context, e1 Expression, e2 Expression) ir.Type {
-	t1 := e1.Type(c)
-	t2 := e2.Type(c)
+func PromoteNumberType(c *Context, t1 ir.Type, t2 ir.Type) (ir.Type, error) {
+	if ir.IsPointer(t1) {
+		t1 = t1.(*ir.PointerType).ElemType
+	}
+	if ir.IsPointer(t2) {
+		t2 = t2.(*ir.PointerType).ElemType
+	}
 	if ir.IsInt(t1) {
 		if ir.IsInt(t2) {
-			if Sizeof(t1) > Sizeof(t2) {
-				return t1
+			i1 := t1.(*ir.IntType)
+			i2 := t2.(*ir.IntType)
+			if i1.Unsigned != i2.Unsigned {
+				return nil, fmt.Errorf("implicit conversion between signed and unsigned integers is not allowed")
 			}
-			return t2
+			if i1.BitSize > i2.BitSize {
+				return i1, nil
+			}
+			return i2, nil
 		} else if ir.IsFloat(t2) {
-			return t2
+			return t2, nil
 		}
-		c.Program.Error(e2.GetPosition(), "invalid number")
-		return nil
 	} else if ir.IsFloat(t1) {
 		if ir.IsInt(t2) {
-			return t1
+			return t1, nil
 		} else if ir.IsFloat(t2) {
-			if Sizeof(t1) > Sizeof(t2) {
-				return t1
+			f1 := t1.(*ir.FloatType)
+			f2 := t2.(*ir.FloatType)
+			if f1.Kind == ir.FloatKindDouble {
+				return f1, nil
 			}
-			return t2
+			if f2.Kind == ir.FloatKindDouble {
+				return f2, nil
+			}
+			return f1, nil
 		}
-		c.Program.Error(e2.GetPosition(), "invalid number")
-		return nil
 	}
-	c.Program.Error(e1.GetPosition(), "invalid number")
-	return nil
+	return nil, fmt.Errorf("invalid number")
+}
+
+func PromoteNumberValue(c *Context, e1 Expression, e2 Expression) (t ir.Type, v1 ir.Value, v2 ir.Value, e error) {
+	v1 = e1.GenerateIR(c)
+	v2 = e2.GenerateIR(c)
+	t1 := e1.Type(c)
+	t2 := e2.Type(c)
+	if ir.IsPointer(t1) {
+		t1 = t1.(*ir.PointerType).ElemType
+		load := ir.NewLoad(t1, v1)
+		c.Block.AddInstruction(load)
+		v1 = load
+	}
+	if ir.IsPointer(t2) {
+		t2 = t2.(*ir.PointerType).ElemType
+		load := ir.NewLoad(t2, v2)
+		c.Block.AddInstruction(load)
+		v2 = load
+	}
+	t, e = PromoteNumberType(c, t1, t2)
+	if e != nil {
+		return
+	}
+	// cast
+	if !t1.Equal(t) {
+		v1 = Cast(c, v1, t)
+	}
+	if !t2.Equal(t) {
+		v2 = Cast(c, v2, t)
+	}
+	return
 }
 
 // also string here
@@ -44,12 +82,14 @@ func Cast(c *Context, in ir.Value, outType ir.Type) ir.Value {
 	if ir.IsPointer(inType) && ir.IsPointer(outType) {
 		if outType.Equal(ir.NewPointerType(ir.I8)) {
 			// convert to raw pointer
-			gep := ir.NewGetElementPtr(inType.(*ir.PointerType).ElemType, in, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
-			c.Block.AddInstruction(gep)
-			return gep
+			//gep := ir.NewGetElementPtr(inType.(*ir.PointerType).ElemType, in, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
+			cast := ir.NewBitCast(in, ir.NewPointerType(ir.I8))
+			c.Block.AddInstruction(cast)
+			return cast
 		} /*else {
 			// TO-DO convert
 			check if convertable, oop inheritance
+			// Check OO inheritance
 		}*/
 		return nil
 	}
@@ -135,27 +175,6 @@ func Cast(c *Context, in ir.Value, outType ir.Type) ir.Value {
 
 		return nil, fmt.Errorf("Failed to typecast type %s to %s", inType.String(), to)*/
 	return nil
-}
-
-//? TO-DO pointer size?
-func Sizeof(typ ir.Type) int {
-	switch t := typ.(type) {
-	case *ir.IntType:
-		return int(t.BitSize)
-
-	case *ir.FloatType:
-		switch t.Kind {
-		case ir.FloatKindFloat:
-			return 32
-
-		case ir.FloatKindDouble:
-			return 64
-
-		default:
-			panic(fmt.Errorf("floating-point kind %q is not implemented", t.Kind))
-		}
-	}
-	return -1
 }
 
 /*
