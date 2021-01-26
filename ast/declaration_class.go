@@ -19,6 +19,7 @@ type Class struct {
 
 	IRStruct        *ir.StructType
 	IRVariables     []ir.Type
+	IRValues        []ir.Value
 	VariableIndexes map[string]int
 
 	IRVTable        *ir.StructType
@@ -60,6 +61,11 @@ func (c *Class) AddFunction(f *Function) error {
 func (c *Class) GenerateIRDeclaration(p *Program) {
 	for _, v := range c.Variables {
 		c.IRVariables = append(c.IRVariables, v.Type.Type(p))
+		if v.Value == nil {
+			c.IRValues = append(c.IRValues, nil)
+		} else {
+			c.IRValues = append(c.IRValues, v.Value.GenerateConstIR(p, v.Type.Type(p)))
+		}
 	}
 	for _, f := range c.Functions {
 		c.IRFunctions = append(c.IRFunctions, f.GenerateIRDeclaration(p))
@@ -169,16 +175,13 @@ func (c *Class) PreProcess(*Program) {
 	if c.Functions[1] == nil {
 		c.Functions[1] = c.CreateEmptyFunction(Destructor)
 	}
-	c.Functions[1].Parameters = &Parameters{
-		Parameters: []*Parameter{
-			&Parameter{
-				Name: "free",
-				Type: &BuitinType{
-					Token: token.Bool,
-				},
-			},
+	c.Functions[1].Parameters = &Parameters{}
+	c.Functions[1].Parameters.Parameters = append(c.Functions[1].Parameters.Parameters, &Parameter{
+		Name: "free",
+		Type: &BuitinType{
+			Token: token.Bool,
 		},
-	}
+	})
 }
 
 func (c *Class) CreateEmptyFunction(name string) *Function {

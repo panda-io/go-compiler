@@ -51,7 +51,7 @@ func (*Identifier) IsConstant() bool {
 	return false
 }
 
-func (*Identifier) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+func (*Identifier) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
 	//TO-DO
 	return nil
 }

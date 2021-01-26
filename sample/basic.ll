@@ -3,20 +3,6 @@
 
 @global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (%global.counter*, i1)* @global.counter.destroy, void (%global.counter*)* @global.counter.retain_shared, void (%global.counter*)* @global.counter.retain_weak, void (%global.counter*)* @global.counter.release_weak, i32 (%global.counter*)* @global.counter.shared_count, i32 (%global.counter*)* @global.counter.weak_count, i8* (%global.counter*)* @global.counter.get_object }
 
-define i32 @main() {
-entry:
-	%0 = alloca i32
-	br label %body
-
-body:
-	store i32 0, i32* %0
-	br label %exit
-
-exit:
-	%1 = load i32, i32* %0
-	ret i32 %1
-}
-
 declare i32 @puts(i8* %text)
 
 declare i8* @malloc(i32 %size)
@@ -158,4 +144,18 @@ body:
 exit:
 	%3 = load i8*, i8** %0
 	ret i8* %3
+}
+
+define i32 @main() {
+entry:
+	%0 = alloca i32
+	br label %body
+
+body:
+	store i32 0, i32* %0
+	br label %exit
+
+exit:
+	%1 = load i32, i32* %0
+	ret i32 %1
 }

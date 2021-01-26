@@ -6,17 +6,11 @@ source_filename = "./sample/basic.ll"
 
 @global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (%global.counter*, i1)* @global.counter.destroy, void (%global.counter*)* @global.counter.retain_shared, void (%global.counter*)* @global.counter.retain_weak, void (%global.counter*)* @global.counter.release_weak, i32 (%global.counter*)* @global.counter.shared_count, i32 (%global.counter*)* @global.counter.weak_count, i8* (%global.counter*)* @global.counter.get_object }
 
-; Function Attrs: norecurse nounwind readnone
-define i32 @main() local_unnamed_addr #0 {
-entry:
-  ret i32 0
-}
-
 ; Function Attrs: nofree nounwind
-declare noalias i8* @malloc(i32) local_unnamed_addr #1
+declare noalias i8* @malloc(i32) local_unnamed_addr #0
 
 ; Function Attrs: nounwind
-declare void @free(i8* nocapture) local_unnamed_addr #2
+declare void @free(i8* nocapture) local_unnamed_addr #1
 
 declare void @memset(i8*, i32, i32) local_unnamed_addr
 
@@ -31,7 +25,7 @@ entry:
 }
 
 ; Function Attrs: nounwind
-define void @global.counter.destroy(%global.counter* nocapture %this, i1 %free) #2 {
+define void @global.counter.destroy(%global.counter* nocapture %this, i1 %free) #1 {
 entry:
   %0 = bitcast %global.counter* %this to i8*
   tail call void @free(i8* %0)
@@ -39,7 +33,7 @@ entry:
 }
 
 ; Function Attrs: nofree norecurse nounwind
-define void @global.counter.retain_shared(%global.counter* nocapture %this) #3 {
+define void @global.counter.retain_shared(%global.counter* nocapture %this) #2 {
 entry:
   %0 = getelementptr %global.counter, %global.counter* %this, i64 0, i32 1
   %1 = load i32, i32* %0, align 4
@@ -49,7 +43,7 @@ entry:
 }
 
 ; Function Attrs: nofree norecurse nounwind
-define void @global.counter.retain_weak(%global.counter* nocapture %this) #3 {
+define void @global.counter.retain_weak(%global.counter* nocapture %this) #2 {
 entry:
   %0 = getelementptr %global.counter, %global.counter* %this, i64 0, i32 2
   %1 = load i32, i32* %0, align 4
@@ -59,7 +53,7 @@ entry:
 }
 
 ; Function Attrs: nofree norecurse nounwind
-define void @global.counter.release_weak(%global.counter* nocapture %this) #3 {
+define void @global.counter.release_weak(%global.counter* nocapture %this) #2 {
 entry:
   %0 = getelementptr %global.counter, %global.counter* %this, i64 0, i32 2
   %1 = load i32, i32* %0, align 4
@@ -69,7 +63,7 @@ entry:
 }
 
 ; Function Attrs: norecurse nounwind readonly
-define i32 @global.counter.shared_count(%global.counter* nocapture readonly %this) #4 {
+define i32 @global.counter.shared_count(%global.counter* nocapture readonly %this) #3 {
 entry:
   %0 = getelementptr %global.counter, %global.counter* %this, i64 0, i32 1
   %1 = load i32, i32* %0, align 4
@@ -77,7 +71,7 @@ entry:
 }
 
 ; Function Attrs: norecurse nounwind readonly
-define i32 @global.counter.weak_count(%global.counter* nocapture readonly %this) #4 {
+define i32 @global.counter.weak_count(%global.counter* nocapture readonly %this) #3 {
 entry:
   %0 = getelementptr %global.counter, %global.counter* %this, i64 0, i32 2
   %1 = load i32, i32* %0, align 4
@@ -85,15 +79,21 @@ entry:
 }
 
 ; Function Attrs: norecurse nounwind readonly
-define i8* @global.counter.get_object(%global.counter* nocapture readonly %this) #4 {
+define i8* @global.counter.get_object(%global.counter* nocapture readonly %this) #3 {
 entry:
   %0 = getelementptr %global.counter, %global.counter* %this, i64 0, i32 3
   %1 = load i8*, i8** %0, align 8
   ret i8* %1
 }
 
-attributes #0 = { norecurse nounwind readnone }
-attributes #1 = { nofree nounwind }
-attributes #2 = { nounwind }
-attributes #3 = { nofree norecurse nounwind }
-attributes #4 = { norecurse nounwind readonly }
+; Function Attrs: norecurse nounwind readnone
+define i32 @main() local_unnamed_addr #4 {
+entry:
+  ret i32 0
+}
+
+attributes #0 = { nofree nounwind }
+attributes #1 = { nounwind }
+attributes #2 = { nofree norecurse nounwind }
+attributes #3 = { norecurse nounwind readonly }
+attributes #4 = { norecurse nounwind readnone }

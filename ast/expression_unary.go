@@ -83,7 +83,7 @@ func (*Unary) IsConstant() bool {
 	return false
 }
 
-func (*Unary) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+func (*Unary) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
 	//TO-DO
 	return nil
 }

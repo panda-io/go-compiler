@@ -9,7 +9,7 @@ type Expression interface {
 	Type(*Context) ir.Type
 	IsConstant() bool
 	GenerateIR(*Context) ir.Value
-	GenerateConstIR(c Context, exprect ir.Type) ir.Value
+	GenerateConstIR(p *Program, exprect ir.Type) ir.Value
 }
 
 type ExpressionBase struct {

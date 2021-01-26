@@ -24,6 +24,6 @@ func (*New) IsConstant() bool {
 	return false
 }
 
-func (*New) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+func (*New) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
 	return nil
 }

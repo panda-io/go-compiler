@@ -49,7 +49,7 @@ func (*Decrement) IsConstant() bool {
 	return false
 }
 
-func (*Decrement) GenerateConstIR(c Context, exprect ir.Type) ir.Value {
+func (*Decrement) GenerateConstIR(p *Program, exprect ir.Type) ir.Value {
 	//TO-DO
 	return nil
 }
