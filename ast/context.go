@@ -30,6 +30,8 @@ func (c *Context) NewContext() *Context {
 		Program:  c.Program,
 		Function: c.Function,
 
+		LeaveBlock: c.LeaveBlock,
+
 		parent:  c,
 		objects: make(map[string]ir.Value),
 	}

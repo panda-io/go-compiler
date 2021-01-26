@@ -53,41 +53,41 @@ const (
 )
 
 // IPred is an integer comparison predicate.
-type IPred uint8
+type IPred string
 
 // Integer predicates.
 const (
-	IPredEQ  IPred = iota // eq
-	IPredNE               // ne
-	IPredSGE              // sge
-	IPredSGT              // sgt
-	IPredSLE              // sle
-	IPredSLT              // slt
-	IPredUGE              // uge
-	IPredUGT              // ugt
-	IPredULE              // ule
-	IPredULT              // ult
+	IPredEQ  IPred = "eq"  // eq
+	IPredNE  IPred = "ne"  // ne
+	IPredSGE IPred = "sge" // sge
+	IPredSGT IPred = "sgt" // sgt
+	IPredSLE IPred = "sle" // sle
+	IPredSLT IPred = "slt" // slt
+	IPredUGE IPred = "uge" // uge
+	IPredUGT IPred = "ugt" // ugt
+	IPredULE IPred = "ule" // ule
+	IPredULT IPred = "ult" // ult
 )
 
 // FPred is a floating-point comparison predicate.
-type FPred uint8
+type FPred string
 
 // Floating-point predicates.
 const (
-	FPredFalse FPred = iota // false
-	FPredOEQ                // oeq
-	FPredOGE                // oge
-	FPredOGT                // ogt
-	FPredOLE                // ole
-	FPredOLT                // olt
-	FPredONE                // one
-	FPredORD                // ord
-	FPredTrue               // true
-	FPredUEQ                // ueq
-	FPredUGE                // uge
-	FPredUGT                // ugt
-	FPredULE                // ule
-	FPredULT                // ult
-	FPredUNE                // une
-	FPredUNO                // uno
+	FPredFalse FPred = "false" // false
+	FPredOEQ   FPred = "oeq"   // oeq
+	FPredOGE   FPred = "oge"   // oge
+	FPredOGT   FPred = "ogt"   // ogt
+	FPredOLE   FPred = "ole"   // ole
+	FPredOLT   FPred = "olt"   // olt
+	FPredONE   FPred = "one"   // one
+	FPredORD   FPred = "ord"   // ord
+	FPredTrue  FPred = "true"  // true
+	FPredUEQ   FPred = "ueq"   // ueq
+	FPredUGE   FPred = "uge"   // uge
+	FPredUGT   FPred = "ugt"   // ugt
+	FPredULE   FPred = "ule"   // ule
+	FPredULT   FPred = "ult"   // ult
+	FPredUNE   FPred = "une"   // une
+	FPredUNO   FPred = "uno"   // uno
 )

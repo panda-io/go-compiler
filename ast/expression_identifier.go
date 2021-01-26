@@ -14,7 +14,20 @@ type Identifier struct {
 func (i *Identifier) Type(c *Context) ir.Type {
 	t := c.ObjectType(i.Name)
 	if t == nil {
-		c.Program.Error(i.Position, fmt.Sprintf("%s undefined", i.Name))
+		_, d := c.Program.FindSelector("", i.Name)
+		if d == nil {
+			c.Program.Error(i.Position, fmt.Sprintf("undefined %s", i.Name))
+			return nil
+		}
+		switch t := d.(type) {
+		case *Variable:
+			return t.IRVariable.Type()
+		case *Function:
+			return t.IRFunction.Type()
+		default:
+			c.Program.Error(i.Position, fmt.Sprintf("invalid type for identifier %s", i.Name))
+			return nil
+		}
 	}
 	return t
 }

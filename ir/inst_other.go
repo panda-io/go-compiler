@@ -62,7 +62,7 @@ func (inst *InstICmp) Type() Type {
 func (inst *InstICmp) LLString() string {
 	buf := &strings.Builder{}
 	fmt.Fprintf(buf, "%s = ", inst.Ident())
-	fmt.Fprintf(buf, "icmp %d %s, %s", inst.Pred, inst.X, inst.Y.Ident())
+	fmt.Fprintf(buf, "icmp %s %s, %s", inst.Pred, inst.X, inst.Y.Ident())
 	return buf.String()
 }
 
@@ -122,7 +122,7 @@ func (inst *InstFCmp) LLString() string {
 	buf := &strings.Builder{}
 	fmt.Fprintf(buf, "%s = ", inst.Ident())
 	buf.WriteString("fcmp")
-	fmt.Fprintf(buf, " %d %s, %s", inst.Pred, inst.X, inst.Y.Ident())
+	fmt.Fprintf(buf, " %s %s, %s", inst.Pred, inst.X, inst.Y.Ident())
 	return buf.String()
 }
 

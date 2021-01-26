@@ -27,6 +27,15 @@ function add(a int, b int) int
 
 public function main() int
 {
+    a++;
+    if (a == 0)
+    {
+        libc.puts("a is 0");
+    }
+    if (a == 1)
+    {
+        libc.puts("a is 1");
+    }
     //libc.puts("hello world");
     return 0;
 }
