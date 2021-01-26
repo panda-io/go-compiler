@@ -1,3 +1,7 @@
+@global.a = global i32 zeroinitializer
+@global.b = global i32 1
+@global.c = global i32 2
+
 declare i32 @puts(i8* %text)
 
 declare i8* @malloc(i32 %size)

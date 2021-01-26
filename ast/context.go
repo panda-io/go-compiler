@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"crypto/md5"
 	"fmt"
 
 	"github.com/panda-foundation/go-compiler/ir"
@@ -96,17 +95,4 @@ func (c *Context) FindSelector(selector string, member string) (parent ir.Value,
 		//parent is an object //class instance
 	}*/
 	return
-}
-
-func (c *Context) AddString(value string) *ir.Global {
-	bytes := []byte(value)
-	bytes = append(bytes, 0)
-	hash := fmt.Sprintf("%x", md5.Sum(bytes))
-	if s, ok := c.Program.Strings[hash]; ok {
-		return s
-	}
-	s := c.Program.IRModule.NewGlobalDef("string."+hash, ir.NewCharArray(bytes))
-	s.Immutable = true
-	c.Program.Strings[hash] = s
-	return s
 }

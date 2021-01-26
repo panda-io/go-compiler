@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"crypto/md5"
+	"fmt"
 	"strings"
 
 	"github.com/panda-foundation/go-compiler/ir"
@@ -68,6 +70,19 @@ func (p *Program) FindDeclaration(t *TypeName) (string, Declaration) {
 	return p.FindSelector(t.Selector, t.Name)
 }
 
+func (p *Program) AddString(value string) *ir.Global {
+	bytes := []byte(value)
+	bytes = append(bytes, 0)
+	hash := fmt.Sprintf("%x", md5.Sum(bytes))
+	if s, ok := p.Strings[hash]; ok {
+		return s
+	}
+	s := p.IRModule.NewGlobalDef("string."+hash, ir.NewCharArray(bytes))
+	s.Immutable = true
+	p.Strings[hash] = s
+	return s
+}
+
 func (p *Program) Error(offset int, message string) {
 	p.Errors = append(p.Errors, &Error{
 		Position: p.Module.File.Position(offset),
@@ -91,6 +106,7 @@ func (p *Program) GenerateIR() string {
 
 		for _, i := range m.Interfaces {
 			i.ResolveParents(p)
+			//TO-DO something here
 		}
 
 		for _, c := range m.Classes {
@@ -113,6 +129,10 @@ func (p *Program) GenerateIR() string {
 	// second pass (generate functions)
 	for _, m := range p.Modules {
 		p.Module = m
+
+		for _, v := range m.Variables {
+			v.GenerateIR(p)
+		}
 
 		for _, f := range m.Functions {
 			f.GenerateIR(p)

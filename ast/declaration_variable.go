@@ -17,14 +17,15 @@ type Variable struct {
 
 func (v *Variable) GenerateIR(p *Program) {
 	if v.Value != nil {
-		v.IRVariable = p.IRModule.NewGlobal(v.Qualified(p.Module.Namespace), v.Type.Type(p))
-	} else {
-		/* TO-DO
-		value := v.Value.GenerateIR(c) // GenerateConstantIR
-		if constValue, ok := value.(ir.Constant); ok {
-			v.IRVariable = p.IRModule.NewGlobalDef(v.Qualified(c.Module.Namespace), constValue)
+		value := v.Value.GenerateConstIR(p, v.Type.Type(p))
+		if value == nil {
+			p.Error(v.Name.Position, "only constant expression is allowed to initialize value")
 		} else {
-			p.Error(v.Position, "variable initialize value must be constant type")
-		}*/
+			v.IRVariable = p.IRModule.NewGlobalDef(v.Qualified(p.Module.Namespace), value)
+		}
+	} else {
+		// zero initalize
+		// TO-DO class type conversion
+		v.IRVariable = p.IRModule.NewGlobalDef(v.Qualified(p.Module.Namespace), ir.NewZeroInitializer(v.Type.Type(p)))
 	}
 }
