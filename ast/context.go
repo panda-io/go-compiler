@@ -19,6 +19,7 @@ type Context struct {
 
 	Block      *ir.Block
 	LeaveBlock *ir.Block
+	LoopBlock  *ir.Block
 	Terminated bool
 
 	parent  *Context
@@ -31,6 +32,7 @@ func (c *Context) NewContext() *Context {
 		Function: c.Function,
 
 		LeaveBlock: c.LeaveBlock,
+		LoopBlock:  c.LoopBlock,
 
 		parent:  c,
 		objects: make(map[string]ir.Value),

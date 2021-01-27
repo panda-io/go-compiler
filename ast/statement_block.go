@@ -6,14 +6,15 @@ type Block struct {
 }
 
 func (b *Block) GenerateIR(c *Context) bool {
+	terminated := false
 	for _, stmt := range b.Statements {
 		ctx := c
 		if _, ok := stmt.(*Block); ok {
 			ctx = c.NewContext()
 		}
 		if stmt.GenerateIR(ctx) {
-			return true
+			terminated = true
 		}
 	}
-	return false
+	return terminated
 }

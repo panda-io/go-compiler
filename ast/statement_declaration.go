@@ -9,5 +9,6 @@ type DeclarationStatement struct {
 
 func (*DeclarationStatement) GenerateIR(*Context) bool {
 	//TO-DO // zero initialize
+	//Builtin, TypeName
 	return false
 }

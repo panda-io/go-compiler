@@ -176,17 +176,27 @@ func (p *Parser) parseSwitchStatement() *ast.Switch {
 	p.next()
 	p.expect(token.LeftParen)
 	first := p.parseSimpleStatement(false)
+	var operand ast.Statement
 	if p.token == token.Semi {
 		p.next()
 		s.Initialization = first
-		s.Operand = p.parseSimpleStatement(false)
+		operand = p.parseSimpleStatement(false)
 	} else {
-		s.Operand = first
+		operand = first
 	}
+	if expr, ok := operand.(*ast.ExpressionStatement); ok {
+		s.Operand = expr.Expression
+	} else {
+		p.error(operand.GetPosition(), "expect expression")
+	}
+
 	p.expect(token.RightParen)
 	p.expect(token.LeftBrace)
-	for p.token == token.Case || p.token == token.Default {
-		s.Body = append(s.Body, p.parseCaseStatement())
+	for p.token == token.Case {
+		s.Cases = append(s.Cases, p.parseCaseStatement())
+	}
+	if p.token == token.Default {
+		s.Default = p.parseCaseStatement()
 	}
 	p.expect(token.RightBrace)
 	return s

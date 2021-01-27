@@ -17,7 +17,7 @@ func (i *If) GenerateIR(c *Context) bool {
 		i.Initialization.GenerateIR(ctx)
 	}
 
-	var leaveBlock *ir.Block
+	leaveBlock := c.Function.IRFunction.NewBlock("")
 
 	bodyBlock := c.Function.IRFunction.NewBlock("")
 	bodyContext := ctx.NewContext()
@@ -26,15 +26,11 @@ func (i *If) GenerateIR(c *Context) bool {
 	if bodyContext.Terminated {
 		ctx.Terminated = true
 	} else {
-		leaveBlock = c.Function.IRFunction.NewBlock("")
 		bodyContext.Block.Term = ir.NewBr(leaveBlock)
 	}
 
 	elseBlock := leaveBlock
 	if i.Else == nil {
-		if leaveBlock == nil {
-			leaveBlock = c.Function.IRFunction.NewBlock("")
-		}
 		ctx.Terminated = false
 	} else {
 		elseBlock = c.Function.IRFunction.NewBlock("")
@@ -43,9 +39,6 @@ func (i *If) GenerateIR(c *Context) bool {
 		i.Else.GenerateIR(elseContext)
 		if !elseContext.Terminated {
 			ctx.Terminated = false
-			if leaveBlock == nil {
-				leaveBlock = c.Function.IRFunction.NewBlock("")
-			}
 			elseBlock.Term = ir.NewBr(leaveBlock)
 		}
 	}
