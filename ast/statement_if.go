@@ -23,29 +23,29 @@ func (i *If) GenerateIR(c *Context) bool {
 	bodyContext := ctx.NewContext()
 	bodyContext.Block = bodyBlock
 	i.Body.GenerateIR(bodyContext)
-	if bodyContext.Terminated {
-		ctx.Terminated = true
+	if bodyContext.Returned {
+		ctx.Returned = true
 	} else {
-		bodyContext.Block.Term = ir.NewBr(leaveBlock)
+		bodyContext.Block.AddInstruction(ir.NewBr(leaveBlock))
 	}
 
 	elseBlock := leaveBlock
 	if i.Else == nil {
-		ctx.Terminated = false
+		ctx.Returned = false
 	} else {
 		elseBlock = c.Function.IRFunction.NewBlock("")
 		elseContext := ctx.NewContext()
 		elseContext.Block = elseBlock
 		i.Else.GenerateIR(elseContext)
-		if !elseContext.Terminated {
-			ctx.Terminated = false
-			elseBlock.Term = ir.NewBr(leaveBlock)
+		ctx.Returned = elseContext.Returned
+		if !elseContext.Returned {
+			elseBlock.AddInstruction(ir.NewBr(leaveBlock))
 		}
 	}
 
-	c.Block.Term = ir.NewCondBr(i.Condition.GenerateIR(c), bodyBlock, elseBlock)
+	c.Block.AddInstruction(ir.NewCondBr(i.Condition.GenerateIR(c), bodyBlock, elseBlock))
 	c.Block = leaveBlock
-	c.Terminated = ctx.Terminated
+	c.Returned = ctx.Returned
 
-	return ctx.Terminated
+	return ctx.Returned
 }

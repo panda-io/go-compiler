@@ -1,0 +1,1 @@
+llc-10 -filetype=obj -o basic.o basic.ll

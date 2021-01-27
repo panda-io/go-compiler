@@ -55,7 +55,7 @@ func (e *ExprICmp) Type() Type {
 // Ident returns the identifier associated with the constant expression.
 func (e *ExprICmp) Ident() string {
 	// 'icmp' Pred=IPred '(' X=TypeConst ',' Y=TypeConst ')'
-	return fmt.Sprintf("icmp %d (%s, %s)", e.Pred, e.X, e.Y)
+	return fmt.Sprintf("icmp %s (%s, %s)", e.Pred, e.X, e.Y)
 }
 
 // Simplify returns an equivalent (and potentially simplified) constant to the
@@ -115,7 +115,7 @@ func (e *ExprFCmp) Type() Type {
 // Ident returns the identifier associated with the constant expression.
 func (e *ExprFCmp) Ident() string {
 	// 'fcmp' Pred=FPred '(' X=TypeConst ',' Y=TypeConst ')'
-	return fmt.Sprintf("fcmp %d (%s, %s)", e.Pred, e.X, e.Y)
+	return fmt.Sprintf("fcmp %s (%s, %s)", e.Pred, e.X, e.Y)
 }
 
 // Simplify returns an equivalent (and potentially simplified) constant to the

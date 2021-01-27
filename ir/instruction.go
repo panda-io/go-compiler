@@ -180,3 +180,17 @@ func (*InstVAArg) isInstruction()      {}
 func (*InstLandingPad) isInstruction() {}
 func (*InstCatchPad) isInstruction()   {}
 func (*InstCleanupPad) isInstruction() {}
+
+// Terminator instructions
+func (*TermRet) isInstruction()         {}
+func (*TermBr) isInstruction()          {}
+func (*TermCondBr) isInstruction()      {}
+func (*TermSwitch) isInstruction()      {}
+func (*TermIndirectBr) isInstruction()  {}
+func (*TermInvoke) isInstruction()      {}
+func (*TermCallBr) isInstruction()      {}
+func (*TermResume) isInstruction()      {}
+func (*TermCatchSwitch) isInstruction() {}
+func (*TermCatchRet) isInstruction()    {}
+func (*TermCleanupRet) isInstruction()  {}
+func (*TermUnreachable) isInstruction() {}

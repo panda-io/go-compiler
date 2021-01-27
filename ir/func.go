@@ -128,17 +128,6 @@ func (f *Func) AssignIDs() error {
 				return err
 			}
 		}
-		n, ok := block.Term.(Ident)
-		if !ok {
-			continue
-		}
-		// Skip void terminators (invoke, callbr with void return).
-		if Equal(n.Type(), Void) {
-			continue
-		}
-		if err := setName(n, &id); err != nil {
-			return err
-		}
 	}
 	return nil
 }

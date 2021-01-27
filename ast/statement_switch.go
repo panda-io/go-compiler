@@ -40,9 +40,7 @@ func (s *Switch) GenerateIR(c *Context) bool {
 	}
 	if !defaultContext.Terminated {
 		ctx.Terminated = false
-		if defaultBlock.Term == nil {
-			defaultBlock.Term = ir.NewBr(leaveBlock)
-		}
+		defaultBlock.AddInstruction(ir.NewBr(leaveBlock))
 	}
 
 	//ir.NewSwitch()

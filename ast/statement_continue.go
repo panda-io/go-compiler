@@ -10,6 +10,6 @@ func (con *Continue) GenerateIR(c *Context) bool {
 	if c.LoopBlock == nil {
 		c.Program.Error(con.Position, "invalid continue")
 	}
-	c.Block.Term = ir.NewBr(c.LoopBlock)
-	return false
+	c.Block.AddInstruction(ir.NewBr(c.LoopBlock))
+	return true
 }

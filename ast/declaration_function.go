@@ -72,16 +72,15 @@ func (f *Function) GenerateIR(p *Program) {
 				p.Error(f.Position, err.Error())
 			}
 		}
-		f.IREntry.Term = ir.NewBr(f.IRBody)
 
 		// prepare return value
-		if f.ReturnType == nil {
-			f.IRExit.Term = ir.NewRet(nil)
-		} else {
+		if f.ReturnType != nil {
 			alloca := ir.NewAlloca(f.ReturnType.Type(p))
 			f.IREntry.AddInstruction(alloca)
 			f.IRReturn = alloca
 		}
+
+		f.IREntry.AddInstruction(ir.NewBr(f.IRBody))
 
 		// generate constructor
 		if f.ObjectName != "" && f.Name.Name == Constructor {
@@ -125,14 +124,19 @@ func (f *Function) GenerateIR(p *Program) {
 		f.Body.GenerateIR(c)
 
 		if f.ObjectName != "" && f.Name.Name == Constructor {
-			c.Terminated = true
+			c.Returned = true
+			c.Block.AddInstruction(ir.NewBr(f.IRExit))
 		}
-		if f.ReturnType != nil && !c.Terminated {
+		if f.ReturnType == nil {
+			if !c.Returned {
+				c.Block.AddInstruction(ir.NewBr(f.IRExit))
+			}
+		} else if !c.Returned {
 			c.Program.Error(f.Position, "missing return")
 		}
-		c.Block.Term = ir.NewBr(f.IRExit)
 
 		// TO-DO clean up function variables in exit block
+		// exit
 
 		// generate destructor
 		if f.ObjectName != "" && f.Name.Name == Destructor {
@@ -145,10 +149,12 @@ func (f *Function) GenerateIR(p *Program) {
 		}
 
 		// return
-		if f.ReturnType != nil {
+		if f.ReturnType == nil {
+			f.IRExit.AddInstruction(ir.NewRet(nil))
+		} else {
 			load := ir.NewLoad(f.ReturnType.Type(p), f.IRReturn)
 			f.IRExit.AddInstruction(load)
-			f.IRExit.Term = ir.NewRet(load)
+			f.IRExit.AddInstruction(ir.NewRet(load))
 		}
 	}
 }

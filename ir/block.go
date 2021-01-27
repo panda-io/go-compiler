@@ -17,11 +17,6 @@ type Block struct {
 	LocalIdent
 	// Instructions of the basic block.
 	Insts []Instruction
-	// Terminator of the basic block.
-	Term Terminator
-
-	// extra.
-
 	// Parent function; field set by ir.Func.NewBlock.
 	Parent *Func `json:"-"`
 }
@@ -66,9 +61,5 @@ func (block *Block) LLString() string {
 	for _, inst := range block.Insts {
 		fmt.Fprintf(buf, "\t%s\n", inst.LLString())
 	}
-	if block.Term == nil {
-		panic(fmt.Sprintf("missing terminator in basic block %q.\ncurrent instructions:\n%s", block.Name(), buf.String()))
-	}
-	fmt.Fprintf(buf, "\t%s", block.Term.LLString())
 	return buf.String()
 }

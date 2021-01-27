@@ -20,6 +20,7 @@ type Context struct {
 	Block      *ir.Block
 	LeaveBlock *ir.Block
 	LoopBlock  *ir.Block
+	Returned   bool
 	Terminated bool
 
 	parent  *Context
