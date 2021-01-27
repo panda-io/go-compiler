@@ -80,8 +80,6 @@ func (f *Function) GenerateIR(p *Program) {
 			f.IRReturn = alloca
 		}
 
-		f.IREntry.AddInstruction(ir.NewBr(f.IRBody))
-
 		// generate constructor
 		if f.ObjectName != "" && f.Name.Name == Constructor {
 			// malloc struct and set 0
@@ -119,6 +117,8 @@ func (f *Function) GenerateIR(p *Program) {
 			}
 			f.IREntry.AddInstruction(ir.NewStore(instance, f.IRReturn))
 		}
+
+		f.IREntry.AddInstruction(ir.NewBr(f.IRBody))
 
 		c.Block = f.IRBody
 		f.Body.GenerateIR(c)

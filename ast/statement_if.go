@@ -10,7 +10,7 @@ type If struct {
 	Else           Statement
 }
 
-func (i *If) GenerateIR(c *Context) bool {
+func (i *If) GenerateIR(c *Context) {
 	ctx := c.NewContext()
 	ctx.Block = c.Block
 	if i.Initialization != nil {
@@ -46,6 +46,4 @@ func (i *If) GenerateIR(c *Context) bool {
 	c.Block.AddInstruction(ir.NewCondBr(i.Condition.GenerateIR(c), bodyBlock, elseBlock))
 	c.Block = leaveBlock
 	c.Returned = ctx.Returned
-
-	return ctx.Returned
 }

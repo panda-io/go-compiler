@@ -56,239 +56,239 @@ var (
 
 type Constant interface {
 	Value
-	Constant()
+	isConstant()
 }
 
 // === [ constant.Constant ] ===================================================
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Global) Constant() {}
+func (*Global) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Func) Constant() {}
+func (*Func) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Int) Constant() {}
+func (*Int) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Float) Constant() {}
+func (*Float) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Null) Constant() {}
+func (*Null) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Struct) Constant() {}
+func (*Struct) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Array) Constant() {}
+func (*Array) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*CharArray) Constant() {}
+func (*CharArray) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Vector) Constant() {}
+func (*Vector) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ZeroInitializer) Constant() {}
+func (*ZeroInitializer) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*Undef) Constant() {}
+func (*Undef) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*BlockAddress) Constant() {}
+func (*BlockAddress) isConstant() {}
 
 // --- [ Unary expressions ] ---------------------------------------------------
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFNeg) Constant() {}
+func (*ExprFNeg) isConstant() {}
 
 // --- [ Binary expressions ] --------------------------------------------------
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprAdd) Constant() {}
+func (*ExprAdd) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFAdd) Constant() {}
+func (*ExprFAdd) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprSub) Constant() {}
+func (*ExprSub) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFSub) Constant() {}
+func (*ExprFSub) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprMul) Constant() {}
+func (*ExprMul) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFMul) Constant() {}
+func (*ExprFMul) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprUDiv) Constant() {}
+func (*ExprUDiv) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprSDiv) Constant() {}
+func (*ExprSDiv) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFDiv) Constant() {}
+func (*ExprFDiv) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprURem) Constant() {}
+func (*ExprURem) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprSRem) Constant() {}
+func (*ExprSRem) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFRem) Constant() {}
+func (*ExprFRem) isConstant() {}
 
 // --- [ Bitwise expressions ] -------------------------------------------------
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprShl) Constant() {}
+func (*ExprShl) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprLShr) Constant() {}
+func (*ExprLShr) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprAShr) Constant() {}
+func (*ExprAShr) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprAnd) Constant() {}
+func (*ExprAnd) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprOr) Constant() {}
+func (*ExprOr) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprXor) Constant() {}
+func (*ExprXor) isConstant() {}
 
 // --- [ Vector expressions ] --------------------------------------------------
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprExtractElement) Constant() {}
+func (*ExprExtractElement) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprInsertElement) Constant() {}
+func (*ExprInsertElement) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprShuffleVector) Constant() {}
+func (*ExprShuffleVector) isConstant() {}
 
 // --- [ Aggregate expressions ] -----------------------------------------------
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprExtractValue) Constant() {}
+func (*ExprExtractValue) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprInsertValue) Constant() {}
+func (*ExprInsertValue) isConstant() {}
 
 // --- [ Memory expressions ] --------------------------------------------------
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprGetElementPtr) Constant() {}
+func (*ExprGetElementPtr) isConstant() {}
 
 // --- [ Conversion expressions ] ----------------------------------------------
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprTrunc) Constant() {}
+func (*ExprTrunc) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprZExt) Constant() {}
+func (*ExprZExt) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprSExt) Constant() {}
+func (*ExprSExt) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFPTrunc) Constant() {}
+func (*ExprFPTrunc) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFPExt) Constant() {}
+func (*ExprFPExt) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFPToUI) Constant() {}
+func (*ExprFPToUI) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFPToSI) Constant() {}
+func (*ExprFPToSI) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprUIToFP) Constant() {}
+func (*ExprUIToFP) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprSIToFP) Constant() {}
+func (*ExprSIToFP) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprPtrToInt) Constant() {}
+func (*ExprPtrToInt) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprIntToPtr) Constant() {}
+func (*ExprIntToPtr) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprBitCast) Constant() {}
+func (*ExprBitCast) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprAddrSpaceCast) Constant() {}
+func (*ExprAddrSpaceCast) isConstant() {}
 
 // --- [ Other expressions ] ---------------------------------------------------
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprICmp) Constant() {}
+func (*ExprICmp) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprFCmp) Constant() {}
+func (*ExprFCmp) isConstant() {}
 
 // IsConstant ensures that only constants can be assigned to the
 // constant.Constant interface.
-func (*ExprSelect) Constant() {}
+func (*ExprSelect) isConstant() {}
 
 // --- [ Index ] --------------------------------
 
-func (*Index) Constant() {}
+func (*Index) isConstant() {}

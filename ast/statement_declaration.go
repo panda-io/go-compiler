@@ -7,8 +7,7 @@ type DeclarationStatement struct {
 	Value Expression
 }
 
-func (*DeclarationStatement) GenerateIR(*Context) bool {
+func (*DeclarationStatement) GenerateIR(*Context) {
 	//TO-DO // zero initialize
 	//Builtin, TypeName
-	return false
 }

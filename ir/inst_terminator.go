@@ -28,6 +28,10 @@ import (
 //    *ir.TermCleanupRet    // https://godoc.org/github.com/llir/llvm/ir#TermCleanupRet
 //    *ir.TermUnreachable   // https://godoc.org/github.com/llir/llvm/ir#TermUnreachable
 
+type Terminator interface {
+	isTerminator()
+}
+
 // --- [ ret ] -----------------------------------------------------------------
 
 // TermRet is an LLVM IR ret terminator.
@@ -576,3 +580,17 @@ func (term *TermUnreachable) LLString() string {
 	buf.WriteString("unreachable")
 	return buf.String()
 }
+
+// Terminator instructions
+func (*TermRet) isTerminator()         {}
+func (*TermBr) isTerminator()          {}
+func (*TermCondBr) isTerminator()      {}
+func (*TermSwitch) isTerminator()      {}
+func (*TermIndirectBr) isTerminator()  {}
+func (*TermInvoke) isTerminator()      {}
+func (*TermCallBr) isTerminator()      {}
+func (*TermResume) isTerminator()      {}
+func (*TermCatchSwitch) isTerminator() {}
+func (*TermCatchRet) isTerminator()    {}
+func (*TermCleanupRet) isTerminator()  {}
+func (*TermUnreachable) isTerminator() {}

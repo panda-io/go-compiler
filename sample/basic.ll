@@ -4,20 +4,6 @@
 @string.459521b87e7c4e2aa0de9b45c0a81268 = constant [7 x i8] c"a is 0\00"
 @string.318ab47b7b6a7bd68c90f6696d16b2fc = constant [7 x i8] c"a is 1\00"
 
-declare i32 @puts(i8* %text)
-
-declare i8* @malloc(i32 %size)
-
-declare i8* @realloc(i8* %address, i32 %size)
-
-declare void @free(i8* %address)
-
-declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
-
-declare void @memcpy(i8* %dest, i8* %source, i32 %size)
-
-declare void @memset(i8* %source, i32 %value, i32 %size)
-
 define i32 @main() {
 entry:
 	%0 = alloca i32
@@ -61,3 +47,17 @@ exit:
 	br label %12
 
 }
+
+declare i32 @puts(i8* %text)
+
+declare i8* @malloc(i32 %size)
+
+declare i8* @realloc(i8* %address, i32 %size)
+
+declare void @free(i8* %address)
+
+declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
+
+declare void @memcpy(i8* %dest, i8* %source, i32 %size)
+
+declare void @memset(i8* %source, i32 %value, i32 %size)

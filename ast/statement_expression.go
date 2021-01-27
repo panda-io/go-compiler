@@ -5,7 +5,6 @@ type ExpressionStatement struct {
 	Expression Expression
 }
 
-func (e *ExpressionStatement) GenerateIR(c *Context) bool {
+func (e *ExpressionStatement) GenerateIR(c *Context) {
 	e.Expression.GenerateIR(c)
-	return false
 }

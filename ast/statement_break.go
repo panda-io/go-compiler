@@ -6,10 +6,9 @@ type Break struct {
 	StatementBase
 }
 
-func (b *Break) GenerateIR(c *Context) bool {
+func (b *Break) GenerateIR(c *Context) {
 	if c.LeaveBlock == nil {
 		c.Program.Error(b.Position, "invalid break")
 	}
 	c.Block.AddInstruction(ir.NewBr(c.LeaveBlock))
-	return true
 }

@@ -9,7 +9,7 @@ type Return struct {
 	Expression Expression
 }
 
-func (r *Return) GenerateIR(c *Context) bool {
+func (r *Return) GenerateIR(c *Context) {
 	value := r.Expression.GenerateIR(c)
 	var t ir.Type = ir.Void
 	if c.Function.ReturnType != nil {
@@ -25,7 +25,5 @@ func (r *Return) GenerateIR(c *Context) bool {
 		c.Program.Error(r.Position, "return type mismatch with function define")
 	}
 	c.Returned = true
-	c.Terminated = true
 	c.Block.AddInstruction(ir.NewBr(c.Function.IRExit))
-	return true
 }

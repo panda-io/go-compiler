@@ -16,9 +16,8 @@ type Block struct {
 	// Name of local variable associated with the basic block.
 	LocalIdent
 	// Instructions of the basic block.
-	Insts []Instruction
-	// Parent function; field set by ir.Func.NewBlock.
-	Parent *Func `json:"-"`
+	Insts      []Instruction
+	Terminated bool
 }
 
 // NewBlock returns a new basic block based on the given label name. An empty
@@ -30,7 +29,13 @@ func NewBlock(name string) *Block {
 }
 
 func (block *Block) AddInstruction(inst Instruction) {
+	if block.Terminated {
+		panic("block already terminated")
+	}
 	block.Insts = append(block.Insts, inst)
+	if _, ok := inst.(Terminator); ok {
+		block.Terminated = true
+	}
 }
 
 // String returns the LLVM syntax representation of the basic block as a

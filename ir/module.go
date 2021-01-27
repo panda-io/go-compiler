@@ -65,7 +65,6 @@ func (m *Module) WriteTo(w io.Writer) (n int64, err error) {
 // The Parent field of the function is set to m.
 func (m *Module) NewFunc(name string, retType Type, params ...*Param) *Func {
 	f := NewFunc(name, retType, params...)
-	f.Parent = m
 	m.Funcs = append(m.Funcs, f)
 	return f
 }

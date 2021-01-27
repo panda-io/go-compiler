@@ -5,15 +5,12 @@ type Block struct {
 	Statements []Statement
 }
 
-func (b *Block) GenerateIR(c *Context) bool {
+func (b *Block) GenerateIR(c *Context) {
 	for _, stmt := range b.Statements {
 		ctx := c
 		if _, ok := stmt.(*Block); ok {
 			ctx = c.NewContext()
 		}
-		if stmt.GenerateIR(ctx) {
-			return true
-		}
+		stmt.GenerateIR(ctx)
 	}
-	return false
 }

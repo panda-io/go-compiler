@@ -18,16 +18,10 @@ type Func struct {
 	Params []*Param
 	// Basic blocks.
 	Blocks []*Block // nil if declaration.
-
-	// extra.
-
 	// Pointer type to function, including an optional address space. If Typ is
 	// nil, the first invocation of Type stores a pointer type with Sig as
 	// element.
 	Typ *PointerType
-
-	// Parent module; field set by ir.Module.NewFunc.
-	Parent *Module `json:"-"`
 }
 
 // NewFunc returns a new function based on the given function name, return type
@@ -51,7 +45,6 @@ func NewFunc(name string, retType Type, params ...*Param) *Func {
 // The Parent field of the block is set to f.
 func (f *Func) NewBlock(name string) *Block {
 	block := NewBlock(name)
-	block.Parent = f
 	f.Blocks = append(f.Blocks, block)
 	return block
 }
