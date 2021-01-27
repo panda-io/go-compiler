@@ -127,12 +127,12 @@ func (f *Function) GenerateIR(p *Program) {
 			c.Returned = true
 			c.Block.AddInstruction(ir.NewBr(f.IRExit))
 		}
-		if f.ReturnType == nil {
-			if !c.Returned {
+		if !c.Block.Terminated {
+			if c.Returned {
 				c.Block.AddInstruction(ir.NewBr(f.IRExit))
+			} else {
+				c.Program.Error(f.Position, "missing return")
 			}
-		} else if !c.Returned {
-			c.Program.Error(f.Position, "missing return")
 		}
 
 		// TO-DO clean up function variables in exit block

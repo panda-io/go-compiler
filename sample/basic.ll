@@ -41,7 +41,7 @@ exit:
 6:
 	%7 = load i32, i32* @global.a
 	%8 = icmp eq i32 %7, 1
-	br i1 %8, label %13, label %12
+	br i1 %8, label %15, label %12
 
 
 9:
@@ -51,13 +51,28 @@ exit:
 
 
 12:
-	store i32 0, i32* %0
+	%13 = load i32, i32* @global.a
+	%14 = icmp eq i32 %13, 1
+	br i1 %14, label %19, label %20
+
+
+15:
+	%16 = bitcast [7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc to i8*
+	%17 = call i32 @puts(i8* %16)
+	br label %12
+
+
+18:
 	br label %exit
 
 
-13:
-	%14 = bitcast [7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc to i8*
-	%15 = call i32 @puts(i8* %14)
-	br label %12
+19:
+	store i32 1, i32* %0
+	br label %exit
+
+
+20:
+	store i32 0, i32* %0
+	br label %exit
 
 }
