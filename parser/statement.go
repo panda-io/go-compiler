@@ -235,7 +235,11 @@ func (p *Parser) parseForStatement() ast.Statement {
 			p.next()
 			s := &ast.For{}
 			s.Position = position
-			s.Condition = first
+			if expr, ok := first.(*ast.ExpressionStatement); ok {
+				s.Condition = expr.Expression
+			} else {
+				p.error(first.GetPosition(), "expect expression")
+			}
 			s.Body = p.parseStatement()
 			return s
 		} else if p.token == token.Colon {
@@ -265,7 +269,11 @@ func (p *Parser) parseForStatement() ast.Statement {
 				s := &ast.For{}
 				s.Position = position
 				s.Initialization = first
-				s.Condition = second
+				if expr, ok := second.(*ast.ExpressionStatement); ok {
+					s.Condition = expr.Expression
+				} else {
+					p.error(second.GetPosition(), "expect expression")
+				}
 				s.Body = p.parseStatement()
 				return s
 			} else if p.token == token.Semi {
@@ -273,7 +281,11 @@ func (p *Parser) parseForStatement() ast.Statement {
 				s := &ast.For{}
 				s.Position = position
 				s.Initialization = first
-				s.Condition = second
+				if expr, ok := second.(*ast.ExpressionStatement); ok {
+					s.Condition = expr.Expression
+				} else {
+					p.error(second.GetPosition(), "expect expression")
+				}
 				if p.token != token.RightParen {
 					s.Post = p.parseSimpleStatement(false)
 				} else {

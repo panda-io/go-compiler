@@ -26,7 +26,6 @@ function add(a int, b int) int
 public function main() int
 {
     a++;
-    a++;
     if (a == 0)
     {
         libc.puts("a is 0");
@@ -35,7 +34,6 @@ public function main() int
     {
         libc.puts("a is 1");
     }
-    //libc.puts("hello world");
 
     switch (a)
     {
@@ -52,5 +50,12 @@ public function main() int
         default:
             libc.puts("default");
     }
+
+    for (a = 0; a < 5; a++)
+    {
+        libc.puts("loop");
+    }
+
+    //libc.puts("hello world");
     return 0;
 }

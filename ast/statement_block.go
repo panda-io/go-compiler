@@ -13,7 +13,7 @@ func (b *Block) GenerateIR(c *Context) {
 		}
 		stmt.GenerateIR(ctx)
 		if ctx.Block.Terminated {
-			//TO-DO warning: unreachable code
+			//TO-DO warning: unreachable code //Start, End of block
 			return
 		}
 	}
