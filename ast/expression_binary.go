@@ -117,6 +117,7 @@ func (b *Binary) GenerateIR(c *Context) ir.Value {
 
 	switch b.Operator {
 	case token.Assign:
+		//TO-DO expected type //const check
 		/*
 			t := l.Type()
 			prog.Compiler.PushType(targetType)
@@ -168,6 +169,7 @@ func (b *Binary) GenerateIR(c *Context) ir.Value {
 		return nil
 
 	case token.Equal, token.NotEqual, token.Less, token.LessEqual, token.Greater, token.GreaterEqual:
+		//TO-DO expected type //const check
 		t, v1, v2, err := PromoteNumberValue(c, b.Left, b.Right)
 		if err != nil {
 			c.Program.Error(b.Position, err.Error())

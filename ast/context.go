@@ -41,13 +41,64 @@ func (c *Context) NewContext() *Context {
 
 func (c *Context) ObjectType(name string) ir.Type {
 	if v, ok := c.objects[name]; ok {
-		return v.Type()
+		return c.ContentType(v)
 	} else if c.Function.Class != nil && c.Function.Class.HasMember(name) {
 		return c.Function.Class.MemberType(name)
 	} else if c.parent != nil {
 		return c.parent.ObjectType(name)
 	}
 	return nil
+}
+
+func (c *Context) ContentType(value ir.Value) ir.Type {
+	switch t := value.(type) {
+	// global define
+	case *ir.Global:
+		return t.ContentType
+
+	// global define
+	case *ir.Func:
+		return t.Sig
+
+	// alloca in function
+	case *ir.InstAlloca:
+		return t.ElemType
+
+	// class member
+	case *ir.InstGetElementPtr:
+		return t.Type().(*ir.PointerType).ElemType
+	}
+	return nil
+}
+
+func (c *Context) AutoLoad(value ir.Value) ir.Value {
+	switch t := value.(type) {
+	// global define
+	case *ir.Global:
+		load := ir.NewLoad(t.ContentType, t)
+		c.Block.AddInstruction(load)
+		return load
+
+	// global define
+	case *ir.Func:
+		//TO-DO use as pointer // implement later
+		return t
+
+	// alloca in function
+	case *ir.InstAlloca:
+		load := ir.NewLoad(t.ElemType, t)
+		c.Block.AddInstruction(load)
+		return load
+
+	// class member
+	case *ir.InstGetElementPtr:
+		typ := t.Type().(*ir.PointerType)
+		load := ir.NewLoad(typ.ElemType, t)
+		c.Block.AddInstruction(load)
+		return load
+	}
+
+	return value
 }
 
 func (c *Context) AddObject(name string, value ir.Value) error {

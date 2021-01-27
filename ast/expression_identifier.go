@@ -21,9 +21,9 @@ func (i *Identifier) Type(c *Context) ir.Type {
 		}
 		switch t := d.(type) {
 		case *Variable:
-			return t.IRVariable.Type()
+			return t.IRVariable.ContentType
 		case *Function:
-			return t.IRFunction.Type()
+			return t.IRFunction.Sig
 		default:
 			c.Program.Error(i.Position, fmt.Sprintf("invalid type for identifier %s", i.Name))
 			return nil
@@ -50,25 +50,7 @@ func (i *Identifier) GenerateIR(c *Context) ir.Value {
 			return nil
 		}
 	}
-	switch t := v.(type) {
-	case *ir.Global:
-		load := ir.NewLoad(t.Type(), t)
-		c.Block.AddInstruction(load)
-		return load
-
-	case *ir.InstAlloca:
-		load := ir.NewLoad(t.ElemType, t)
-		c.Block.AddInstruction(load)
-		return load
-
-	case *ir.InstLoad:
-		return t
-
-	case *ir.InstGetElementPtr:
-		return t
-	}
-	c.Program.Error(i.Position, fmt.Sprintf("invalid variable: %s", i.Name))
-	return nil
+	return v
 }
 
 func (i *Identifier) IsConstant(p *Program) bool {

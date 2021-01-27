@@ -11,11 +11,8 @@ type Increment struct {
 
 func (i *Increment) Type(c *Context) ir.Type {
 	t := i.Expression.Type(c)
-	if ir.IsPointer(t) {
-		e := t.(*ir.PointerType).ElemType
-		if ir.IsNumber(e) {
-			return e
-		}
+	if ir.IsNumber(t) {
+		return t
 	}
 	c.Program.Error(i.Position, "invalid type for increment expression")
 	return nil
@@ -23,20 +20,18 @@ func (i *Increment) Type(c *Context) ir.Type {
 
 func (i *Increment) GenerateIR(c *Context) ir.Value {
 	t := i.Expression.Type(c)
-	if ir.IsPointer(t) {
-		p := i.Expression.GenerateIR(c)
-		e := t.(*ir.PointerType).ElemType
-		load := ir.NewLoad(e, p)
-		c.Block.AddInstruction(load)
-		if ir.IsInt(e) {
-			add := ir.NewAdd(load, ir.NewInt(e.(*ir.IntType), 1))
+	if ir.IsNumber(t) {
+		e := i.Expression.GenerateIR(c)
+		operand := c.AutoLoad(e)
+		if ir.IsInt(t) {
+			add := ir.NewAdd(operand, ir.NewInt(t.(*ir.IntType), 1))
 			c.Block.AddInstruction(add)
-			c.Block.AddInstruction(ir.NewStore(add, p))
+			c.Block.AddInstruction(ir.NewStore(add, e))
 			return add
-		} else if ir.IsFloat(e) {
-			add := ir.NewFAdd(load, ir.NewFloat(e.(*ir.FloatType), 1))
+		} else if ir.IsFloat(t) {
+			add := ir.NewFAdd(operand, ir.NewFloat(t.(*ir.FloatType), 1))
 			c.Block.AddInstruction(add)
-			c.Block.AddInstruction(ir.NewStore(add, p))
+			c.Block.AddInstruction(ir.NewStore(add, e))
 			return add
 		}
 	}

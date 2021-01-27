@@ -198,6 +198,9 @@ func (p *Parser) parseSwitchStatement() *ast.Switch {
 	if p.token == token.Default {
 		s.Default = p.parseCaseStatement()
 	}
+	if len(s.Cases) == 0 {
+		p.error(s.Position, "expect 'case'")
+	}
 	p.expect(token.RightBrace)
 	return s
 }

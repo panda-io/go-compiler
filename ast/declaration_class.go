@@ -250,9 +250,9 @@ func (c *Class) HasMember(member string) bool {
 
 func (c *Class) MemberType(member string) ir.Type {
 	if index, ok := c.VariableIndexes[member]; ok {
-		return ir.GepInstType(c.IRStruct, []ir.Value{ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index))})
+		return ir.GepInstType(c.IRStruct, []ir.Value{ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index))}).(*ir.PointerType).ElemType
 	} else if index, ok := c.FunctionIndexes[member]; ok {
-		return ir.GepInstType(c.IRVTable, []ir.Value{ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index))})
+		return ir.GepInstType(c.IRVTable, []ir.Value{ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index))}).(*ir.PointerType).ElemType
 	}
 	return nil
 }

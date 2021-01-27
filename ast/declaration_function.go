@@ -57,17 +57,15 @@ func (f *Function) GenerateIR(p *Program) {
 
 		// prepare params
 		for _, param := range f.IRParams {
-			var value ir.Value
-			if ir.IsPointer(param.Typ) {
-				value = param
-			} else {
-				alloc := ir.NewAlloca(param.Typ)
-				f.IREntry.AddInstruction(alloc)
-				store := ir.NewStore(param, alloc)
-				f.IREntry.AddInstruction(store)
-				value = alloc
-			}
-			err := c.AddObject(param.LocalName, value)
+			/*
+				if ir.IsPointer(param.Typ) {
+					//TO-DO add weak ref
+				}*/
+			alloc := ir.NewAlloca(param.Typ)
+			f.IREntry.AddInstruction(alloc)
+			store := ir.NewStore(param, alloc)
+			f.IREntry.AddInstruction(store)
+			err := c.AddObject(param.LocalName, alloc)
 			if err != nil {
 				p.Error(f.Position, err.Error())
 			}

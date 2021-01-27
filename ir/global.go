@@ -17,9 +17,6 @@ type Global struct {
 	ContentType Type
 	// Initial value; or nil if declaration.
 	Init Constant
-
-	// extra.
-
 	// Pointer type to global variable, including an optional address space. If
 	// Typ is nil, the first invocation of Type stores a pointer type with
 	// ContentType as element.

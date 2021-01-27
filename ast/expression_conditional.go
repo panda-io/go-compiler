@@ -13,8 +13,8 @@ type Conditional struct {
 
 func (c *Conditional) Type(ctx *Context) ir.Type {
 	if ir.IsBool(c.Condition.Type(ctx)) {
-		// TO-DO check pointer element type
 		if c.First.Type(ctx).Equal(c.Second.Type(ctx)) {
+			//TO-DO check interface stuff // expected type
 			return c.First.Type(ctx)
 		} else if ir.IsNumber(c.First.Type(ctx)) && ir.IsNumber(c.Second.Type(ctx)) {
 			t, err := PromoteNumberType(ctx, c.First.Type(ctx), c.Second.Type(ctx))

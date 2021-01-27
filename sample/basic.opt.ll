@@ -22,22 +22,18 @@ entry:
 3:                                                ; preds = %6, %entry
   %4 = phi i32 [ %.pr, %6 ], [ %1, %entry ]
   %5 = icmp eq i32 %4, 1
-  br i1 %5, label %10, label %exit
+  br i1 %5, label %8, label %exit
 
 6:                                                ; preds = %entry
   %7 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([7 x i8], [7 x i8]* @string.459521b87e7c4e2aa0de9b45c0a81268, i64 0, i64 0))
   %.pr = load i32, i32* @global.a, align 4
   br label %3
 
-exit:                                             ; preds = %10, %3
-  %8 = phi i32 [ %.pre, %10 ], [ %4, %3 ]
-  %9 = icmp eq i32 %8, 1
-  %.0 = zext i1 %9 to i32
-  ret i32 %.0
+exit:                                             ; preds = %8, %3
+  ret i32 0
 
-10:                                               ; preds = %3
-  %11 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([7 x i8], [7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc, i64 0, i64 0))
-  %.pre = load i32, i32* @global.a, align 4
+8:                                                ; preds = %3
+  %9 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([7 x i8], [7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc, i64 0, i64 0))
   br label %exit
 }
 

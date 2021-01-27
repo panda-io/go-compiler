@@ -7,12 +7,6 @@ import (
 )
 
 func PromoteNumberType(c *Context, t1 ir.Type, t2 ir.Type) (ir.Type, error) {
-	if ir.IsPointer(t1) {
-		t1 = t1.(*ir.PointerType).ElemType
-	}
-	if ir.IsPointer(t2) {
-		t2 = t2.(*ir.PointerType).ElemType
-	}
 	if ir.IsInt(t1) {
 		if ir.IsInt(t2) {
 			i1 := t1.(*ir.IntType)
@@ -45,23 +39,12 @@ func PromoteNumberType(c *Context, t1 ir.Type, t2 ir.Type) (ir.Type, error) {
 	return nil, fmt.Errorf("invalid number")
 }
 
+//TO-DO expected type and constexpr
 func PromoteNumberValue(c *Context, e1 Expression, e2 Expression) (t ir.Type, v1 ir.Value, v2 ir.Value, e error) {
-	v1 = e1.GenerateIR(c)
-	v2 = e2.GenerateIR(c)
+	v1 = c.AutoLoad(e1.GenerateIR(c))
+	v2 = c.AutoLoad(e2.GenerateIR(c))
 	t1 := e1.Type(c)
 	t2 := e2.Type(c)
-	if ir.IsPointer(t1) {
-		t1 = t1.(*ir.PointerType).ElemType
-		load := ir.NewLoad(t1, v1)
-		c.Block.AddInstruction(load)
-		v1 = load
-	}
-	if ir.IsPointer(t2) {
-		t2 = t2.(*ir.PointerType).ElemType
-		load := ir.NewLoad(t2, v2)
-		c.Block.AddInstruction(load)
-		v2 = load
-	}
 	t, e = PromoteNumberType(c, t1, t2)
 	if e != nil {
 		return
