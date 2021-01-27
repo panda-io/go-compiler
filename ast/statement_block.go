@@ -12,5 +12,9 @@ func (b *Block) GenerateIR(c *Context) {
 			ctx = c.NewContext()
 		}
 		stmt.GenerateIR(ctx)
+		if ctx.Block.Terminated {
+			//TO-DO warning: unreachable code
+			return
+		}
 	}
 }
