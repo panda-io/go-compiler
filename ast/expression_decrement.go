@@ -23,20 +23,18 @@ func (d *Decrement) Type(c *Context) ir.Type {
 
 func (d *Decrement) GenerateIR(c *Context) ir.Value {
 	t := d.Expression.Type(c)
-	if ir.IsPointer(t) {
-		p := d.Expression.GenerateIR(c)
-		e := t.(*ir.PointerType).ElemType
-		load := ir.NewLoad(e, p)
-		c.Block.AddInstruction(load)
-		if ir.IsInt(e) {
-			sub := ir.NewSub(load, ir.NewInt(e.(*ir.IntType), 1))
+	if ir.IsNumber(t) {
+		e := d.Expression.GenerateIR(c)
+		operand := c.AutoLoad(e)
+		if ir.IsInt(t) {
+			sub := ir.NewSub(operand, ir.NewInt(t.(*ir.IntType), 1))
 			c.Block.AddInstruction(sub)
-			c.Block.AddInstruction(ir.NewStore(sub, p))
+			c.Block.AddInstruction(ir.NewStore(sub, e))
 			return sub
-		} else if ir.IsFloat(e) {
-			sub := ir.NewFSub(load, ir.NewFloat(e.(*ir.FloatType), 1))
+		} else if ir.IsFloat(t) {
+			sub := ir.NewFSub(operand, ir.NewFloat(t.(*ir.FloatType), 1))
 			c.Block.AddInstruction(sub)
-			c.Block.AddInstruction(ir.NewStore(sub, p))
+			c.Block.AddInstruction(ir.NewStore(sub, e))
 			return sub
 		}
 	}

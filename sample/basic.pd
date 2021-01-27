@@ -3,8 +3,6 @@ namespace;
 import libc;
 
 var a int;
-var b int = 1;
-const c int = 2;
 
 /*
 enum color
@@ -28,6 +26,7 @@ function add(a int, b int) int
 public function main() int
 {
     a++;
+    a++;
     if (a == 0)
     {
         libc.puts("a is 0");
@@ -37,17 +36,21 @@ public function main() int
         libc.puts("a is 1");
     }
     //libc.puts("hello world");
-    /*
+
     switch (a)
     {
         case 0:
-            lib.puts("a is 0");
-
+        {
+            libc.puts("a is 0");
+            break;
+        }
         case 1:
-            lib.puts("a is 1");
-
+        {
+            libc.puts("a is 1");
+            break;
+        }
         default:
-            lib.puts("default");
-    }*/
+            libc.puts("default");
+    }
     return 0;
 }
