@@ -25,7 +25,7 @@ func (v *Variable) GenerateIR(p *Program) {
 		}
 	} else {
 		// zero initalize
-		// TO-DO class type conversion
+		// TO-DO class type conversion with auto pointer
 		v.IRVariable = p.IRModule.NewGlobalDef(v.Qualified(p.Module.Namespace), ir.NewZeroInitializer(v.Type.Type(p)))
 	}
 }

@@ -8,9 +8,6 @@ source_filename = "./sample/basic.ll"
 @string.43d2b345b462cd06e5f7841d678588a5 = constant [5 x i8] c"loop\00"
 
 ; Function Attrs: nofree nounwind
-declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #0
-
-; Function Attrs: nofree nounwind
 define i32 @main() local_unnamed_addr #0 {
 entry:
   %0 = load i32, i32* @global.a, align 4
@@ -56,5 +53,8 @@ exit:                                             ; preds = %.lr.ph, %8
   %17 = icmp slt i32 %16, 5
   br i1 %17, label %.lr.ph, label %exit
 }
+
+; Function Attrs: nofree nounwind
+declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #0
 
 attributes #0 = { nofree nounwind }

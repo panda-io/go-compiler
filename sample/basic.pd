@@ -13,11 +13,20 @@ enum color
 }*/
 
 /*
-public class nothing
+public class something
 {
+    public function create()
+    {
+        libc.puts("create something");
+    }
 
-}
+    public function destroy()
+    {
+        libc.puts("destroy something");
+    }
+}*/
 
+/*
 function add(a int, b int) int
 {
     return a + b;
@@ -25,7 +34,10 @@ function add(a int, b int) int
 
 public function main() int
 {
+    //var s something = new something();
+
     a++;
+
     if (a == 0)
     {
         libc.puts("a is 0");

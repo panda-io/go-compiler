@@ -42,38 +42,31 @@ type Binary struct {
 }
 
 //TO-DO operator override
-//TO-DO check if const
 func (b *Binary) Type(c *Context) ir.Type {
+	t0 := b.Left.Type(c)
+	t1 := b.Right.Type(c)
+
 	switch b.Operator {
 	// bitwise code
 	case token.LeftShift, token.RightShift, token.BitXor, token.BitOr, token.BitAnd, token.Not:
-		t, err := PromoteNumberType(c, b.Left.Type(c), b.Right.Type(c))
-		if err != nil {
-			c.Program.Error(b.Position, err.Error())
-			return nil
+		if ir.IsInt(t0) && ir.IsInt(t1) {
+			return t0
 		}
-		if ir.IsInt(t) {
-			t1 := b.Left.Type(c)
-			if ir.IsPointer(t1) {
-				return t1.(*ir.PointerType).ElemType
-			}
-			return t1
-		}
-		c.Program.Error(b.Position, "only int are valid for bitwise operator")
+		c.Program.Error(b.Position, "invalid type for bitwise operator")
 		return nil
 
 	// assign
 	case token.Assign, token.MulAssign, token.DivAssign, token.RemAssign, token.PlusAssign, token.MinusAssign,
 		token.LeftShiftAssign, token.RightShiftAssign, token.AndAssign, token.OrAssign, token.XorAssign:
-		// TO-DO assert left type
-		return b.Right.Type(c)
+		// TO-DO assert left type // equal or convertable
+		return t1
 
 	// logic operator
 	case token.Or, token.And:
-		if ir.IsBool(b.Left.Type(c)) && ir.IsBool(b.Right.Type(c)) {
+		if ir.IsBool(t0) && ir.IsBool(t1) {
 			return ir.I1
 		}
-		c.Program.Error(b.Position, "invalid type for binary operator")
+		c.Program.Error(b.Position, "invalid type for logic operator")
 		return nil
 
 	case token.Less, token.LessEqual, token.Greater, token.GreaterEqual, token.Equal, token.NotEqual:
@@ -101,6 +94,8 @@ func (b *Binary) Type(c *Context) ir.Type {
 		return nil
 	}
 }
+
+//TO-DO check if const
 
 //TO-DO operator overload
 func (b *Binary) GenerateIR(c *Context) ir.Value {
@@ -149,12 +144,14 @@ func (b *Binary) GenerateIR(c *Context) ir.Value {
 		return nil
 
 	case token.Or:
-		//TO-DO
-		return nil
+		or := ir.NewOr(b.Left.GenerateIR(c), b.Right.GenerateIR(c))
+		c.Block.AddInstruction(or)
+		return or
 
 	case token.And:
-		//TO-DO
-		return nil
+		and := ir.NewAnd(b.Left.GenerateIR(c), b.Right.GenerateIR(c))
+		c.Block.AddInstruction(and)
+		return and
 
 	case token.BitOr:
 		//TO-DO
@@ -532,9 +529,8 @@ func (b *Binary) GenerateIR1(c *Context) ir.Value {
 
 }*/
 
-func (*Binary) IsConstant(p *Program) bool {
-	//TO-DO
-	return false
+func (b *Binary) IsConstant(p *Program) bool {
+	return b.Left.IsConstant(p) && b.Right.IsConstant(p)
 }
 
 func (*Binary) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {

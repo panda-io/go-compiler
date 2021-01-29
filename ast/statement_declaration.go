@@ -9,5 +9,6 @@ type DeclarationStatement struct {
 
 func (*DeclarationStatement) GenerateIR(*Context) {
 	//TO-DO // zero initialize
+	//TO-DO class type conversion with auto pointer
 	//Builtin, TypeName
 }

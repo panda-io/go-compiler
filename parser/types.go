@@ -36,25 +36,13 @@ func (p *Parser) parseTypeName() *ast.TypeName {
 }
 
 func (p *Parser) parseTypeArguments() *ast.TypeArguments {
-	t := &ast.TypeArguments{Ellipsis: -1}
+	t := &ast.TypeArguments{}
 	t.Position = p.position
-	t.Ellipsis = -1
 	p.next() // skip <
 	t.Arguments = append(t.Arguments, p.parseType())
-	if p.token == token.Ellipsis {
-		t.Ellipsis = 0
-		p.next()
-	}
 	for p.token == token.Comma {
 		p.next()
 		t.Arguments = append(t.Arguments, p.parseType())
-		if p.token == token.Ellipsis {
-			if t.Ellipsis > -1 {
-				p.error(p.position, "dupicate ellipsis")
-			}
-			t.Ellipsis = len(t.Arguments) - 1
-			p.next()
-		}
 	}
 	p.expect(token.Greater)
 	return t
@@ -65,20 +53,9 @@ func (p *Parser) parseTypeParameters() *ast.TypeParameters {
 	t.Position = p.position
 	p.next() // skip <
 	t.Parameters = append(t.Parameters, p.parseTypeParameter())
-	if p.token == token.Ellipsis {
-		t.Ellipsis = true
-		p.next()
-	}
 	for p.token == token.Comma {
-		if t.Ellipsis {
-			p.error(p.position, "ellipsis must be in the last position")
-		}
 		p.next()
 		t.Parameters = append(t.Parameters, p.parseTypeParameter())
-		if p.token == token.Ellipsis {
-			t.Ellipsis = true
-			p.next()
-		}
 	}
 	p.expect(token.Greater)
 	return t

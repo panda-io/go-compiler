@@ -27,7 +27,7 @@ type Function struct {
 
 func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 	if f.ObjectName != "" && f.Name.Name != Constructor {
-		param := ir.NewParam(CreateStructPointerType(p.Module.Namespace + "." + f.ObjectName))
+		param := ir.NewParam(CreateRawPointer())
 		param.LocalName = ClassThis
 		f.IRParams = append(f.IRParams, param)
 	}
@@ -56,16 +56,21 @@ func (f *Function) GenerateIR(p *Program) {
 		c.Block = f.IREntry
 
 		// prepare params
-		for _, param := range f.IRParams {
-			/*
-				if ir.IsPointer(param.Typ) {
-					//TO-DO add weak ref
-				}*/
-			alloc := ir.NewAlloca(param.Typ)
-			f.IREntry.AddInstruction(alloc)
-			store := ir.NewStore(param, alloc)
-			f.IREntry.AddInstruction(store)
-			err := c.AddObject(param.LocalName, alloc)
+		for i, param := range f.IRParams {
+			var v ir.Value
+			if i == 0 && f.ObjectName != "" && f.Name.Name != Constructor {
+				cast := ir.NewBitCast(param, CreateStructPointerType(p.Module.Namespace+"."+f.ObjectName))
+				f.IREntry.AddInstruction(cast)
+				v = cast
+			} else {
+				//TO-DO add weak ref
+				alloc := ir.NewAlloca(param.Typ)
+				f.IREntry.AddInstruction(alloc)
+				store := ir.NewStore(param, alloc)
+				f.IREntry.AddInstruction(store)
+				v = alloc
+			}
+			err := c.AddObject(param.LocalName, v)
 			if err != nil {
 				p.Error(f.Position, err.Error())
 			}

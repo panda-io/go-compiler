@@ -4,20 +4,6 @@
 @string.3860584d72c3c1e2f6ebe3a6e165a60f = constant [8 x i8] c"default\00"
 @string.43d2b345b462cd06e5f7841d678588a5 = constant [5 x i8] c"loop\00"
 
-declare i32 @puts(i8* %text)
-
-declare i8* @malloc(i32 %size)
-
-declare i8* @realloc(i8* %address, i32 %size)
-
-declare void @free(i8* %address)
-
-declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
-
-declare void @memcpy(i8* %dest, i8* %source, i32 %size)
-
-declare void @memset(i8* %source, i32 %value, i32 %size)
-
 define i32 @main() {
 entry:
 	%0 = alloca i32
@@ -110,3 +96,17 @@ exit:
 	br label %31
 
 }
+
+declare i32 @puts(i8* %text)
+
+declare i8* @malloc(i32 %size)
+
+declare i8* @realloc(i8* %address, i32 %size)
+
+declare void @free(i8* %address)
+
+declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
+
+declare void @memcpy(i8* %dest, i8* %source, i32 %size)
+
+declare void @memset(i8* %source, i32 %value, i32 %size)
