@@ -115,7 +115,7 @@ func (p *Parser) parseParameter() *ast.Parameter {
 }
 
 func (p *Parser) parseArguments() *ast.Arguments {
-	t := &ast.Arguments{Ellipsis: -1}
+	t := &ast.Arguments{}
 	t.Position = p.position
 	p.expect(token.LeftParen)
 	if p.token == token.RightParen {
@@ -123,20 +123,9 @@ func (p *Parser) parseArguments() *ast.Arguments {
 		return t
 	}
 	t.Arguments = append(t.Arguments, p.parseExpression())
-	if p.token == token.Ellipsis {
-		t.Ellipsis = 0
-		p.next()
-	}
 	for p.token == token.Comma {
 		p.next()
 		t.Arguments = append(t.Arguments, p.parseExpression())
-		if p.token == token.Ellipsis {
-			if t.Ellipsis > -1 {
-				p.error(p.position, "dupicate ellipsis")
-			}
-			t.Ellipsis = len(t.Arguments) - 1
-			p.next()
-		}
 	}
 	p.expect(token.RightParen)
 	return t

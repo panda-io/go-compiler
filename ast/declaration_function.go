@@ -177,7 +177,6 @@ type Parameter struct {
 type Arguments struct {
 	NodeBase
 	Arguments []Expression
-	Ellipsis  int
 }
 
 func (args *Arguments) GenerateIR(c *Context, this ir.Value, function *ir.Func) []ir.Value {
