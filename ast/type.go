@@ -13,18 +13,14 @@ type TypeBase struct {
 	NodeBase
 }
 
-func CreateStructType(qualified string) *ir.StructType {
+func CreateStruct(qualified string) *ir.StructType {
 	t := ir.NewStructType()
 	t.TypeName = qualified
 	return t
 }
 
-func CreateStructPointerType(qualified string) *ir.PointerType {
+func CreateStructPointer(qualified string) *ir.PointerType {
 	t := ir.NewStructType()
 	t.TypeName = qualified
 	return ir.NewPointerType(t)
-}
-
-func CreateRawPointer() *ir.PointerType {
-	return ir.NewPointerType(ir.I8)
 }

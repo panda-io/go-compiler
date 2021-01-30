@@ -6,9 +6,9 @@ import (
 
 type Expression interface {
 	Node
-	Type(*Context) ir.Type
+	Type(c *Context, expected ir.Type) ir.Type
 	IsConstant(p *Program) bool
-	GenerateIR(*Context) ir.Value
+	GenerateIR(c *Context, expected ir.Type) ir.Value
 	GenerateConstIR(p *Program, expected ir.Type) ir.Constant
 }
 

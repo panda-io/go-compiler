@@ -1,8 +1,6 @@
 package ast
 
 import (
-	"fmt"
-
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
@@ -23,11 +21,14 @@ type Function struct {
 	IRBody     *ir.Block
 	IRExit     *ir.Block
 	IRReturn   ir.Value
+
+	AutoReleasePool []ir.Value
+	//TO-DO string ...
 }
 
 func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 	if f.ObjectName != "" && f.Name.Name != Constructor {
-		param := ir.NewParam(CreateRawPointer())
+		param := ir.NewParam(ir.NewPointerType(ir.I8))
 		param.LocalName = ClassThis
 		f.IRParams = append(f.IRParams, param)
 	}
@@ -59,7 +60,7 @@ func (f *Function) GenerateIR(p *Program) {
 		for i, param := range f.IRParams {
 			var v ir.Value
 			if i == 0 && f.ObjectName != "" && f.Name.Name != Constructor {
-				cast := ir.NewBitCast(param, CreateStructPointerType(p.Module.Namespace+"."+f.ObjectName))
+				cast := ir.NewBitCast(param, CreateStructPointer(p.Module.Namespace+"."+f.ObjectName))
 				f.IREntry.AddInstruction(cast)
 				v = cast
 			} else {
@@ -104,16 +105,12 @@ func (f *Function) GenerateIR(p *Program) {
 			// set default values
 			current := f.Class
 			for current != nil {
-				for _, v := range current.Variables {
+				for i, v := range current.Variables {
 					if v.Value != nil {
-						value := v.Value.GenerateIR(c) // constant expr //TO-DO use generate const expr instead
-						if !ir.IsConstant(value) {
-							p.Error(v.Position, "initialize value must be const expression")
-						}
 						index := f.Class.VariableIndexes[v.Name.Name]
 						offset := ir.NewGetElementPtr(f.Class.IRStruct, instance, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
 						f.IREntry.AddInstruction(offset)
-						f.IREntry.AddInstruction(ir.NewStore(value, offset))
+						f.IREntry.AddInstruction(ir.NewStore(current.IRValues[i], offset))
 					}
 				}
 				current = current.Parent
@@ -182,7 +179,7 @@ type Arguments struct {
 func (args *Arguments) GenerateIR(c *Context, this ir.Value, function *ir.Func) []ir.Value {
 	arguments := []ir.Value{}
 	if this != nil {
-		arguments = append(arguments, Cast(c, this, function.Params[0].Typ))
+		arguments = append(arguments, CastToPointer(c, this))
 	}
 	if args == nil {
 		return arguments
@@ -193,33 +190,15 @@ func (args *Arguments) GenerateIR(c *Context, this ir.Value, function *ir.Func) 
 		length++
 	}
 	if length > len(function.Params) {
-		c.Program.Error(args.Position, "arguments mismatch with function paraments. too many arguments.")
+		c.Program.Error(args.Position, "too many arguments.")
 		return arguments
 	} else if length < len(function.Params) {
-		c.Program.Error(args.Position, "arguments mismatch with function paraments. too few arguments.")
+		c.Program.Error(args.Position, "too few arguments.")
 		return arguments
 	}
 	for _, arg := range args.Arguments {
-		arguments = append(arguments, arg.GenerateIR(c))
-	}
-	for i, arg := range arguments {
-		if !arg.Type().Equal(function.Params[i].Typ) {
-			newArg := Cast(c, arg, function.Params[i].Typ)
-			if newArg == nil {
-				index := i
-				if this != nil {
-					if i == 0 {
-						c.Program.Error(args.Arguments[index].GetPosition(), fmt.Sprintf("cannot convert %s to %s", arg.Type().String(), function.Params[i].Typ.String()))
-					}
-					index--
-				}
-				if index >= 0 {
-					c.Program.Error(args.Arguments[index].GetPosition(), fmt.Sprintf("cannot convert %s to %s", arg.Type().String(), function.Params[i].Typ.String()))
-				}
-			} else {
-				arguments[i] = newArg
-			}
-		}
+		i := len(arguments)
+		arguments = append(arguments, arg.GenerateIR(c, function.Params[i].Typ))
 	}
 	return arguments
 }

@@ -8,11 +8,11 @@ type Base struct {
 	ExpressionBase
 }
 
-func (*Base) Type(c *Context) ir.Type {
+func (*Base) Type(c *Context, expected ir.Type) ir.Type {
 	return nil
 }
 
-func (*Base) GenerateIR(c *Context) ir.Value {
+func (*Base) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	return nil
 }
 

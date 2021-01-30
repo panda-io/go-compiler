@@ -9,22 +9,19 @@ type Decrement struct {
 	Expression Expression
 }
 
-func (d *Decrement) Type(c *Context) ir.Type {
-	t := d.Expression.Type(c)
-	if ir.IsPointer(t) {
-		e := t.(*ir.PointerType).ElemType
-		if ir.IsNumber(e) {
-			return e
-		}
+func (d *Decrement) Type(c *Context, expected ir.Type) ir.Type {
+	t := d.Expression.Type(c, expected)
+	if ir.IsNumber(t) {
+		return t
 	}
 	c.Program.Error(d.Position, "invalid type for decrement expression")
 	return nil
 }
 
-func (d *Decrement) GenerateIR(c *Context) ir.Value {
-	t := d.Expression.Type(c)
+func (d *Decrement) GenerateIR(c *Context, expected ir.Type) ir.Value {
+	t := d.Expression.Type(c, expected)
 	if ir.IsNumber(t) {
-		e := d.Expression.GenerateIR(c)
+		e := d.Expression.GenerateIR(c, expected)
 		operand := c.AutoLoad(e)
 		if ir.IsInt(t) {
 			sub := ir.NewSub(operand, ir.NewInt(t.(*ir.IntType), 1))

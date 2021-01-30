@@ -1,27 +1,12 @@
-int g = 10;
-
-void add(int a, int b)
-{
-    a = 1;
-}
-
-struct ss
-{
-    int value;
-};
+#include <stdio.h>
+#include <stdbool.h>
 
 int main()
 {
-    int a = 1;
-    {
-        int a = 2;
-    }
-
-    if (a == 1) {
-        int b = 1;
-    } else {
-        int b = 2;
-    }
-
-    int c = 3;
+   float a = 0.1;
+   float b = -a;
+   int c = 1;
+   int d = -c;
+   int e = +c;
+   return 0;
 }

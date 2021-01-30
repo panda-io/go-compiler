@@ -63,7 +63,7 @@ public function main() int
             libc.puts("default");
     }
 
-    for (a = 0; a < 5; a++)
+    for (; a < 5; a++)
     {
         libc.puts("loop");
     }

@@ -50,6 +50,7 @@ const (
 
 	// scalars
 	scalarBegin
+	Any
 	Bool
 	Char //16 bit unicode char
 	Int8
@@ -122,7 +123,6 @@ const (
 	MinusMinus
 
 	Comma
-	Question
 	Colon
 	Semi
 	Dot
@@ -166,6 +166,7 @@ var (
 		Var:       "var",
 		Weak:      "weak",
 
+		Any:     "any",
 		Bool:    "bool",
 		Char:    "char",
 		Int8:    "i8",
@@ -231,7 +232,6 @@ var (
 		PlusPlus:         "++",
 		MinusMinus:       "--",
 		Comma:            ",",
-		Question:         "?",
 		Colon:            ":",
 		Semi:             ";",
 		Dot:              ".",
@@ -308,38 +308,35 @@ func (t Token) Precedence() int {
 		LeftShiftAssign, RightShiftAssign, AndAssign, OrAssign, XorAssign:
 		return 1
 
-	case Question:
+	case Or:
 		return 2
 
-	case Or:
+	case And:
 		return 3
 
-	case And:
+	case BitOr:
 		return 4
 
-	case BitOr:
+	case BitXor:
 		return 5
 
-	case BitXor:
+	case BitAnd:
 		return 6
 
-	case BitAnd:
+	case Equal, NotEqual:
 		return 7
 
-	case Equal, NotEqual:
+	case Less, LessEqual, Greater, GreaterEqual:
 		return 8
 
-	case Less, LessEqual, Greater, GreaterEqual:
+	case LeftShift, RightShift:
 		return 9
 
-	case LeftShift, RightShift:
+	case Plus, Minus:
 		return 10
 
-	case Plus, Minus:
-		return 11
-
 	case Mul, Div, Rem:
-		return 12
+		return 11
 	}
 	return 0
 }

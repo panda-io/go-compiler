@@ -60,6 +60,7 @@ func (p *Parser) parseEnum(modifier *ast.Modifier, attributes []*ast.Attribute) 
 	p.expect(token.LeftBrace)
 	for p.token != token.RightBrace {
 		v := &ast.Variable{}
+		v.Const = true
 		v.Name = p.parseIdentifier()
 		v.ObjectName = e.Name.Name
 		if p.token == token.Assign {

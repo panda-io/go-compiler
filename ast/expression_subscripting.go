@@ -10,12 +10,13 @@ type Subscripting struct {
 	Element Expression
 }
 
-func (e *Subscripting) Type(c *Context) ir.Type {
+//TO-DO operator overload
+func (e *Subscripting) Type(c *Context, expected ir.Type) ir.Type {
 	//TO-DO
 	return nil
 }
 
-func (e *Subscripting) GenerateIR(c *Context) ir.Value {
+func (e *Subscripting) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	//TO-DO
 	return nil
 }

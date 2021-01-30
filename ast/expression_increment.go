@@ -9,8 +9,8 @@ type Increment struct {
 	Expression Expression
 }
 
-func (i *Increment) Type(c *Context) ir.Type {
-	t := i.Expression.Type(c)
+func (i *Increment) Type(c *Context, expected ir.Type) ir.Type {
+	t := i.Expression.Type(c, expected)
 	if ir.IsNumber(t) {
 		return t
 	}
@@ -18,10 +18,10 @@ func (i *Increment) Type(c *Context) ir.Type {
 	return nil
 }
 
-func (i *Increment) GenerateIR(c *Context) ir.Value {
-	t := i.Expression.Type(c)
+func (i *Increment) GenerateIR(c *Context, expected ir.Type) ir.Value {
+	t := i.Expression.Type(c, expected)
 	if ir.IsNumber(t) {
-		e := i.Expression.GenerateIR(c)
+		e := i.Expression.GenerateIR(c, expected)
 		operand := c.AutoLoad(e)
 		if ir.IsInt(t) {
 			add := ir.NewAdd(operand, ir.NewInt(t.(*ir.IntType), 1))

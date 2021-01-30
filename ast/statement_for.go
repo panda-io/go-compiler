@@ -43,7 +43,13 @@ func (f *For) GenerateIR(c *Context) {
 		bodyContext.Block.AddInstruction(ir.NewBr(postBlock))
 	}
 
-	conditionContext.Block.AddInstruction(ir.NewCondBr(f.Condition.GenerateIR(conditionContext), bodyBlock, leaveBlock))
+	var condition ir.Value
+	if f.Condition.IsConstant(c.Program) {
+		condition = f.Condition.GenerateConstIR(conditionContext.Program, ir.I1)
+	} else {
+		condition = f.Condition.GenerateIR(conditionContext, nil)
+	}
+	conditionContext.Block.AddInstruction(ir.NewCondBr(condition, bodyBlock, leaveBlock))
 	ctx.Block.AddInstruction(ir.NewBr(conditionBlock))
 	c.Block = leaveBlock
 	c.Returned = ctx.Returned

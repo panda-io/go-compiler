@@ -11,7 +11,7 @@ type Identifier struct {
 	Name string
 }
 
-func (i *Identifier) Type(c *Context) ir.Type {
+func (i *Identifier) Type(c *Context, expected ir.Type) ir.Type {
 	t := c.ObjectType(i.Name)
 	if t == nil {
 		_, d := c.Program.FindSelector("", i.Name)
@@ -22,17 +22,18 @@ func (i *Identifier) Type(c *Context) ir.Type {
 		switch t := d.(type) {
 		case *Variable:
 			return t.IRVariable.ContentType
+
 		case *Function:
 			return t.IRFunction.Sig
+
 		default:
-			c.Program.Error(i.Position, fmt.Sprintf("invalid type for identifier %s", i.Name))
 			return nil
 		}
 	}
 	return t
 }
 
-func (i *Identifier) GenerateIR(c *Context) ir.Value {
+func (i *Identifier) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	v := c.FindObject(i.Name)
 	if v == nil {
 		_, d := c.Program.FindSelector("", i.Name)
@@ -43,10 +44,12 @@ func (i *Identifier) GenerateIR(c *Context) ir.Value {
 		switch t := d.(type) {
 		case *Variable:
 			return t.IRVariable
+
 		case *Function:
 			return t.IRFunction
+
 		default:
-			c.Program.Error(i.Position, fmt.Sprintf("invalid type for identifier %s", i.Name))
+			c.Program.Error(i.Position, "invalid type")
 			return nil
 		}
 	}
@@ -77,8 +80,7 @@ func (i *Identifier) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 		if v.Const && v.Value.IsConstant(p) {
 			return v.Value.GenerateConstIR(p, nil)
 		}
-	}
-	if f, ok := d.(*Function); ok {
+	} else if f, ok := d.(*Function); ok {
 		return f.IRFunction
 	}
 	p.Error(i.Position, "invalid constant declaration")

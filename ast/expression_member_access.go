@@ -13,7 +13,7 @@ type MemberAccess struct {
 	FullNamespace string
 }
 
-func (m *MemberAccess) Type(c *Context) ir.Type {
+func (m *MemberAccess) Type(c *Context, expected ir.Type) ir.Type {
 	if ident, ok := m.Parent.(*Identifier); ok {
 		// resolve here
 		_, obj := c.FindSelector(ident.Name, m.Member.Name)
@@ -35,16 +35,17 @@ func (m *MemberAccess) Type(c *Context) ir.Type {
 	return nil
 }
 
+//TO-DO refactor
 func (m *MemberAccess) GenerateParentIR(c *Context) ir.Value {
 	if ident, ok := m.Parent.(*Identifier); ok {
 		// resolve here
 		parent, _ := c.FindSelector(ident.Name, m.Member.Name)
 		return parent
 	}
-	return m.Parent.GenerateIR(c)
+	return m.Parent.GenerateIR(c, nil)
 }
 
-func (m *MemberAccess) GenerateIR(c *Context) ir.Value {
+func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	if ident, ok := m.Parent.(*Identifier); ok {
 		// resolve here
 		_, obj := c.FindSelector(ident.Name, m.Member.Name)

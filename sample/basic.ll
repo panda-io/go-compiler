@@ -27,73 +27,67 @@ exit:
 6:
 	%7 = load i32, i32* @global.a
 	%8 = icmp eq i32 %7, 1
-	br i1 %8, label %14, label %12
+	br i1 %8, label %13, label %11
 
 
 9:
-	%10 = bitcast [7 x i8]* @string.459521b87e7c4e2aa0de9b45c0a81268 to i8*
-	%11 = call i32 @puts(i8* %10)
+	%10 = call i32 @puts(i8* bitcast ([7 x i8]* @string.459521b87e7c4e2aa0de9b45c0a81268 to i8*))
 	br label %6
 
 
-12:
-	%13 = load i32, i32* @global.a
-	switch i32 %13, label %18 [
-		i32 0, label %21
-		i32 1, label %24
+11:
+	%12 = load i32, i32* @global.a
+	switch i32 %12, label %16 [
+		i32 0, label %18
+		i32 1, label %20
 	]
 
 
-14:
-	%15 = bitcast [7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc to i8*
-	%16 = call i32 @puts(i8* %15)
-	br label %12
+13:
+	%14 = call i32 @puts(i8* bitcast ([7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc to i8*))
+	br label %11
 
 
-17:
-	br label %28
+15:
+	br label %23
+
+
+16:
+	%17 = call i32 @puts(i8* bitcast ([8 x i8]* @string.3860584d72c3c1e2f6ebe3a6e165a60f to i8*))
+	br label %15
 
 
 18:
-	%19 = bitcast [8 x i8]* @string.3860584d72c3c1e2f6ebe3a6e165a60f to i8*
-	%20 = call i32 @puts(i8* %19)
-	br label %17
+	%19 = call i32 @puts(i8* bitcast ([7 x i8]* @string.459521b87e7c4e2aa0de9b45c0a81268 to i8*))
+	br label %15
 
 
-21:
-	%22 = bitcast [7 x i8]* @string.459521b87e7c4e2aa0de9b45c0a81268 to i8*
-	%23 = call i32 @puts(i8* %22)
-	br label %17
+20:
+	%21 = call i32 @puts(i8* bitcast ([7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc to i8*))
+	br label %15
 
 
-24:
-	%25 = bitcast [7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc to i8*
-	%26 = call i32 @puts(i8* %25)
-	br label %17
-
-
-27:
+22:
 	store i32 0, i32* %0
 	br label %exit
 
 
-28:
-	%29 = load i32, i32* @global.a
-	%30 = icmp slt i32 %29, 5
-	br i1 %30, label %34, label %27
+23:
+	%24 = load i32, i32* @global.a
+	%25 = icmp slt i32 %24, 5
+	br i1 %25, label %29, label %22
 
 
-31:
-	%32 = load i32, i32* @global.a
-	%33 = add i32 %32, 1
-	store i32 %33, i32* @global.a
-	br label %28
+26:
+	%27 = load i32, i32* @global.a
+	%28 = add i32 %27, 1
+	store i32 %28, i32* @global.a
+	br label %23
 
 
-34:
-	%35 = bitcast [5 x i8]* @string.43d2b345b462cd06e5f7841d678588a5 to i8*
-	%36 = call i32 @puts(i8* %35)
-	br label %31
+29:
+	%30 = call i32 @puts(i8* bitcast ([5 x i8]* @string.43d2b345b462cd06e5f7841d678588a5 to i8*))
+	br label %26
 
 }
 

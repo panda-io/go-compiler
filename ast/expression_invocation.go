@@ -12,21 +12,21 @@ type Invocation struct {
 	Arguments *Arguments
 }
 
-func (i *Invocation) Type(c *Context) ir.Type {
-	t := i.Function.Type(c)
-	if f, ok := t.(*ir.FuncType); ok {
-		return f.RetType
+func (i *Invocation) Type(c *Context, expected ir.Type) ir.Type {
+	t := i.Function.Type(c, expected)
+	if ir.IsFunc(t) {
+		return t.(*ir.FuncType).RetType
 	}
-	c.Program.Error(i.Position, fmt.Sprintf("%s is not a function", t.Name()))
+	c.Program.Error(i.Position, "not a function type")
 	return nil
 }
 
-func (i *Invocation) GenerateIR(c *Context) ir.Value {
+func (i *Invocation) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	var parent ir.Value
 	var function *ir.Func
 	switch t := i.Function.(type) {
 	case *MemberAccess:
-		d := t.GenerateIR(c)
+		d := t.GenerateIR(c, expected)
 		// TO-DO generate "this"
 		if f, ok := d.(*ir.Func); ok {
 			function = f

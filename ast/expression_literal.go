@@ -1,19 +1,17 @@
 package ast
 
 import (
-	"fmt"
-
 	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/token"
 )
 
 type Literal struct {
 	ExpressionBase
-	Typ   token.Token // (identifier, string, char, float, int, bool)
+	Typ   token.Token
 	Value string
 }
 
-func (l *Literal) Type(c *Context) ir.Type {
+func (l *Literal) Type(c *Context, expected ir.Type) ir.Type {
 	switch l.Typ {
 	case token.STRING:
 		return ir.NewArrayType(uint64(len(l.Value)-1), ir.I8)
@@ -22,23 +20,32 @@ func (l *Literal) Type(c *Context) ir.Type {
 		return ir.I32
 
 	case token.FLOAT:
+		if expected != nil && ir.IsFloat(expected) {
+			return expected
+		}
 		return ir.Float32
 
 	case token.INT:
+		if expected != nil && ir.IsInt(expected) {
+			return expected
+		}
 		return ir.I32
 
 	case token.BOOL:
 		return ir.I1
 
 	case token.NULL:
-		return ir.Void
+		if expected != nil && ir.IsPointer(expected) {
+			return expected
+		}
+		return nil
 
 	default:
 		return nil
 	}
 }
 
-func (l *Literal) GenerateIR(c *Context) ir.Value {
+func (l *Literal) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	switch l.Typ {
 	case token.STRING:
 		return c.Program.AddString(l.Value[1 : len(l.Value)-1])
@@ -48,19 +55,37 @@ func (l *Literal) GenerateIR(c *Context) ir.Value {
 		return nil
 
 	case token.FLOAT:
+		if expected != nil {
+			if ir.IsFloat(expected) {
+				return ir.NewFloatFromString(expected.(*ir.FloatType), l.Value)
+			}
+			c.Program.Error(l.Position, "type mismatch")
+		}
 		return ir.NewFloatFromString(ir.Float32, l.Value)
 
 	case token.INT:
+		if expected != nil {
+			if ir.IsInt(expected) {
+				return ir.NewIntFromString(expected.(*ir.IntType), l.Value)
+			}
+			c.Program.Error(l.Position, "type mismatch")
+		}
 		return ir.NewIntFromString(ir.I32, l.Value)
 
 	case token.BOOL:
-		var b int64 = 0
-		if l.Value == "true" {
-			b = 1
+		if expected != nil && !ir.IsBool(expected) {
+			c.Program.Error(l.Position, "type mismatch")
 		}
-		return ir.NewInt(ir.I1, b)
+		if l.Value == "true" {
+			return ir.True
+		}
+		return ir.False
 
 	case token.NULL:
+		if expected != nil && ir.IsPointer(expected) {
+			return ir.NewNull(expected.(*ir.PointerType))
+		}
+		c.Program.Error(l.Position, "missing type for null")
 		return ir.NewNull(nil)
 
 	default:
@@ -75,7 +100,6 @@ func (*Literal) IsConstant(p *Program) bool {
 func (l *Literal) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 	switch l.Typ {
 	case token.STRING:
-		//TO-DO check expected
 		return p.AddString(l.Value[1 : len(l.Value)-1])
 
 	case token.CHAR:
@@ -91,7 +115,7 @@ func (l *Literal) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 			}
 			return ir.NewFloatFromString(ir.Float64, l.Value)
 		}
-		p.Error(l.Position, fmt.Sprintf("cannot convert float to %s", expected.String()))
+		p.Error(l.Position, "type mismatch")
 		return nil
 
 	case token.INT:
@@ -103,19 +127,22 @@ func (l *Literal) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 			t.Typ.Unsigned = i.Unsigned
 			return t
 		}
-		p.Error(l.Position, fmt.Sprintf("cannot convert int to %s", expected.String()))
+		p.Error(l.Position, "type mismatch")
 		return nil
 
 	case token.BOOL:
 		if expected != nil && !ir.IsBool(expected) {
-			p.Error(l.Position, fmt.Sprintf("cannot convert bool type to %s", expected.String()))
+			p.Error(l.Position, "type mismatch")
 			return nil
 		}
-		return ir.NewIntFromString(ir.I1, l.Value)
+		if l.Value == "true" {
+			return ir.True
+		}
+		return ir.False
 
 	case token.NULL:
 		if expected == nil || !ir.IsPointer(expected) {
-			p.Error(l.Position, "type is missing or invalid for null")
+			p.Error(l.Position, "missing type or invalid for null")
 			return nil
 		}
 		return ir.NewNull(expected.(*ir.PointerType))

@@ -10,12 +10,12 @@ type New struct {
 	Arguments *Arguments
 }
 
-func (n *New) Type(c *Context) ir.Type {
+func (n *New) Type(c *Context, expected ir.Type) ir.Type {
 	//TO-DO
 	return nil
 }
 
-func (n *New) GenerateIR(c *Context) ir.Value {
+func (n *New) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	//TO-DO
 	return nil
 }

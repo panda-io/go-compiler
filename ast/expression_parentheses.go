@@ -9,12 +9,12 @@ type Parentheses struct {
 	Expression Expression
 }
 
-func (p *Parentheses) Type(c *Context) ir.Type {
-	return p.Expression.Type(c)
+func (p *Parentheses) Type(c *Context, expected ir.Type) ir.Type {
+	return p.Expression.Type(c, expected)
 }
 
-func (p *Parentheses) GenerateIR(c *Context) ir.Value {
-	return p.Expression.GenerateIR(c)
+func (p *Parentheses) GenerateIR(c *Context, expected ir.Type) ir.Value {
+	return p.Expression.GenerateIR(c, expected)
 }
 
 func (p *Parentheses) IsConstant(program *Program) bool {

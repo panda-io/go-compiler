@@ -20,7 +20,7 @@ type Program struct {
 	IRModule *ir.Module
 
 	Declarations map[string]Declaration
-	Strings      map[string]*ir.Global
+	Strings      map[string]ir.Constant
 
 	Errors []*Error
 }
@@ -36,7 +36,7 @@ func (p *Program) Reset() {
 	p.IRModule = ir.NewModule()
 
 	p.Declarations = make(map[string]Declaration)
-	p.Strings = make(map[string]*ir.Global)
+	p.Strings = make(map[string]ir.Constant)
 
 	p.Errors = p.Errors[:0]
 }
@@ -70,17 +70,18 @@ func (p *Program) FindDeclaration(t *TypeName) (string, Declaration) {
 	return p.FindSelector(t.Selector, t.Name)
 }
 
-func (p *Program) AddString(value string) *ir.Global {
+func (p *Program) AddString(value string) ir.Constant {
 	bytes := []byte(value)
 	bytes = append(bytes, 0)
 	hash := fmt.Sprintf("%x", md5.Sum(bytes))
-	if s, ok := p.Strings[hash]; ok {
-		return s
+	if v, ok := p.Strings[hash]; ok {
+		return v
 	}
 	s := p.IRModule.NewGlobalDef("string."+hash, ir.NewCharArray(bytes))
 	s.Immutable = true
-	p.Strings[hash] = s
-	return s
+	v := ir.NewExprBitCast(s, ir.NewPointerType(ir.I8))
+	p.Strings[hash] = v
+	return v
 }
 
 func (p *Program) Error(offset int, message string) {

@@ -75,7 +75,7 @@ func (c *Class) GenerateIRDeclaration(p *Program) {
 func (c *Class) GenerateIRStruct(p *Program) {
 	c.VariableIndexes = make(map[string]int)
 
-	variables := []ir.Type{CreateStructPointerType(p.Module.Namespace + "." + c.Name.Name + ".vtable.type")}
+	variables := []ir.Type{CreateStructPointer(p.Module.Namespace + "." + c.Name.Name + ".vtable.type")}
 	classes := []*Class{c}
 	current := c
 	for current.Parent != nil {
@@ -142,7 +142,7 @@ func (c *Class) GenerateIRVTable(p *Program) {
 	c.IRVTable = ir.NewStructType(types...)
 	p.IRModule.NewTypeDef(c.Qualified(p.Module.Namespace)+".vtable.type", c.IRVTable)
 
-	data := ir.NewStruct(CreateStructType(c.Qualified(p.Module.Namespace)+".vtable.type"), constants...)
+	data := ir.NewStruct(CreateStruct(c.Qualified(p.Module.Namespace)+".vtable.type"), constants...)
 	c.IRVTableData = p.IRModule.NewGlobalDef(c.Qualified(p.Module.Namespace)+".vtable.data", data)
 }
 

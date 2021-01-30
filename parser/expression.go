@@ -143,20 +143,10 @@ func (p *Parser) parseBinaryExpression(precedence int) ast.Expression {
 		}
 		p.next()
 		y := p.parseBinaryExpression(opPrec)
-		if op == token.Question {
-			p.expect(token.Colon)
-			z := p.parseBinaryExpression(opPrec)
-			x = &ast.Conditional{
-				Condition: x,
-				First:     y,
-				Second:    z,
-			}
-		} else {
-			x = &ast.Binary{
-				Left:     x,
-				Operator: op,
-				Right:    y,
-			}
+		x = &ast.Binary{
+			Left:     x,
+			Operator: op,
+			Right:    y,
 		}
 	}
 }

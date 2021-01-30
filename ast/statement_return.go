@@ -10,7 +10,12 @@ type Return struct {
 }
 
 func (r *Return) GenerateIR(c *Context) {
-	value := r.Expression.GenerateIR(c)
+	var value ir.Value
+	if r.Expression.IsConstant(c.Program) {
+		value = r.Expression.GenerateConstIR(c.Program, c.Function.ReturnType.Type(c.Program))
+	} else {
+		value = r.Expression.GenerateIR(c, nil)
+	}
 	var t ir.Type = ir.Void
 	if c.Function.ReturnType != nil {
 		t = c.Function.ReturnType.Type(c.Program)

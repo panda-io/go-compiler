@@ -27,7 +27,12 @@ func (s *Switch) GenerateIR(c *Context) {
 	if s.Initialization != nil {
 		s.Initialization.GenerateIR(ctx)
 	}
-	operand := c.AutoLoad(s.Operand.GenerateIR(c))
+	var operand ir.Value
+	if s.Operand.IsConstant(c.Program) {
+		operand = s.Operand.GenerateConstIR(c.Program, ir.I1)
+	} else {
+		operand = c.AutoLoad(s.Operand.GenerateIR(c, nil))
+	}
 	t := operand.Type()
 	if !ir.IsInt(t) {
 		c.Program.Error(s.Operand.GetPosition(), "switch operand must be integer type")

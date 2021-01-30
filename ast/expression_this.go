@@ -8,19 +8,19 @@ type This struct {
 	ExpressionBase
 }
 
-func (t *This) Type(c *Context) ir.Type {
+func (t *This) Type(c *Context, expected ir.Type) ir.Type {
 	if c.Function.Class != nil {
 		return c.Function.Class.IRStruct
 	}
-	c.Program.Error(t.Position, "'this' is not defined")
 	return nil
 }
 
-func (t *This) GenerateIR(c *Context) ir.Value {
+func (t *This) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	if c.Function.Class != nil {
 		return c.FindObject(ClassThis)
 	}
-	c.Program.Error(t.Position, "'this' is not defined")
+
+	c.Program.Error(t.Position, "'this' undefined")
 	return nil
 }
 
