@@ -69,5 +69,6 @@ public function main() int
     }
 
     //libc.puts("hello world");
+    libc.printf("a = %d \n", a);
     return 0;
 }

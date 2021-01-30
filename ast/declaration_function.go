@@ -44,6 +44,17 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 		t = f.ReturnType.Type(p)
 	}
 	f.IRFunction = p.IRModule.NewFunc(f.Qualified(p.Module.Namespace), t, f.IRParams...)
+	if f.HasAttribute(Extern) {
+		l := f.GetAttributeValue(Extern, Variadic)
+		if l != nil {
+			v := l.GetValue()
+			if variadic, ok := v.(bool); ok {
+				if variadic {
+					f.IRFunction.Sig.Variadic = true
+				}
+			}
+		}
+	}
 	return f.IRFunction
 }
 
@@ -189,16 +200,20 @@ func (args *Arguments) GenerateIR(c *Context, this ir.Value, function *ir.Func) 
 	if this != nil {
 		length++
 	}
-	if length > len(function.Params) {
-		c.Program.Error(args.Position, "too many arguments.")
+	if length < len(function.Params) {
+		c.Program.Error(args.Position, "too few arguments")
 		return arguments
-	} else if length < len(function.Params) {
-		c.Program.Error(args.Position, "too few arguments.")
+	} else if length > len(function.Params) && !function.Sig.Variadic {
+		c.Program.Error(args.Position, "too many arguments")
 		return arguments
 	}
 	for _, arg := range args.Arguments {
 		i := len(arguments)
-		arguments = append(arguments, arg.GenerateIR(c, function.Params[i].Typ))
+		if i < len(function.Params) {
+			arguments = append(arguments, c.AutoLoad(arg.GenerateIR(c, function.Params[i].Typ)))
+		} else {
+			arguments = append(arguments, c.AutoLoad(arg.GenerateIR(c, nil)))
+		}
 	}
 	return arguments
 }

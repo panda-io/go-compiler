@@ -54,6 +54,9 @@ func (b *BuitinType) Type(*Program) ir.Type {
 	case token.Pointer:
 		return ir.NewPointerType(ir.I8)
 
+	case token.Any:
+		return ir.NewVectorType(9, ir.I8)
+
 	default:
 		return nil
 	}

@@ -40,6 +40,15 @@ func (b *DeclarationBase) HasAttribute(attribute string) bool {
 	return false
 }
 
+func (b *DeclarationBase) GetAttributeValue(attribute string, value string) *Literal {
+	for _, a := range b.Attributes {
+		if a.Name == attribute {
+			return a.Values[value]
+		}
+	}
+	return nil
+}
+
 func (b *DeclarationBase) Identifier() string {
 	return b.Name.Name
 }

@@ -12,8 +12,31 @@ const (
 	Constructor   = "create"
 	Destructor    = "destroy"
 
-	Extern  = "extern"
-	Builtin = "builtin"
+	Extern   = "extern"
+	Builtin  = "builtin"
+	Variadic = "variadic"
+)
+
+type ValueType int
+
+const (
+	TVoid ValueType = iota
+	TBool
+	TI8
+	TI16
+	TI32
+	TI64
+	TUI8
+	TUI16
+	TUI32
+	TUI64
+	TF32
+	TF64
+	TChar
+	TString
+	TFunction
+	TClass
+	TPointer
 )
 
 var (

@@ -6,6 +6,13 @@ source_filename = "./sample/basic.ll"
 @string.318ab47b7b6a7bd68c90f6696d16b2fc = constant [7 x i8] c"a is 1\00"
 @string.3860584d72c3c1e2f6ebe3a6e165a60f = constant [8 x i8] c"default\00"
 @string.43d2b345b462cd06e5f7841d678588a5 = constant [5 x i8] c"loop\00"
+@string.e4774a52ffe13545ae9d5ce20dd839b9 = constant [9 x i8] c"a = %d \0A\00"
+
+; Function Attrs: nofree nounwind
+declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #0
+
+; Function Attrs: nofree nounwind
+declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr #0
 
 ; Function Attrs: nofree nounwind
 define i32 @main() local_unnamed_addr #0 {
@@ -30,9 +37,9 @@ entry:
   %9 = phi i32 [ %.pre, %12 ], [ %4, %3 ]
   %switch.selectcmp = icmp eq i32 %9, 1
   %switch.select = select i1 %switch.selectcmp, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @string.318ab47b7b6a7bd68c90f6696d16b2fc, i64 0, i64 0), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @string.3860584d72c3c1e2f6ebe3a6e165a60f, i64 0, i64 0)
-  %switch.selectcmp2 = icmp eq i32 %9, 0
-  %switch.select3 = select i1 %switch.selectcmp2, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @string.459521b87e7c4e2aa0de9b45c0a81268, i64 0, i64 0), i8* %switch.select
-  %10 = tail call i32 @puts(i8* nonnull dereferenceable(1) %switch.select3)
+  %switch.selectcmp5 = icmp eq i32 %9, 0
+  %switch.select6 = select i1 %switch.selectcmp5, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @string.459521b87e7c4e2aa0de9b45c0a81268, i64 0, i64 0), i8* %switch.select
+  %10 = tail call i32 @puts(i8* nonnull dereferenceable(1) %switch.select6)
   %.pr1 = load i32, i32* @global.a, align 4
   %11 = icmp slt i32 %.pr1, 5
   br i1 %11, label %.lr.ph, label %exit
@@ -43,18 +50,17 @@ entry:
   br label %8
 
 exit:                                             ; preds = %.lr.ph, %8
+  %.lcssa = phi i32 [ %.pr1, %8 ], [ %17, %.lr.ph ]
+  %14 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([9 x i8], [9 x i8]* @string.e4774a52ffe13545ae9d5ce20dd839b9, i64 0, i64 0), i32 %.lcssa)
   ret i32 0
 
 .lr.ph:                                           ; preds = %8, %.lr.ph
-  %14 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([5 x i8], [5 x i8]* @string.43d2b345b462cd06e5f7841d678588a5, i64 0, i64 0))
-  %15 = load i32, i32* @global.a, align 4
-  %16 = add i32 %15, 1
-  store i32 %16, i32* @global.a, align 4
-  %17 = icmp slt i32 %16, 5
-  br i1 %17, label %.lr.ph, label %exit
+  %15 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([5 x i8], [5 x i8]* @string.43d2b345b462cd06e5f7841d678588a5, i64 0, i64 0))
+  %16 = load i32, i32* @global.a, align 4
+  %17 = add i32 %16, 1
+  store i32 %17, i32* @global.a, align 4
+  %18 = icmp slt i32 %17, 5
+  br i1 %18, label %.lr.ph, label %exit
 }
-
-; Function Attrs: nofree nounwind
-declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #0
 
 attributes #0 = { nofree nounwind }

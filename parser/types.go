@@ -91,16 +91,13 @@ func (p *Parser) parseParameters() *ast.Parameters {
 		return nil
 	}
 	t.Parameters = append(t.Parameters, p.parseParameter())
+	for p.token == token.Comma {
+		p.next()
+		t.Parameters = append(t.Parameters, p.parseParameter())
+	}
 	if p.token == token.Ellipsis {
 		t.Ellipsis = true
 		p.next()
-	}
-	for p.token == token.Comma {
-		if t.Ellipsis {
-			p.error(p.position, "ellipsis must be in the last position")
-		}
-		p.next()
-		t.Parameters = append(t.Parameters, p.parseParameter())
 	}
 	p.expect(token.RightParen)
 	return t

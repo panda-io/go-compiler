@@ -1,6 +1,9 @@
 package ast
 
 import (
+	"math/big"
+	"strconv"
+
 	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -48,7 +51,14 @@ func (l *Literal) Type(c *Context, expected ir.Type) ir.Type {
 func (l *Literal) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	switch l.Typ {
 	case token.STRING:
-		return c.Program.AddString(l.Value[1 : len(l.Value)-1])
+		if l.Value[0] == '"' {
+			// string
+			str, _ := strconv.Unquote(l.Value)
+			return c.Program.AddString(str)
+		} else {
+			// `` raw string
+			return c.Program.AddString(l.Value[1 : len(l.Value)-1])
+		}
 
 	case token.CHAR:
 		//TO-DO convert char to i32
@@ -146,6 +156,35 @@ func (l *Literal) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 			return nil
 		}
 		return ir.NewNull(expected.(*ir.PointerType))
+
+	default:
+		return nil
+	}
+}
+
+func (l *Literal) GetValue() interface{} {
+	switch l.Typ {
+	case token.STRING:
+		return l.Value[1 : len(l.Value)-1]
+
+	case token.CHAR:
+		//TO-DO convert char to i32
+		return nil
+
+	case token.FLOAT:
+		x, _, _ := big.ParseFloat(l.Value, 10, 24, big.ToNearestEven)
+		f, _ := x.Float32()
+		return f
+
+	case token.INT:
+		x, _ := (&big.Int{}).SetString(l.Value, 10)
+		return x.Int64()
+
+	case token.BOOL:
+		if l.Value == "true" {
+			return true
+		}
+		return false
 
 	default:
 		return nil
