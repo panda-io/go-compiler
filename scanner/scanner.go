@@ -39,6 +39,11 @@ type Scanner struct {
 	char       rune
 	offset     int
 	readOffset int
+
+	prevChar       rune
+	prevOffset     int
+	prevReadOffset int
+	prevLines      int
 }
 
 func NewScanner(flags []string) *Scanner {
@@ -537,4 +542,20 @@ func (s *Scanner) Scan() (position int, t token.Token, literal string) {
 		}
 	}
 	return
+}
+
+func (s *Scanner) Backup() {
+	s.prevChar = s.char
+	s.prevOffset = s.offset
+	s.prevReadOffset = s.readOffset
+	s.prevLines = s.file.Lines()
+}
+
+func (s *Scanner) Restore() {
+	s.char = s.prevChar
+	s.offset = s.prevOffset
+	s.readOffset = s.prevReadOffset
+	if s.prevLines != s.file.Lines() {
+		s.file.Truncate(s.prevLines)
+	}
 }

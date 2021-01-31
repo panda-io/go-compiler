@@ -23,6 +23,10 @@ type Parser struct {
 	token    token.Token
 	literal  string
 
+	prevPosition int
+	prevToken    token.Token
+	prevLiteral  string
+
 	program *ast.Program
 	scanner *scanner.Scanner
 }
@@ -52,6 +56,20 @@ func (p *Parser) ParseStatements(source []byte) ast.Statement {
 
 func (p *Parser) next() {
 	p.position, p.token, p.literal = p.scanner.Scan()
+}
+
+func (p *Parser) backup() {
+	p.prevPosition = p.position
+	p.prevLiteral = p.literal
+	p.prevToken = p.token
+	p.scanner.Backup()
+}
+
+func (p *Parser) restore() {
+	p.position = p.prevPosition
+	p.literal = p.prevLiteral
+	p.token = p.prevToken
+	p.scanner.Restore()
 }
 
 func (p *Parser) expect(t token.Token) {

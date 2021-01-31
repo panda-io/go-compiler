@@ -8,8 +8,9 @@ import (
 
 type Invocation struct {
 	ExpressionBase
-	Function  Expression
-	Arguments *Arguments
+	Function      Expression
+	Arguments     *Arguments
+	TypeArguments *TypeArguments
 }
 
 func (i *Invocation) Type(c *Context, expected ir.Type) ir.Type {
@@ -55,6 +56,7 @@ func (i *Invocation) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		c.Block.AddInstruction(value)
 		return value
 	}
+	c.Program.Error(i.Position, "function %s not found")
 	return nil
 }
 

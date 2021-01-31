@@ -101,6 +101,26 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
 			p.next()
 			return e
 
+		case token.Less:
+			p.backup()
+			t, success := p.tryParseTypeArguments()
+			if success {
+				if p.token == token.LeftParen {
+					e := &ast.Invocation{}
+					e.TypeArguments = t
+					e.Position = p.position
+					e.Function = x
+					e.Arguments = p.parseArguments()
+					x = e
+				} else {
+					success = false
+				}
+			}
+			if !success {
+				p.restore()
+				return x
+			}
+
 		default:
 			return x
 		}

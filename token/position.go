@@ -38,6 +38,14 @@ func (f *File) AddLine(offset int) {
 	f.lines = append(f.lines, offset)
 }
 
+func (f *File) Lines() int {
+	return len(f.lines)
+}
+
+func (f *File) Truncate(lines int) {
+	f.lines = f.lines[:lines]
+}
+
 func (f *File) Position(offset int) *Position {
 	return &Position{
 		file:   f,

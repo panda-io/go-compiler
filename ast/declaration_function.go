@@ -27,6 +27,9 @@ type Function struct {
 }
 
 func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
+	if f.HasAttribute(Compiler) {
+		return nil
+	}
 	if f.ObjectName != "" && f.Name.Name != Constructor {
 		param := ir.NewParam(ir.NewPointerType(ir.I8))
 		param.LocalName = ClassThis

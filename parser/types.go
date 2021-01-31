@@ -147,3 +147,54 @@ func (p *Parser) parseFunctionType() *ast.TypeFunction {
 	}
 	return t
 }
+
+func (p *Parser) tryParseTypeArguments() (*ast.TypeArguments, bool) {
+	t := &ast.TypeArguments{}
+	t.Position = p.position
+	p.next() // skip <
+	arg, success := p.tryParseTypeArgument()
+	if !success {
+		return nil, false
+	}
+	t.Arguments = append(t.Arguments, arg)
+	for p.token == token.Comma {
+		p.next()
+		arg, success := p.tryParseTypeArgument()
+		if !success {
+			return nil, false
+		}
+		t.Arguments = append(t.Arguments, arg)
+	}
+	if p.token == token.Greater {
+		p.next()
+		return t, true
+	}
+	return nil, false
+}
+
+func (p *Parser) tryParseTypeArgument() (ast.Type, bool) {
+	if p.token.IsScalar() {
+		t := &ast.BuitinType{}
+		t.Position = p.position
+		t.Token = p.token
+		p.next()
+		return t, true
+	}
+	if p.token == token.IDENT {
+		t := &ast.TypeName{}
+		t.Position = p.position
+		t.Name = p.parseIdentifier().Name
+		if p.token == token.Dot {
+			p.next()
+			t.Selector = t.Name
+			t.Name = p.parseIdentifier().Name
+		}
+		if p.token == token.Less {
+			var success bool
+			t.TypeArguments, success = p.tryParseTypeArguments()
+			return t, success
+		}
+		return t, true
+	}
+	return nil, false
+}
