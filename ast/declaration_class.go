@@ -271,3 +271,8 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string) ir.Value {
 	}
 	return nil
 }
+
+func (c *Class) IsMemberFunction(member string) bool {
+	_, ok := c.FunctionIndexes[member]
+	return ok
+}

@@ -81,7 +81,6 @@ func (c *Context) AutoLoad(value ir.Value) ir.Value {
 
 	// global define
 	case *ir.Func:
-		//TO-DO use as pointer // implement later
 		return t
 
 	// alloca in function

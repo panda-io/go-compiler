@@ -53,22 +53,26 @@ func (m *MemberAccess) Type(c *Context, expected ir.Type) ir.Type {
 func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	var v ir.Value
 	var p ir.Value
+	var memberFunction bool
 	if ident, ok := m.Parent.(*Identifier); ok {
 		p, v = c.FindSelector(ident.Name, m.Member.Name)
 
 	} else if _, ok := m.Parent.(*This); ok {
 		p = c.FindObject(ClassThis)
 		v = c.Function.Class.GetMember(c, p, m.Member.Name)
+		memberFunction = c.Function.Class.IsMemberFunction(m.Member.Name)
 
 	} else if _, ok := m.Parent.(*Base); ok {
 		p = c.FindObject(ClassThis)
 		v = c.Function.Class.Parent.GetMember(c, p, m.Member.Name)
+		memberFunction = c.Function.Class.IsMemberFunction(m.Member.Name)
 
 	} else if n, ok := m.Parent.(*New); ok {
 		_, d := c.Program.FindDeclaration(n.Typ)
 		if class, ok := d.(*Class); ok {
 			p = m.Parent.GenerateIR(c, nil)
 			v = class.GetMember(c, p, m.Member.Name)
+			memberFunction = c.Function.Class.IsMemberFunction(m.Member.Name)
 		}
 
 	} else if memberAccess, ok := m.Parent.(*MemberAccess); ok {
@@ -78,16 +82,17 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 				if class, ok := d.(*Class); ok {
 					p = m.Parent.GenerateIR(c, nil)
 					v = class.GetMember(c, p, m.Member.Name)
+					memberFunction = c.Function.Class.IsMemberFunction(m.Member.Name)
 				} else if enum, ok := d.(*Enum); ok {
 					v = enum.GetMember(m.Member.Name)
 				}
 			}
 		}
 	}
-
-	if _, ok := v.(*ir.Func); ok {
+	if m.IsFunction(v) {
+		v = c.AutoLoad(v)
 		v = ir.NewCall(v)
-		if p != nil {
+		if p != nil && memberFunction {
 			call := v.(*ir.InstCall)
 			call.Args = append(call.Args, CastToPointer(c, p))
 		}
@@ -96,6 +101,20 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		c.Program.Error(m.Position, fmt.Sprintf("%s undefined", m.Member.Name))
 	}
 	return v
+}
+
+func (m *MemberAccess) IsFunction(v ir.Value) bool {
+	if t, ok := v.Type().(*ir.PointerType); ok {
+		if _, ok = t.ElemType.(*ir.FuncType); ok {
+			return true
+
+		} else if e, ok := t.ElemType.(*ir.PointerType); ok {
+			// gep instruction
+			_, ok = e.ElemType.(*ir.FuncType)
+			return ok
+		}
+	}
+	return false
 }
 
 func (m *MemberAccess) IsConstant(p *Program) bool {

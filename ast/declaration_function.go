@@ -191,7 +191,7 @@ type Arguments struct {
 }
 
 func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall) {
-	function := call.Callee.(*ir.Func)
+	function := call.Callee.Type().(*ir.PointerType).ElemType.(*ir.FuncType)
 	if args == nil {
 		return
 	}
@@ -199,7 +199,7 @@ func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall) {
 	if length < len(function.Params) {
 		c.Program.Error(args.Position, "too few arguments")
 		return
-	} else if length > len(function.Params) && !function.Sig.Variadic {
+	} else if length > len(function.Params) && !function.Variadic {
 		c.Program.Error(args.Position, "too many arguments")
 		return
 	}
@@ -207,7 +207,7 @@ func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall) {
 		i := len(call.Args)
 		var v ir.Value
 		if i < len(function.Params) {
-			v = arg.GenerateIR(c, function.Params[i].Typ)
+			v = arg.GenerateIR(c, function.Params[i])
 		} else {
 			v = arg.GenerateIR(c, nil)
 		}

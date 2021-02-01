@@ -35,7 +35,7 @@ function add(a int, b int) int
 public function main() int
 {
     //var s something = new something();
-
+    /*
     a++;
 
     if (a == 0)
@@ -68,7 +68,7 @@ public function main() int
         libc.puts("loop");
     }
 
-    //libc.puts("hello world");
-    libc.printf("a = %d \n", a);
+    libc.printf("a = %d \n", a);*/
+    libc.puts("hello world");
     return 0;
 }
