@@ -142,7 +142,7 @@ func (f *Function) GenerateIR(p *Program) {
 			c.Block.AddInstruction(ir.NewBr(f.IRExit))
 		}
 		if !c.Block.Terminated {
-			if c.Returned {
+			if c.Returned || f.ReturnType == nil {
 				c.Block.AddInstruction(ir.NewBr(f.IRExit))
 			} else {
 				c.Program.Error(f.Position, "missing return")
@@ -205,8 +205,14 @@ func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall) {
 	}
 	for _, arg := range args.Arguments {
 		i := len(call.Args)
+		var v ir.Value
 		if i < len(function.Params) {
-			call.Args = append(call.Args, c.AutoLoad(arg.GenerateIR(c, function.Params[i].Typ)))
+			v = arg.GenerateIR(c, function.Params[i].Typ)
+		} else {
+			v = arg.GenerateIR(c, nil)
+		}
+		if v == nil {
+			c.Program.Error(arg.GetPosition(), "invalid expression")
 		} else {
 			call.Args = append(call.Args, c.AutoLoad(arg.GenerateIR(c, nil)))
 		}
