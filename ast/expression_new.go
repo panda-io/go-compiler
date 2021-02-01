@@ -6,7 +6,7 @@ import (
 
 type New struct {
 	ExpressionBase
-	Typ       Type
+	Typ       *TypeName
 	Arguments *Arguments
 }
 

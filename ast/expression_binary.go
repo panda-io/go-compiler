@@ -71,7 +71,7 @@ func (b *Binary) Type(c *Context, expected ir.Type) ir.Type {
 			return ir.I1
 		}
 
-	//arithmetic operator
+	// arithmetic operator
 	case token.Plus, token.Minus, token.Mul, token.Div, token.Rem:
 		t, err := PromoteNumberType(t1, t2)
 		if err == nil {

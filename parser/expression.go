@@ -141,7 +141,7 @@ func (p *Parser) parseUnaryExpression() ast.Expression {
 		e := &ast.New{}
 		e.Position = p.position
 		p.next()
-		e.Typ = p.parseType()
+		e.Typ = p.parseTypeName()
 		e.Arguments = p.parseArguments()
 		return e
 

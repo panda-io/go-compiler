@@ -1,8 +1,6 @@
 package ast
 
 import (
-	"fmt"
-
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
@@ -23,40 +21,15 @@ func (i *Invocation) Type(c *Context, expected ir.Type) ir.Type {
 }
 
 func (i *Invocation) GenerateIR(c *Context, expected ir.Type) ir.Value {
-	var parent ir.Value
-	var function *ir.Func
-	switch t := i.Function.(type) {
-	case *MemberAccess:
-		d := t.GenerateIR(c, expected)
-		// TO-DO generate "this"
-		if f, ok := d.(*ir.Func); ok {
-			function = f
-		} else {
-			c.Program.Error(t.Position, fmt.Sprintf("%s is not a function", t.Member.Name))
-		}
-		parent = t.GenerateParentIR(c)
-
-	case *Identifier:
-		//TO-DO if class, search member function and parent function
-		d := c.FindObject(t.Name)
-		if d == nil {
-			c.Program.Error(t.Position, fmt.Sprintf("%s undefined", t.Name))
-		} else {
-			if f, ok := d.(*ir.Func); ok {
-				function = f
-			} else {
-				c.Program.Error(t.Position, fmt.Sprintf("%s is not a function", t.Name))
-			}
+	value := i.Function.GenerateIR(c, nil)
+	if value != nil {
+		if call, ok := value.(*ir.InstCall); ok {
+			i.Arguments.GenerateIR(c, call)
+			c.Block.AddInstruction(call)
+			return value
 		}
 	}
-
-	if function != nil {
-		args := i.Arguments.GenerateIR(c, parent, function)
-		value := ir.NewCall(function, args...)
-		c.Block.AddInstruction(value)
-		return value
-	}
-	c.Program.Error(i.Position, "function %s not found")
+	c.Program.Error(i.Position, "invalid function call")
 	return nil
 }
 

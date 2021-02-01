@@ -190,33 +190,25 @@ type Arguments struct {
 	Arguments []Expression
 }
 
-func (args *Arguments) GenerateIR(c *Context, this ir.Value, function *ir.Func) []ir.Value {
-	arguments := []ir.Value{}
-	if this != nil {
-		arguments = append(arguments, CastToPointer(c, this))
-	}
+func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall) {
+	function := call.Callee.(*ir.Func)
 	if args == nil {
-		return arguments
+		return
 	}
-
-	length := len(args.Arguments)
-	if this != nil {
-		length++
-	}
+	length := len(args.Arguments) + len(call.Args)
 	if length < len(function.Params) {
 		c.Program.Error(args.Position, "too few arguments")
-		return arguments
+		return
 	} else if length > len(function.Params) && !function.Sig.Variadic {
 		c.Program.Error(args.Position, "too many arguments")
-		return arguments
+		return
 	}
 	for _, arg := range args.Arguments {
-		i := len(arguments)
+		i := len(call.Args)
 		if i < len(function.Params) {
-			arguments = append(arguments, c.AutoLoad(arg.GenerateIR(c, function.Params[i].Typ)))
+			call.Args = append(call.Args, c.AutoLoad(arg.GenerateIR(c, function.Params[i].Typ)))
 		} else {
-			arguments = append(arguments, c.AutoLoad(arg.GenerateIR(c, nil)))
+			call.Args = append(call.Args, c.AutoLoad(arg.GenerateIR(c, nil)))
 		}
 	}
-	return arguments
 }

@@ -13,66 +13,145 @@ type MemberAccess struct {
 	FullNamespace string
 }
 
+//TO-DO subscripting
 func (m *MemberAccess) Type(c *Context, expected ir.Type) ir.Type {
+	// parent could be: identifier, member_access, new, subscripting, this, base
 	if ident, ok := m.Parent.(*Identifier); ok {
-		// resolve here
 		_, obj := c.FindSelector(ident.Name, m.Member.Name)
-		if obj == nil {
-			c.Program.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
-			return nil
+		if obj != nil {
+			return obj.Type()
 		}
-		return obj.Type()
-	} else if _, ok := m.Parent.(*This); ok {
-		t := c.ObjectType(m.Member.Name)
-		if t == nil {
-			c.Program.Error(m.Position, fmt.Sprintf("%s undefined", m.Member.Name))
-		}
-		return t
-	} /* else {
-		// TO-DO
-		// generate parent firstly, then check type of parent, then generate ir
-	}*/
-	return nil
-}
 
-//TO-DO refactor
-func (m *MemberAccess) GenerateParentIR(c *Context) ir.Value {
-	if ident, ok := m.Parent.(*Identifier); ok {
-		// resolve here
-		parent, _ := c.FindSelector(ident.Name, m.Member.Name)
-		return parent
+	} else if _, ok := m.Parent.(*This); ok {
+		return c.Function.Class.MemberType(m.Member.Name)
+
+	} else if _, ok := m.Parent.(*Base); ok {
+		return c.Function.Class.MemberType(m.Member.Name)
+
+	} else if n, ok := m.Parent.(*New); ok {
+		_, d := c.Program.FindDeclaration(n.Typ)
+		if class, ok := d.(*Class); ok {
+			return class.MemberType(m.Member.Name)
+		}
+
+	} else if memberAccess, ok := m.Parent.(*MemberAccess); ok {
+		parentType := memberAccess.Type(c, nil)
+		if s, ok := parentType.(*ir.StructType); ok {
+			if d, ok := c.Program.Declarations[s.TypeName]; ok {
+				if class, ok := d.(*Class); ok {
+					return class.MemberType(m.Member.Name)
+				} else if _, ok := d.(*Enum); ok {
+					return ir.I32
+				}
+			}
+		}
 	}
-	return m.Parent.GenerateIR(c, nil)
+
+	return nil
 }
 
 func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
+	var v ir.Value
+	var p ir.Value
 	if ident, ok := m.Parent.(*Identifier); ok {
-		// resolve here
-		_, obj := c.FindSelector(ident.Name, m.Member.Name)
-		if obj == nil {
-			c.Program.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
-		}
-		return obj
+		p, v = c.FindSelector(ident.Name, m.Member.Name)
+
 	} else if _, ok := m.Parent.(*This); ok {
-		member := c.Function.Class.GetMember(c, c.FindObject(ClassThis), m.Member.Name)
-		if member == nil {
-			c.Program.Error(m.Position, fmt.Sprintf("%s is undefined", m.Member.Name))
-			return nil
+		p = c.FindObject(ClassThis)
+		v = c.Function.Class.GetMember(c, p, m.Member.Name)
+
+	} else if _, ok := m.Parent.(*Base); ok {
+		p = c.FindObject(ClassThis)
+		v = c.Function.Class.Parent.GetMember(c, p, m.Member.Name)
+
+	} else if n, ok := m.Parent.(*New); ok {
+		_, d := c.Program.FindDeclaration(n.Typ)
+		if class, ok := d.(*Class); ok {
+			p = m.Parent.GenerateIR(c, nil)
+			v = class.GetMember(c, p, m.Member.Name)
 		}
-		return member
-	} /* else {
-		// TO-DO
-		// generate parent firstly, then check type of parent, then generate ir
-	}*/
-	return nil
+
+	} else if memberAccess, ok := m.Parent.(*MemberAccess); ok {
+		parentType := memberAccess.Type(c, nil)
+		if s, ok := parentType.(*ir.StructType); ok {
+			if d, ok := c.Program.Declarations[s.TypeName]; ok {
+				if class, ok := d.(*Class); ok {
+					p = m.Parent.GenerateIR(c, nil)
+					v = class.GetMember(c, p, m.Member.Name)
+				} else if enum, ok := d.(*Enum); ok {
+					v = enum.GetMember(m.Member.Name)
+				}
+			}
+		}
+	}
+
+	if _, ok := v.(*ir.Func); ok {
+		v = ir.NewCall(v)
+		if p != nil {
+			call := v.(*ir.InstCall)
+			call.Args = append(call.Args, CastToPointer(c, p))
+		}
+	}
+	if v == nil {
+		c.Program.Error(m.Position, fmt.Sprintf("%s undefined", m.Member.Name))
+	}
+	return v
 }
 
-func (*MemberAccess) IsConstant(p *Program) bool {
-	//TO-DO
+func (m *MemberAccess) IsConstant(p *Program) bool {
+	if ident, ok := m.Parent.(*Identifier); ok {
+		_, d := p.FindSelector(ident.Name, m.Member.Name)
+		if d == nil {
+			// could be an enum
+			_, e := p.FindSelector("", ident.Name)
+			if _, ok := e.(*Enum); ok {
+				return true
+			}
+			return false
+		}
+		if v, ok := d.(*Variable); ok {
+			return v.Const && v.Value.IsConstant(p)
+		}
+		if _, ok := d.(*Function); ok {
+			return true
+		}
+
+	} else if memberAccess, ok := m.Parent.(*MemberAccess); ok {
+		if identifier, ok := memberAccess.Parent.(*Identifier); ok {
+			_, e := p.FindSelector(identifier.Name, memberAccess.Member.Name)
+			if _, ok := e.(*Enum); ok {
+				return true
+			}
+		}
+	}
 	return false
 }
 
-func (*MemberAccess) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
-	//TO-DO
+func (m *MemberAccess) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
+	if ident, ok := m.Parent.(*Identifier); ok {
+		_, d := p.FindSelector(ident.Name, m.Member.Name)
+		if d == nil {
+			// could be an enum
+			_, e := p.FindSelector("", ident.Name)
+			if enum, ok := e.(*Enum); ok {
+				return enum.GetMember(m.Member.Name)
+			}
+		}
+		if v, ok := d.(*Variable); ok {
+			return v.Value.GenerateConstIR(p, expected)
+		}
+		if f, ok := d.(*Function); ok {
+			//TO-DO use function as pointer
+			return f.IRFunction
+		}
+	} else if memberAccess, ok := m.Parent.(*MemberAccess); ok {
+		if identifier, ok := memberAccess.Parent.(*Identifier); ok {
+			_, e := p.FindSelector(identifier.Name, memberAccess.Member.Name)
+			if enum, ok := e.(*Enum); ok {
+				return enum.GetMember(m.Member.Name)
+			}
+		}
+	}
+	p.Error(m.Position, "invalid constant declaration")
 	return nil
 }

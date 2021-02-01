@@ -125,29 +125,35 @@ func (c *Context) FindSelector(selector string, member string) (parent ir.Value,
 	if parent == nil {
 		_, d := c.Program.FindSelector(selector, member)
 		if d == nil {
-			return
+			// could be an enum
+			_, e := c.Program.FindSelector("", selector)
+			if enum, ok := e.(*Enum); ok {
+				value = enum.GetMember(member)
+			} else {
+				return
+			}
 		}
-		// TO-DO can be enum, function, variable
-		// cannot be interface, class, they has no static member
 		switch t := d.(type) {
 		case *Enum:
-			//TO-DO
-			return nil, nil
+			value = t.IRStructData
 
 		case *Variable:
-			//TO-DO
-			return nil, nil
+			value = t.IRVariable
 
 		case *Function:
-			return nil, t.IRFunction
-
-		default:
-			return nil, nil
+			value = t.IRFunction
 		}
-	} /*else {
-		// TO-DO parent is class or interface, find its member then
-		//parent is "this", "base"
-		//parent is an object //class instance
-	}*/
+
+	} else if p, ok := parent.Type().(*ir.PointerType); ok {
+		element := p.ElemType
+		if t, ok := element.(*ir.StructType); ok {
+			// find declaration
+			if d, ok := c.Program.Declarations[t.TypeName]; ok {
+				if class, ok := d.(*Class); ok {
+					value = class.GetMember(c, parent, member)
+				}
+			}
+		}
+	}
 	return
 }

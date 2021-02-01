@@ -271,5 +271,3 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string) ir.Value {
 	}
 	return nil
 }
-
-//TO-DO set member
