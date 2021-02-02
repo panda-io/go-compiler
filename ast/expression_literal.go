@@ -77,6 +77,8 @@ func (l *Literal) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		if expected != nil {
 			if ir.IsInt(expected) {
 				return ir.NewIntFromString(expected.(*ir.IntType), l.Value)
+			} else if ir.IsFloat(expected) {
+				return ir.NewFloatFromString(expected.(*ir.FloatType), l.Value)
 			}
 			c.Program.Error(l.Position, "type mismatch")
 		}

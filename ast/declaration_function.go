@@ -39,6 +39,9 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 		for _, parameter := range f.Parameters.Parameters {
 			param := ir.NewParam(parameter.Type.Type(p))
 			param.LocalName = parameter.Name
+			if t, ok := parameter.Type.(*TypeName); ok {
+				param.UserData, _ = p.FindDeclaration(t)
+			}
 			f.IRParams = append(f.IRParams, param)
 		}
 	}
@@ -78,8 +81,9 @@ func (f *Function) GenerateIR(p *Program) {
 				f.IREntry.AddInstruction(cast)
 				v = cast
 			} else {
-				//TO-DO add weak ref
+				//TO-DO add shared ref
 				alloc := ir.NewAlloca(param.Typ)
+				alloc.UserData = param.UserData
 				f.IREntry.AddInstruction(alloc)
 				store := ir.NewStore(param, alloc)
 				f.IREntry.AddInstruction(store)

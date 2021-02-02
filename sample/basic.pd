@@ -69,6 +69,9 @@ public function main() int
     }
 
     libc.printf("a = %d \n", a);*/
+
+    var b int = 9;
+    libc.printf("b = %d \n", b);
     libc.puts("hello world");
     return 0;
 }

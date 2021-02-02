@@ -38,6 +38,15 @@ func (block *Block) AddInstruction(inst Instruction) {
 	}
 }
 
+func (block *Block) InsertAlloca(inst *InstAlloca) {
+	if block.Terminated {
+		block.Insts = append(block.Insts, block.Insts[len(block.Insts)-1])
+		block.Insts[len(block.Insts)-2] = inst
+	} else {
+		block.Insts = append(block.Insts, inst)
+	}
+}
+
 // String returns the LLVM syntax representation of the basic block as a
 // type-value pair.
 func (block *Block) String() string {

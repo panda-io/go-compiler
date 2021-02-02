@@ -15,12 +15,11 @@ type InstAlloca struct {
 	LocalIdent
 	// Element type.
 	ElemType Type
-
-	// extra.
-
 	// Type of result produced by the instruction, including an optional address
 	// space.
 	Typ *PointerType
+	// Save reference type for autopointer
+	UserData string
 }
 
 // NewAlloca returns a new alloca instruction based on the given element type.
