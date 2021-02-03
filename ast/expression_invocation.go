@@ -21,7 +21,7 @@ func (i *Invocation) Type(c *Context, expected ir.Type) ir.Type {
 }
 
 func (i *Invocation) GenerateIR(c *Context, expected ir.Type) ir.Value {
-	if IsCompilerFunction(c, i.Function) {
+	if IsCompilerFunction(GetCompilerFunctionName(c, i.Function)) {
 		return InvokeCompilerFunction(c, i)
 	}
 	value := i.Function.GenerateIR(c, nil)

@@ -12,8 +12,12 @@ func RegisterComplierFunction(namespace, name string, f CompilerFunction) {
 	compilerFunctions[namespace+"."+name] = f
 }
 
-func IsCompilerFunction(c *Context, f Expression) bool {
-	return GetCompilerFunctionName(c, f) != ""
+func IsCompilerFunction(qualified string) bool {
+	if qualified == "" {
+		return false
+	}
+	_, ok := compilerFunctions[qualified]
+	return ok
 }
 
 func InvokeCompilerFunction(c *Context, invocation *Invocation) ir.Value {

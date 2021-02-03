@@ -117,8 +117,11 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	var inst ir.Instruction
 	switch b.Operator {
 	case token.Assign:
-		//TO-DO
+		//TO-DO counter
 		//Left cannot be const
+		if c1 {
+			c.Program.Error(b.Position, "left value cannot be const expression")
+		}
 
 	case token.MulAssign, token.DivAssign, token.RemAssign, token.PlusAssign, token.MinusAssign,
 		token.LeftShiftAssign, token.RightShiftAssign, token.AndAssign, token.OrAssign, token.XorAssign:

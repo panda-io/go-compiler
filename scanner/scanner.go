@@ -18,7 +18,7 @@ const (
 	preprocessorElseIf = "elif"
 	preprocessorEnd    = "end"
 
-	// TO-DO add logical check for preprocessor
+	// TO-DO add logical operator support for preprocessor
 	// TO-DO separate preprocessor
 	// () == != ! && ||
 )

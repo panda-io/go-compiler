@@ -206,7 +206,7 @@
     |a -= b| a.minus_assign(b) |
     |a *= b| a.mul_assign(b) |
     |a /= b| a.div_assign(b) |
-    |a %= b| a.mod_assign(b) |
+    |a %= b| a.rem_assign(b) |
 
 - equality, inequality and comparison
  

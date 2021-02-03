@@ -10,17 +10,30 @@ type DeclarationStatement struct {
 }
 
 func (d *DeclarationStatement) GenerateIR(c *Context) {
-	//TO-DO // zero initialize
-	//TO-DO class type conversion with auto pointer
-	//Builtin, TypeName
 	var alloca *ir.InstAlloca
-	switch d.Type.(type) {
+	switch t := d.Type.(type) {
 	case *BuitinType:
 		alloca = ir.NewAlloca(d.Type.Type(c.Program))
 
 	case *TypeName:
-		// TO-DO implement
-		// alloca.UserData = // param.UserData, _ = p.FindDeclaration(t)
+		// TO-DO interface
+		qualified, declaration := c.Program.FindDeclaration(t)
+		switch declaration.(type) {
+		case *Class:
+			if IsBuiltinType(qualified) {
+				alloca = ir.NewAlloca(CreateStructPointer(qualified))
+			} else {
+				alloca = ir.NewAlloca(counter)
+			}
+			alloca.UserData = qualified
+
+		case *Enum:
+			alloca = ir.NewAlloca(ir.I32)
+
+		case *Interface:
+			//TO-DO need to be some convert
+			alloca.UserData = qualified
+		}
 
 	case *TypeFunction:
 		alloca = ir.NewAlloca(d.Type.Type(c.Program))

@@ -13,9 +13,7 @@ const (
 	Destructor    = "destroy"
 
 	Extern   = "extern"
-	Builtin  = "builtin"
 	Variadic = "variadic"
-	Compiler = "compiler"
 )
 
 type ValueType int

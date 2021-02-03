@@ -8,7 +8,7 @@ func init() {
 }
 
 /*
-#compiler
+@compiler
 function is<type>(value type) bool;
 */
 

@@ -27,7 +27,7 @@ type Function struct {
 }
 
 func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
-	if f.HasAttribute(Compiler) {
+	if IsCompilerFunction(f.Qualified(p.Module.Namespace)) {
 		return nil
 	}
 	if f.ObjectName != "" && f.Name.Name != Constructor {

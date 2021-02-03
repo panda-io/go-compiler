@@ -17,7 +17,7 @@ func (n *TypeName) Type(p *Program) ir.Type {
 		p.Error(n.GetPosition(), "undefined: "+n.Name)
 		return ir.Void
 	}
-	if d.HasAttribute(Builtin) {
+	if IsBuiltinType(qualified) {
 		return ir.NewPointerType(&ir.StructType{TypeName: qualified})
 	}
 	return counter
