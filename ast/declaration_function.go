@@ -22,8 +22,8 @@ type Function struct {
 	IRExit     *ir.Block
 	IRReturn   ir.Value
 
-	AutoReleasePool []ir.Value
-	//TO-DO string ...
+	AutoReleasePool    []ir.Value
+	BuiltinReleasePool []ir.Value
 }
 
 func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
@@ -153,17 +153,15 @@ func (f *Function) GenerateIR(p *Program) {
 			}
 		}
 
-		// TO-DO clean up function variables in exit block
-		// exit
+		f.AutoRelease(p)
 
 		// generate destructor
 		if f.ObjectName != "" && f.Name.Name == Destructor {
 			// TO-DO call parent destructor
 			// TO-DO clean up members
 			// TO-DO check if free memory
-			address := ir.NewBitCast(f.IRParams[0], ir.NewPointerType(ir.I8))
-			f.IRExit.AddInstruction(address)
-			f.IRExit.AddInstruction(ir.NewCall(free, address))
+
+			f.IRExit.AddInstruction(ir.NewCall(free, f.IRParams[0]))
 		}
 
 		// return
@@ -175,6 +173,18 @@ func (f *Function) GenerateIR(p *Program) {
 			f.IRExit.AddInstruction(ir.NewRet(load))
 		}
 	}
+}
+
+// TO-DO clean up function variables in exit blo
+func (f *Function) AutoRelease(p *Program) {
+	// buitin type
+	for _, obj := range f.BuiltinReleasePool {
+		//TO-DO check if zero
+		t := obj.Type().(*ir.PointerType).ElemType.(*ir.StructType)
+		c := p.FindQualified(t.TypeName).(*Class)
+		c.DestroyInstance(obj, f.IRExit)
+	}
+	// TO-DO counter type
 }
 
 type Parameters struct {

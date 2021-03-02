@@ -47,6 +47,10 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 		if d.Value == nil {
 			store = ir.NewStore(ir.NewZeroInitializer(d.Type.Type(c.Program)), alloca)
 		} else {
+			//TO-DO check counter or instance
+			if n, ok := d.Value.(*New); ok {
+				n.HasOwner = true
+			}
 			store = ir.NewStore(d.Value.GenerateIR(c, d.Type.Type(c.Program)), alloca)
 		}
 		c.Block.AddInstruction(store)

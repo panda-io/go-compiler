@@ -42,7 +42,7 @@ func (p *Program) Reset() {
 }
 
 func (p *Program) FindSelector(selector, member string) (string, Declaration) {
-	if selector == "" {
+	if selector == "" || selector == "global" {
 		// search current package
 		if p.Module.Namespace != Global {
 			qualified := p.Module.Namespace + "." + member
@@ -68,6 +68,10 @@ func (p *Program) FindSelector(selector, member string) (string, Declaration) {
 
 func (p *Program) FindDeclaration(t *TypeName) (string, Declaration) {
 	return p.FindSelector(t.Selector, t.Name)
+}
+
+func (p *Program) FindQualified(qualified string) Declaration {
+	return p.Declarations[qualified]
 }
 
 func (p *Program) AddString(value string) ir.Constant {

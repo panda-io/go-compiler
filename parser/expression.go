@@ -134,6 +134,7 @@ func (p *Parser) parseUnaryExpression() ast.Expression {
 		e.Position = p.position
 		e.Operator = p.token
 		p.next()
+		// this expression cannot be "New"
 		e.Expression = p.parseUnaryExpression()
 		return e
 
@@ -167,6 +168,9 @@ func (p *Parser) parseBinaryExpression(precedence int) ast.Expression {
 			Left:     x,
 			Operator: op,
 			Right:    y,
+		}
+		if n, ok := y.(*ast.New); ok {
+			n.HasOwner = op.IsAssign()
 		}
 	}
 }

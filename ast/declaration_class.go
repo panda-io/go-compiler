@@ -175,13 +175,16 @@ func (c *Class) PreProcess(*Program) {
 	if c.Functions[1] == nil {
 		c.Functions[1] = c.CreateEmptyFunction(Destructor)
 	}
-	c.Functions[1].Parameters = &Parameters{}
-	c.Functions[1].Parameters.Parameters = append(c.Functions[1].Parameters.Parameters, &Parameter{
-		Name: "free",
-		Type: &BuitinType{
-			Token: token.Bool,
+	c.Functions[1].Parameters = &Parameters{
+		Parameters: []*Parameter{
+			{
+				Name: "free",
+				Type: &BuitinType{
+					Token: token.Bool,
+				},
+			},
 		},
-	})
+	}
 }
 
 func (c *Class) CreateEmptyFunction(name string) *Function {
@@ -270,6 +273,25 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string) ir.Value {
 		return f
 	}
 	return nil
+}
+
+func (c *Class) CreateInstance(ctx *Context, args *Arguments) ir.Value {
+	f := c.IRFunctions[0]
+	call := ir.NewCall(f)
+	if args != nil {
+		args.GenerateIR(ctx, call)
+	}
+	ctx.Block.AddInstruction(call)
+	return call
+}
+
+func (c *Class) DestroyInstance(instance ir.Value, b *ir.Block) ir.Value {
+	f := c.IRFunctions[1]
+	pointer := ir.NewBitCast(instance, ir.NewPointerType(ir.I8))
+	b.AddInstruction(pointer)
+	call := ir.NewCall(f, pointer, ir.True)
+	b.AddInstruction(call)
+	return call
 }
 
 func (c *Class) IsMemberFunction(member string) bool {

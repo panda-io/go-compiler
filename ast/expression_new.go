@@ -8,15 +8,28 @@ type New struct {
 	ExpressionBase
 	Typ       *TypeName
 	Arguments *Arguments
+	HasOwner  bool
 }
 
 func (n *New) Type(c *Context, expected ir.Type) ir.Type {
-	//TO-DO
-	return nil
+	return n.Typ.Type(c.Program)
 }
 
-func (n *New) GenerateIR(c *Context, expected ir.Type) ir.Value {
-	//TO-DO
+func (n *New) GenerateIR(ctx *Context, expected ir.Type) ir.Value {
+	qualified, d := ctx.Program.FindDeclaration(n.Typ)
+	if c, ok := d.(*Class); ok {
+		instance := c.CreateInstance(ctx, n.Arguments)
+		if IsBuiltinType(qualified) {
+			if !n.HasOwner {
+				ctx.Function.BuiltinReleasePool = append(ctx.Function.BuiltinReleasePool, instance)
+			}
+			return instance
+		} else {
+			//TO-DO
+			//_, counter := ctx.Program.FindSelector("global", "counter")
+		}
+	}
+	ctx.Program.Error(n.Position, "invalid type for new operator")
 	return nil
 }
 

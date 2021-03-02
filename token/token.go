@@ -96,10 +96,11 @@ const (
 	BitXor
 	Complement
 	Not
-	Assign
 	Less
 	Greater
 
+	assignBegin
+	Assign
 	PlusAssign
 	MinusAssign
 	MulAssign
@@ -112,6 +113,7 @@ const (
 	RightShift
 	LeftShiftAssign
 	RightShiftAssign
+	assignEnd
 
 	Equal
 	NotEqual
@@ -300,6 +302,10 @@ func (t Token) IsKeyword() bool {
 
 func (t Token) IsScalar() bool {
 	return scalarBegin < t && t < scalarEnd
+}
+
+func (t Token) IsAssign() bool {
+	return assignBegin < t && t < assignEnd
 }
 
 func (t Token) Precedence() int {

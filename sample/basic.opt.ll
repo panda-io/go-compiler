@@ -5,15 +5,13 @@ source_filename = "./sample/basic.ll"
 %global.counter = type { %global.counter.vtable.type*, i32, i32, i8*, void (i8*, i1)* }
 
 @global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (i8*, i1)* @global.counter.destroy, void (i8*)* @global.counter.retain_shared, void (i8*)* @global.counter.release_shared, void (i8*)* @global.counter.retain_weak, void (i8*)* @global.counter.release_weak }
+@string.5bdaebb122965539cdd6ce77f212b65e = constant [15 x i8] c"create counter\00"
+@string.f8f86b3941cca26e8c147322b9a8309f = constant [16 x i8] c"destroy counter\00"
 @global.a = local_unnamed_addr global i32 0
-@string.7ac4a7d2c8bf695dc8a116f6b70a8e1a = constant [9 x i8] c"b = %d \0A\00"
 @string.cb091131e20d7842e7627e8736856b45 = constant [12 x i8] c"hello world\00"
 
 ; Function Attrs: nofree nounwind
 declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #0
-
-; Function Attrs: nofree nounwind
-declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr #0
 
 ; Function Attrs: nofree nounwind
 declare noalias i8* @malloc(i32) local_unnamed_addr #0
@@ -30,12 +28,14 @@ entry:
   %1 = bitcast i8* %0 to %global.counter*
   %2 = bitcast i8* %0 to %global.counter.vtable.type**
   store %global.counter.vtable.type* @global.counter.vtable.data, %global.counter.vtable.type** %2, align 8
+  %3 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.5bdaebb122965539cdd6ce77f212b65e, i64 0, i64 0))
   ret %global.counter* %1
 }
 
 ; Function Attrs: nounwind
 define void @global.counter.destroy(i8* nocapture %this, i1 %free) #1 {
 entry:
+  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([16 x i8], [16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f, i64 0, i64 0))
   tail call void @free(i8* %this)
   ret void
 }
@@ -96,11 +96,16 @@ exit:                                             ; preds = %9, %entry
   br label %exit
 }
 
-; Function Attrs: nofree nounwind
-define i32 @main() local_unnamed_addr #0 {
+define i32 @main() local_unnamed_addr {
 entry:
-  %0 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([9 x i8], [9 x i8]* @string.7ac4a7d2c8bf695dc8a116f6b70a8e1a, i64 0, i64 0), i32 9)
-  %1 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([12 x i8], [12 x i8]* @string.cb091131e20d7842e7627e8736856b45, i64 0, i64 0))
+  %0 = tail call dereferenceable_or_null(32) i8* @malloc(i32 32)
+  tail call void @memset(i8* %0, i32 0, i32 32)
+  %1 = bitcast i8* %0 to %global.counter.vtable.type**
+  store %global.counter.vtable.type* @global.counter.vtable.data, %global.counter.vtable.type** %1, align 8
+  %2 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.5bdaebb122965539cdd6ce77f212b65e, i64 0, i64 0))
+  %3 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([12 x i8], [12 x i8]* @string.cb091131e20d7842e7627e8736856b45, i64 0, i64 0))
+  %4 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([16 x i8], [16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f, i64 0, i64 0)) #1
+  tail call void @free(i8* %0) #1
   ret i32 0
 }
 

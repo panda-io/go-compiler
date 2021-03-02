@@ -70,8 +70,10 @@ public function main() int
 
     libc.printf("a = %d \n", a);*/
 
-    var b int = 9;
-    libc.printf("b = %d \n", b);
+    //var b int = 9;
+    //libc.printf("b = %d \n", b);
+    //var c counter = new counter();
+    new counter();
     libc.puts("hello world");
     return 0;
 }
