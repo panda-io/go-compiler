@@ -153,11 +153,11 @@ func (l *Literal) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 		return ir.False
 
 	case token.NULL:
-		if expected == nil || !ir.IsPointer(expected) {
+		if expected == nil {
 			p.Error(l.Position, "missing type or invalid for null")
 			return nil
 		}
-		return ir.NewNull(expected.(*ir.PointerType))
+		return ir.NewNull(ir.NewPointerType(expected))
 
 	default:
 		return nil

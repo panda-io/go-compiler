@@ -25,8 +25,8 @@ func (n *New) GenerateIR(ctx *Context, expected ir.Type) ir.Value {
 			}
 			return instance
 		} else {
-			//TO-DO
-			//_, counter := ctx.Program.FindSelector("global", "counter")
+			//counter := ctx.Program.FindQualified(Counter).(*Class).CreateInstance(ctx, nil)
+
 		}
 	}
 	ctx.Program.Error(n.Position, "invalid type for new operator")

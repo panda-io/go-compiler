@@ -10,3 +10,12 @@ int main()
    int e = +c;
    return 0;
 }
+
+bool test(int* a)
+{
+   if (a == NULL)
+   {
+      return true;
+   }
+   return false;
+}

@@ -231,6 +231,13 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 					}
 				}
 			}
+		} else {
+			if ir.IsPointer(v1.Type()) && ir.IsPointer(v2.Type()) {
+				if b.Operator == token.Equal || b.Operator == token.NotEqual {
+					icmp := ICMP[b.Operator]
+					inst = ir.NewICmp(icmp, v1, v2)
+				}
+			}
 		}
 	}
 	if inst == nil {

@@ -11,31 +11,10 @@ const (
 	ClassThis     = "this"
 	Constructor   = "create"
 	Destructor    = "destroy"
+	Counter       = "global.counter"
 
 	Extern   = "extern"
 	Variadic = "variadic"
-)
-
-type ValueType int
-
-const (
-	TVoid ValueType = iota
-	TBool
-	TI8
-	TI16
-	TI32
-	TI64
-	TUI8
-	TUI16
-	TUI32
-	TUI64
-	TF32
-	TF64
-	TChar
-	TString
-	TFunction
-	TClass
-	TPointer
 )
 
 var (
@@ -43,5 +22,8 @@ var (
 	free    = ir.NewFunc("free", ir.Void, ir.NewParam(ir.NewPointerType(ir.I8)))
 	memcpy  = ir.NewFunc("memcpy", ir.NewPointerType(ir.I8), ir.NewParam(ir.NewPointerType(ir.I8)), ir.NewParam(ir.I32))
 	memset  = ir.NewFunc("memset", ir.Void, ir.NewParam(ir.I32), ir.NewParam(ir.I32))
-	counter = ir.NewPointerType(&ir.StructType{TypeName: "global.counter"})
+	counter = ir.NewPointerType(&ir.StructType{TypeName: Counter})
+
+	releaseShared = ir.NewFunc("global.counter.release_shared", ir.NewPointerType(ir.I8))
+	releaseWeak   = ir.NewFunc("global.counter.retain_weak", ir.NewPointerType(ir.I8))
 )

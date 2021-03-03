@@ -2,7 +2,7 @@ namespace;
 
 import libc;
 
-var a int;
+//var a int;
 
 /*
 enum color
@@ -31,6 +31,19 @@ function add(a int, b int) int
 {
     return a + b;
 }*/
+
+public class base
+{
+    public function create()
+    {
+        libc.puts("base contruction");
+    }
+
+    public function destroy()
+    {
+        libc.puts("base destruction");
+    }
+}
 
 public function main() int
 {
@@ -74,6 +87,7 @@ public function main() int
     //libc.printf("b = %d \n", b);
     //var c counter = new counter();
     new counter();
-    libc.puts("hello world");
+
+    //new base();
     return 0;
 }
