@@ -23,7 +23,7 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 			if IsBuiltinType(qualified) {
 				alloca = ir.NewAlloca(CreateStructPointer(qualified))
 			} else {
-				alloca = ir.NewAlloca(counter)
+				alloca = ir.NewAlloca(counterType)
 			}
 			alloca.UserData = qualified
 

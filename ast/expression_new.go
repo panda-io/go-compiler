@@ -25,8 +25,20 @@ func (n *New) GenerateIR(ctx *Context, expected ir.Type) ir.Value {
 			}
 			return instance
 		} else {
-			//counter := ctx.Program.FindQualified(Counter).(*Class).CreateInstance(ctx, nil)
-
+			counterClass := ctx.Program.FindQualified(Counter).(*Class)
+			counter := counterClass.CreateInstance(ctx, nil)
+			if !n.HasOwner {
+				ctx.Function.AutoReleasePool = append(ctx.Function.AutoReleasePool, counter)
+			}
+			// set object
+			object := counterClass.GetMember(ctx, counter, "object")
+			pointer := ir.NewBitCast(instance, ir.NewPointerType(ir.I8))
+			ctx.Block.AddInstruction(pointer)
+			ctx.Block.AddInstruction(ir.NewStore(pointer, object))
+			// set destructor
+			destructor := counterClass.GetMember(ctx, counter, "destructor")
+			ctx.Block.AddInstruction(ir.NewStore(c.IRFunctions[1], destructor))
+			return counter
 		}
 	}
 	ctx.Program.Error(n.Position, "invalid type for new operator")

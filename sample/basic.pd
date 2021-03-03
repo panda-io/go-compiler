@@ -12,26 +12,6 @@ enum color
     blue
 }*/
 
-/*
-public class something
-{
-    public function create()
-    {
-        libc.puts("create something");
-    }
-
-    public function destroy()
-    {
-        libc.puts("destroy something");
-    }
-}*/
-
-/*
-function add(a int, b int) int
-{
-    return a + b;
-}*/
-
 public class base
 {
     public function create()
@@ -86,8 +66,7 @@ public function main() int
     //var b int = 9;
     //libc.printf("b = %d \n", b);
     //var c counter = new counter();
-    new counter();
-
-    //new base();
+    //new counter();
+    new base();
     return 0;
 }

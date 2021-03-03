@@ -18,12 +18,12 @@ const (
 )
 
 var (
-	malloc  = ir.NewFunc("malloc", ir.NewPointerType(ir.I8), ir.NewParam(ir.I32))
-	free    = ir.NewFunc("free", ir.Void, ir.NewParam(ir.NewPointerType(ir.I8)))
-	memcpy  = ir.NewFunc("memcpy", ir.NewPointerType(ir.I8), ir.NewParam(ir.NewPointerType(ir.I8)), ir.NewParam(ir.I32))
-	memset  = ir.NewFunc("memset", ir.Void, ir.NewParam(ir.I32), ir.NewParam(ir.I32))
-	counter = ir.NewPointerType(&ir.StructType{TypeName: Counter})
+	malloc = ir.NewFunc("malloc", ir.NewPointerType(ir.I8), ir.NewParam(ir.I32))
+	free   = ir.NewFunc("free", ir.Void, ir.NewParam(ir.NewPointerType(ir.I8)))
+	memcpy = ir.NewFunc("memcpy", ir.NewPointerType(ir.I8), ir.NewParam(ir.NewPointerType(ir.I8)), ir.NewParam(ir.I32))
+	memset = ir.NewFunc("memset", ir.Void, ir.NewParam(ir.I32), ir.NewParam(ir.I32))
 
-	releaseShared = ir.NewFunc("global.counter.release_shared", ir.NewPointerType(ir.I8))
-	releaseWeak   = ir.NewFunc("global.counter.retain_weak", ir.NewPointerType(ir.I8))
+	counterType   = ir.NewPointerType(&ir.StructType{TypeName: Counter})
+	releaseShared = ir.NewFunc("global.counter.release_shared", ir.Void, ir.NewParam(ir.NewPointerType(ir.I8)))
+	releaseWeak   = ir.NewFunc("global.counter.retain_weak", ir.Void, ir.NewParam(ir.NewPointerType(ir.I8)))
 )

@@ -22,8 +22,8 @@ type Function struct {
 	IRExit     *ir.Block
 	IRReturn   ir.Value
 
-	ReferenceReleasePool []ir.Value
-	BuiltinReleasePool   []ir.Value
+	AutoReleasePool    []ir.Value
+	BuiltinReleasePool []ir.Value
 }
 
 func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
@@ -170,7 +170,7 @@ func (f *Function) GenerateIR(p *Program) {
 			class := c.Program.FindQualified(t.TypeName).(*Class)
 			class.DestroyInstance(obj, f.IRExit)
 		}
-		for _, obj := range f.ReferenceReleasePool {
+		for _, obj := range f.AutoReleasePool {
 			pointer := ir.NewBitCast(obj, ir.NewPointerType(ir.I8))
 			f.IRExit.AddInstruction(pointer)
 			call := ir.NewCall(releaseShared, pointer)

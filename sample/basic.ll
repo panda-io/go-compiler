@@ -1,10 +1,10 @@
-%global.counter = type { %global.counter.vtable.type*, i32, i32, i8*, void (i8*, i1)* }
-%global.counter.vtable.type = type { %global.counter* ()*, void (i8*)*, void (i8*)*, void (i8*)*, void (i8*)*, void (i8*)* }
 %global.base = type { %global.base.vtable.type* }
 %global.base.vtable.type = type { %global.base* ()*, void (i8*)* }
+%global.counter = type { %global.counter.vtable.type*, i32, i32, i8*, void (i8*)* }
+%global.counter.vtable.type = type { %global.counter* ()*, void (i8*)*, void (i8*)*, void (i8*)*, void (i8*)*, void (i8*)* }
 
-@global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (i8*)* @global.counter.destroy, void (i8*)* @global.counter.retain_shared, void (i8*)* @global.counter.release_shared, void (i8*)* @global.counter.retain_weak, void (i8*)* @global.counter.release_weak }
 @global.base.vtable.data = global %global.base.vtable.type { %global.base* ()* @global.base.create, void (i8*)* @global.base.destroy }
+@global.counter.vtable.data = global %global.counter.vtable.type { %global.counter* ()* @global.counter.create, void (i8*)* @global.counter.destroy, void (i8*)* @global.counter.retain_shared, void (i8*)* @global.counter.release_shared, void (i8*)* @global.counter.retain_weak, void (i8*)* @global.counter.release_weak }
 @string.5bdaebb122965539cdd6ce77f212b65e = constant [15 x i8] c"create counter\00"
 @string.f8f86b3941cca26e8c147322b9a8309f = constant [16 x i8] c"destroy counter\00"
 @string.319f93d592b03bf2f832e7b2592ace2e = constant [17 x i8] c"base contruction\00"
@@ -107,7 +107,7 @@ exit:
 	%6 = getelementptr %global.counter, %global.counter* %0, i32 0, i32 1
 	%7 = load i32, i32* %6
 	%8 = icmp eq i32 %7, 0
-	br i1 %8, label %20, label %10
+	br i1 %8, label %23, label %10
 
 
 9:
@@ -120,26 +120,30 @@ exit:
 
 11:
 	%12 = getelementptr %global.counter, %global.counter* %0, i32 0, i32 4
-	%13 = load void (i8*, i1)*, void (i8*, i1)** %12
+	%13 = load void (i8*)*, void (i8*)** %12
 	%14 = getelementptr %global.counter, %global.counter* %0, i32 0, i32 3
 	%15 = getelementptr %global.counter, %global.counter* %0, i32 0, i32 3
 	%16 = load i8*, i8** %15
-	call void %13(i8* %16, i1 true)
-	%17 = getelementptr %global.counter, %global.counter* %0, i32 0, i32 2
-	%18 = load i32, i32* %17
-	%19 = icmp eq i32 %18, 0
-	br i1 %19, label %21, label %20
+	call void %13(i8* %16)
+	%17 = getelementptr %global.counter, %global.counter* %0, i32 0, i32 3
+	%18 = getelementptr %global.counter, %global.counter* %0, i32 0, i32 3
+	%19 = load i8*, i8** %18
+	call void @free(i8* %19)
+	%20 = getelementptr %global.counter, %global.counter* %0, i32 0, i32 2
+	%21 = load i32, i32* %20
+	%22 = icmp eq i32 %21, 0
+	br i1 %22, label %24, label %23
 
 
-20:
+23:
 	br label %10
 
 
-21:
-	%22 = bitcast %global.counter* %0 to i8*
-	%23 = bitcast %global.counter* %0 to i8*
-	call void @free(i8* %23)
-	br label %20
+24:
+	%25 = bitcast %global.counter* %0 to i8*
+	%26 = bitcast %global.counter* %0 to i8*
+	call void @free(i8* %26)
+	br label %23
 
 }
 
@@ -215,16 +219,22 @@ entry:
 
 
 body:
-	%1 = call %global.counter* @global.counter.create()
+	%1 = call %global.base* @global.base.create()
+	%2 = call %global.counter* @global.counter.create()
+	%3 = getelementptr %global.counter, %global.counter* %2, i32 0, i32 3
+	%4 = bitcast %global.base* %1 to i8*
+	store i8* %4, i8** %3
+	%5 = getelementptr %global.counter, %global.counter* %2, i32 0, i32 4
+	store void (i8*)* @global.base.destroy, void (i8*)** %5
 	store i32 0, i32* %0
 	br label %exit
 
 
 exit:
-	%2 = bitcast %global.counter* %1 to i8*
-	call void @global.counter.destroy(i8* %2)
-	%3 = load i32, i32* %0
-	ret i32 %3
+	%6 = bitcast %global.counter* %2 to i8*
+	call void @global.counter.release_shared(i8* %6)
+	%7 = load i32, i32* %0
+	ret i32 %7
 
 }
 
