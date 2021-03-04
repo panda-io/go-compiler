@@ -135,6 +135,14 @@ func (f *Function) GenerateIR(p *Program) {
 
 		f.IREntry.AddInstruction(ir.NewBr(f.IRBody))
 
+		if f.ObjectName != "" && f.Name.Name == Destructor {
+			// call parent destructor
+			if f.Class.Parent != nil {
+				destructor := f.Class.Parent.IRFunctions[1]
+				call := ir.NewCall(destructor, f.IRParams[0])
+				f.IRBody.AddInstruction(call)
+			}
+		}
 		c.Block = f.IRBody
 		f.Body.GenerateIR(c)
 
@@ -152,12 +160,6 @@ func (f *Function) GenerateIR(p *Program) {
 
 		// generate destructor
 		if f.ObjectName != "" && f.Name.Name == Destructor {
-			// call parent destructor
-			if f.Class.Parent != nil {
-				destructor := f.Class.Parent.IRFunctions[1]
-				call := ir.NewCall(destructor, f.IRParams[0])
-				f.IRExit.AddInstruction(call)
-			}
 			// TO-DO clean up members // none-builtin-member
 		}
 

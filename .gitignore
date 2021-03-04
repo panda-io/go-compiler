@@ -2,6 +2,4 @@
 */**/test.sh
 coverage.out
 test.sh
-sample/foobar
-sample/vector
 debug.test

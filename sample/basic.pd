@@ -16,7 +16,7 @@ public class base
 {
     public function create()
     {
-        libc.puts("base contruction");
+        libc.puts("base construction");
     }
 
     public function destroy()
@@ -29,7 +29,7 @@ public class derive : base
 {
     public function create()
     {
-        libc.puts("derive contruction");
+        libc.puts("derive construction");
     }
 
     public function destroy()
@@ -80,7 +80,7 @@ public function main() int
     //libc.printf("b = %d \n", b);
     //var c counter = new counter();
     //new counter();
-    new base();
+    //new base();
 
     new derive();
     
