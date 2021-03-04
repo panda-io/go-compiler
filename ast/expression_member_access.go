@@ -94,7 +94,7 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		v = ir.NewCall(v)
 		if p != nil && memberFunction {
 			call := v.(*ir.InstCall)
-			call.Args = append(call.Args, CastToPointer(c, p))
+			call.Args = append(call.Args, p)
 		}
 	}
 	if v == nil {

@@ -77,9 +77,7 @@ func (f *Function) GenerateIR(p *Program) {
 		for i, param := range f.IRParams {
 			var v ir.Value
 			if i == 0 && f.ObjectName != "" && f.Name.Name != Constructor {
-				cast := ir.NewBitCast(param, CreateStructPointer(p.Module.Namespace+"."+f.ObjectName))
-				f.IREntry.AddInstruction(cast)
-				v = cast
+				v = CastFromPointer(f.IREntry, param, CreateStructPointer(p.Module.Namespace+"."+f.ObjectName))
 			} else {
 				//TO-DO add shared ref
 				alloc := ir.NewAlloca(param.Typ)
@@ -114,8 +112,7 @@ func (f *Function) GenerateIR(p *Program) {
 			f.IREntry.AddInstruction(ir.NewCall(memset, address, ir.NewInt(ir.I32, 0), size))
 
 			// set vtable
-			instance := ir.NewBitCast(address, ir.NewPointerType(f.Class.IRStruct))
-			f.IREntry.AddInstruction(instance)
+			instance := CastFromPointer(f.IREntry, address, ir.NewPointerType(f.Class.IRStruct))
 			vtable := ir.NewGetElementPtr(f.Class.IRStruct, instance, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
 			f.IREntry.AddInstruction(vtable)
 			f.IREntry.AddInstruction(ir.NewStore(f.Class.IRVTableData, vtable))
@@ -133,7 +130,7 @@ func (f *Function) GenerateIR(p *Program) {
 				}
 				current = current.Parent
 			}
-			f.IREntry.AddInstruction(ir.NewStore(instance, f.IRReturn))
+			f.IREntry.AddInstruction(ir.NewStore(address, f.IRReturn))
 		}
 
 		f.IREntry.AddInstruction(ir.NewBr(f.IRBody))
@@ -168,12 +165,10 @@ func (f *Function) GenerateIR(p *Program) {
 		for _, obj := range f.BuiltinReleasePool {
 			t := obj.Type().(*ir.PointerType).ElemType.(*ir.StructType)
 			class := c.Program.FindQualified(t.TypeName).(*Class)
-			class.DestroyInstance(obj, f.IRExit)
+			class.DestroyInstance(f.IRExit, obj)
 		}
 		for _, obj := range f.AutoReleasePool {
-			pointer := ir.NewBitCast(obj, ir.NewPointerType(ir.I8))
-			f.IRExit.AddInstruction(pointer)
-			call := ir.NewCall(releaseShared, pointer)
+			call := ir.NewCall(releaseShared, obj)
 			f.IRExit.AddInstruction(call)
 		}
 

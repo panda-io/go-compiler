@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/panda-foundation/go-compiler/ir"
+	"github.com/panda-foundation/go-compiler/token"
 )
 
 type Class struct {
@@ -117,7 +118,7 @@ func (c *Class) GenerateIRVTable(p *Program) {
 			if existing, ok := c.FunctionIndexes[f.Name.Name]; ok {
 				// existing function
 				function := functions[existing]
-				if !c.CompareFunction(function, current.IRFunctions[j], f.Name.Name == Constructor) {
+				if !function.Sig.Equal(current.IRFunctions[j].Sig) {
 					p.Error(f.Position, fmt.Sprintf("member function %s does not match its parent class", f.Name.Name))
 					//TO-DO print more params details here
 				} else {
@@ -168,8 +169,8 @@ func (c *Class) PreProcess(*Program) {
 	if c.Functions[0] == nil {
 		c.Functions[0] = c.CreateEmptyFunction(Constructor)
 	}
-	c.Functions[0].ReturnType = &TypeName{
-		Name: c.Name.Name,
+	c.Functions[0].ReturnType = &BuitinType{
+		Token: token.Pointer,
 	}
 	if c.Functions[1] == nil {
 		c.Functions[1] = c.CreateEmptyFunction(Destructor)
@@ -185,26 +186,6 @@ func (c *Class) CreateEmptyFunction(name string) *Function {
 	f.Body = &Block{}
 	f.Class = c
 	return f
-}
-
-func (c *Class) CompareFunction(f0 *ir.Func, f1 *ir.Func, isConstructor bool) bool {
-	sig0 := f0.Sig
-	sig1 := f1.Sig
-	if isConstructor {
-		return sig0.Equal(sig1)
-	}
-	if !sig0.RetType.Equal(sig1.RetType) {
-		return false
-	}
-	if len(sig0.Params) != len(sig1.Params) {
-		return false
-	}
-	for i := 1; i < len(sig0.Params); i++ {
-		if !sig0.Params[i].Equal(sig1.Params[i]) {
-			return false
-		}
-	}
-	return sig0.Variadic == sig1.Variadic
 }
 
 func (c *Class) ResolveParents(p *Program) {
@@ -274,11 +255,9 @@ func (c *Class) CreateInstance(ctx *Context, args *Arguments) ir.Value {
 	return call
 }
 
-func (c *Class) DestroyInstance(instance ir.Value, b *ir.Block) ir.Value {
+func (c *Class) DestroyInstance(b *ir.Block, instance ir.Value) ir.Value {
 	f := c.IRFunctions[1]
-	pointer := ir.NewBitCast(instance, ir.NewPointerType(ir.I8))
-	b.AddInstruction(pointer)
-	call := ir.NewCall(f, pointer)
+	call := ir.NewCall(f, instance)
 	b.AddInstruction(call)
 	return call
 }

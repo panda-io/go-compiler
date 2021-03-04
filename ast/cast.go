@@ -39,20 +39,20 @@ func PromoteNumberType(t1 ir.Type, t2 ir.Type) (ir.Type, error) {
 	return nil, fmt.Errorf("invalid number")
 }
 
-func CastToPointer(c *Context, value ir.Value) ir.Value {
+func CastToPointer(b *ir.Block, value ir.Value) ir.Value {
 	if ir.IsPointer(value.Type()) {
 		cast := ir.NewBitCast(value, ir.NewPointerType(ir.I8))
-		c.Block.AddInstruction(cast)
+		b.AddInstruction(cast)
 		return cast
 	}
 	return nil
 }
 
-func CastFromPointer(c *Context, value ir.Value, typ ir.Type) ir.Value {
+func CastFromPointer(b *ir.Block, value ir.Value, typ ir.Type) ir.Value {
 	t := value.Type()
 	if ir.IsPointer(t) && t.(*ir.PointerType).ElemType.Equal(ir.I8) {
 		cast := ir.NewBitCast(value, typ)
-		c.Block.AddInstruction(cast)
+		b.AddInstruction(cast)
 		return cast
 	}
 	return nil

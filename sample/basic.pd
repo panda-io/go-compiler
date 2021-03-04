@@ -25,6 +25,19 @@ public class base
     }
 }
 
+public class derive : base
+{
+    public function create()
+    {
+        libc.puts("derive contruction");
+    }
+
+    public function destroy()
+    {
+        libc.puts("derive destruction");
+    }
+}
+
 public function main() int
 {
     //var s something = new something();
@@ -68,5 +81,8 @@ public function main() int
     //var c counter = new counter();
     //new counter();
     new base();
+
+    new derive();
+    
     return 0;
 }

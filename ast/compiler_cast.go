@@ -3,8 +3,8 @@ package ast
 import "github.com/panda-foundation/go-compiler/ir"
 
 func init() {
-	RegisterComplierFunction("type", "to_pointer", CastToPinter)
-	RegisterComplierFunction("type", "from_pointer", CastFromPinter)
+	RegisterComplierFunction("type", "to_pointer", CompilerCastToPointer)
+	RegisterComplierFunction("type", "from_pointer", CompilerCastFromPointer)
 }
 
 /*
@@ -12,7 +12,7 @@ func init() {
 function is<type>(value type) bool;
 */
 
-func CastToPinter(c *Context, invocation *Invocation) ir.Value {
+func CompilerCastToPointer(c *Context, invocation *Invocation) ir.Value {
 	args := invocation.Arguments
 	if args != nil && len(args.Arguments) == 1 {
 		arg := args.Arguments[0]
@@ -26,7 +26,7 @@ func CastToPinter(c *Context, invocation *Invocation) ir.Value {
 	return nil
 }
 
-func CastFromPinter(c *Context, invocation *Invocation) ir.Value {
+func CompilerCastFromPointer(c *Context, invocation *Invocation) ir.Value {
 	args := invocation.Arguments
 	types := invocation.TypeArguments
 	if args != nil && len(args.Arguments) == 1 && types != nil && len(types.Arguments) == 1 {
