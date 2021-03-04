@@ -17,8 +17,8 @@ func (f *For) GenerateIR(c *Context) {
 		f.Initialization.GenerateIR(ctx)
 	}
 
-	leaveBlock := c.Function.IRFunction.NewBlock("")
-	ctx.LeaveBlock = leaveBlock
+	nextBlock := c.Function.IRFunction.NewBlock("")
+	ctx.LeaveBlock = nextBlock
 
 	conditionBlock := c.Function.IRFunction.NewBlock("")
 	conditionContext := ctx.NewContext()
@@ -49,8 +49,8 @@ func (f *For) GenerateIR(c *Context) {
 	} else {
 		condition = f.Condition.GenerateIR(conditionContext, nil)
 	}
-	conditionContext.Block.AddInstruction(ir.NewCondBr(condition, bodyBlock, leaveBlock))
+	conditionContext.Block.AddInstruction(ir.NewCondBr(condition, bodyBlock, nextBlock))
 	ctx.Block.AddInstruction(ir.NewBr(conditionBlock))
-	c.Block = leaveBlock
+	c.Block = nextBlock
 	c.Returned = ctx.Returned
 }

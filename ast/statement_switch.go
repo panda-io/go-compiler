@@ -39,16 +39,17 @@ func (s *Switch) GenerateIR(c *Context) {
 		return
 	}
 
-	leaveBlock := c.Function.IRFunction.NewBlock("")
-	ctx.LeaveBlock = leaveBlock
+	nextBlock := c.Function.IRFunction.NewBlock("")
+	ctx.LeaveBlock = nextBlock
 
 	defaultContext := ctx.NewContext()
-	defaultContext.Block = c.Function.IRFunction.NewBlock("")
+	defaultBlock := c.Function.IRFunction.NewBlock("")
+	defaultContext.Block = defaultBlock
 	if s.Default != nil {
 		s.Default.Body.GenerateIR(defaultContext)
 	}
 	if !defaultContext.Block.Terminated {
-		defaultContext.Block.AddInstruction(ir.NewBr(leaveBlock))
+		defaultContext.Block.AddInstruction(ir.NewBr(nextBlock))
 	}
 	if !defaultContext.Returned {
 		ctx.Returned = false
@@ -57,7 +58,8 @@ func (s *Switch) GenerateIR(c *Context) {
 	var caseBlocks []*ir.Case
 	for _, cc := range s.Cases {
 		caseContext := ctx.NewContext()
-		caseContext.Block = c.Function.IRFunction.NewBlock("")
+		caseBlock := c.Function.IRFunction.NewBlock("")
+		caseContext.Block = caseBlock
 		cc.Body.GenerateIR(caseContext)
 		if !caseContext.Returned {
 			ctx.Returned = false
@@ -65,7 +67,7 @@ func (s *Switch) GenerateIR(c *Context) {
 		if !cc.Case.IsConstant(c.Program) {
 			c.Program.Error(cc.Position, "expect constant int expression")
 		}
-		caseBlocks = append(caseBlocks, ir.NewCase(cc.Case.GenerateConstIR(c.Program, t.(*ir.IntType)), caseContext.Block))
+		caseBlocks = append(caseBlocks, ir.NewCase(cc.Case.GenerateConstIR(c.Program, t.(*ir.IntType)), caseBlock))
 	}
 
 	for i, cc := range caseBlocks {
@@ -73,14 +75,14 @@ func (s *Switch) GenerateIR(c *Context) {
 		if !b.Terminated {
 			if i == len(caseBlocks)-1 {
 				// last one
-				b.AddInstruction(ir.NewBr(defaultContext.Block))
+				b.AddInstruction(ir.NewBr(defaultBlock))
 			} else {
 				b.AddInstruction(ir.NewBr(caseBlocks[i+1].Target))
 			}
 		}
 	}
 
-	c.Block.AddInstruction(ir.NewSwitch(operand, defaultContext.Block, caseBlocks...))
-	c.Block = leaveBlock
+	ctx.Block.AddInstruction(ir.NewSwitch(operand, defaultBlock, caseBlocks...))
+	c.Block = nextBlock
 	c.Returned = ctx.Returned
 }
