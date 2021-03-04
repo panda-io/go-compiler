@@ -18,9 +18,9 @@ source_filename = "./sample/basic.ll"
 @string.5927c4441dce664e4b461e529f933750 = constant [12 x i8] c"retain weak\00"
 @string.5662737e1a39fc068ead71add358dfd3 = constant [13 x i8] c"release weak\00"
 @string.b6feae5df5d6172ffcb2a6bcd4d5c478 = constant [17 x i8] c"weak count: %d \0A\00"
-@string.319f93d592b03bf2f832e7b2592ace2e = constant [17 x i8] c"base contruction\00"
+@string.726bd3560bd4c136648f7760895d8d62 = constant [18 x i8] c"base construction\00"
 @string.362aeeddb3d01da539cb6755bde46953 = constant [17 x i8] c"base destruction\00"
-@string.e6ea2246bb845d56df0a16f42f78e88f = constant [19 x i8] c"derive contruction\00"
+@string.33b7808bf372c3d58730520160cb2c15 = constant [20 x i8] c"derive construction\00"
 @string.ef25b0542457581e67c27a0dddb7bda5 = constant [19 x i8] c"derive destruction\00"
 
 ; Function Attrs: nofree nounwind
@@ -47,10 +47,11 @@ entry:
   ret i8* %0
 }
 
-; Function Attrs: nofree nounwind
-define void @global.counter.destroy(i8* nocapture readnone %this) #0 {
+; Function Attrs: nounwind
+define void @global.counter.destroy(i8* nocapture %this) #1 {
 entry:
   %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([16 x i8], [16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f, i64 0, i64 0))
+  tail call void @free(i8* %this)
   ret void
 }
 
@@ -159,7 +160,7 @@ entry:
   tail call void @memset(i8* %0, i32 0, i32 8)
   %1 = bitcast i8* %0 to %global.derive.vtable.type**
   store %global.derive.vtable.type* @global.derive.vtable.data, %global.derive.vtable.type** %1, align 8
-  %2 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([19 x i8], [19 x i8]* @string.e6ea2246bb845d56df0a16f42f78e88f, i64 0, i64 0))
+  %2 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([20 x i8], [20 x i8]* @string.33b7808bf372c3d58730520160cb2c15, i64 0, i64 0))
   %3 = tail call dereferenceable_or_null(32) i8* @malloc(i32 32)
   tail call void @memset(i8* %3, i32 0, i32 32)
   %4 = bitcast i8* %3 to %global.counter.vtable.type**
@@ -177,6 +178,7 @@ entry:
   %13 = getelementptr i8, i8* %3, i64 24
   %14 = bitcast i8* %13 to void (i8*)**
   store void (i8*)* @global.derive.destroy, void (i8*)** %14, align 8
+  %15 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([16 x i8], [16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f, i64 0, i64 0)) #1
   tail call void @global.counter.release_shared(i8* %3)
   ret i32 0
 }
@@ -187,7 +189,7 @@ entry:
   tail call void @memset(i8* %0, i32 0, i32 8)
   %1 = bitcast i8* %0 to %global.base.vtable.type**
   store %global.base.vtable.type* @global.base.vtable.data, %global.base.vtable.type** %1, align 8
-  %2 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([17 x i8], [17 x i8]* @string.319f93d592b03bf2f832e7b2592ace2e, i64 0, i64 0))
+  %2 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([18 x i8], [18 x i8]* @string.726bd3560bd4c136648f7760895d8d62, i64 0, i64 0))
   ret i8* %0
 }
 
@@ -204,7 +206,7 @@ entry:
   tail call void @memset(i8* %0, i32 0, i32 8)
   %1 = bitcast i8* %0 to %global.derive.vtable.type**
   store %global.derive.vtable.type* @global.derive.vtable.data, %global.derive.vtable.type** %1, align 8
-  %2 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([19 x i8], [19 x i8]* @string.e6ea2246bb845d56df0a16f42f78e88f, i64 0, i64 0))
+  %2 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([20 x i8], [20 x i8]* @string.33b7808bf372c3d58730520160cb2c15, i64 0, i64 0))
   ret i8* %0
 }
 

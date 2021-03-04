@@ -314,20 +314,13 @@ type InstCall struct {
 	// Name of local variable associated with the result.
 	LocalIdent
 	// Callee.
-	// TODO: specify the set of underlying types of Callee.
 	Callee Value
 	// Function arguments.
-	//
-	// Arg has one of the following underlying types:
-	//    Value
-	//    *ir.Arg
-	//    TODO: add metadata value?
 	Args []Value
-
-	// extra.
-
 	// Type of result produced by the instruction.
 	Typ Type
+	// Save reference type for return type
+	UserData string
 }
 
 // NewCall returns a new call instruction based on the given callee and function

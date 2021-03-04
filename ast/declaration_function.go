@@ -31,7 +31,7 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 		return nil
 	}
 	if f.ObjectName != "" && f.Name.Name != Constructor {
-		param := ir.NewParam(ir.NewPointerType(ir.I8))
+		param := ir.NewParam(pointerType)
 		param.LocalName = ClassThis
 		f.IRParams = append(f.IRParams, param)
 	}
@@ -165,8 +165,18 @@ func (f *Function) GenerateIR(p *Program) {
 
 		// auto release pool
 		for _, obj := range f.BuiltinReleasePool {
-			t := obj.Type().(*ir.PointerType).ElemType.(*ir.StructType)
-			class := c.Program.FindQualified(t.TypeName).(*Class)
+			qualified := ""
+			switch t := obj.(type) {
+			case *ir.InstCall:
+				qualified = t.UserData
+
+			case *ir.InstAlloca:
+				qualified = t.UserData
+				load := ir.NewLoad(t.ElemType, t)
+				f.IRExit.AddInstruction(load)
+				obj = load
+			}
+			class := c.Program.FindQualified(qualified).(*Class)
 			class.DestroyInstance(f.IRExit, obj)
 		}
 		for _, obj := range f.AutoReleasePool {

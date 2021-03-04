@@ -19,7 +19,7 @@ func (n *New) GenerateIR(ctx *Context, expected ir.Type) ir.Value {
 	qualified, d := ctx.Program.FindDeclaration(n.Typ)
 	if c, ok := d.(*Class); ok {
 		instance := c.CreateInstance(ctx, n.Arguments)
-		if IsBuiltinType(qualified) {
+		if IsBuiltinClass(qualified) {
 			if !n.HasOwner {
 				ctx.Function.BuiltinReleasePool = append(ctx.Function.BuiltinReleasePool, instance)
 			}

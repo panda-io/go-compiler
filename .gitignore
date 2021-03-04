@@ -3,3 +3,5 @@
 coverage.out
 test.sh
 debug.test
+sample/basic.o
+sample/basic

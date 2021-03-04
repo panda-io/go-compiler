@@ -40,48 +40,10 @@ public class derive : base
 
 public function main() int
 {
-    //var s something = new something();
-    /*
-    a++;
-
-    if (a == 0)
-    {
-        libc.puts("a is 0");
-    }
-    if (a == 1)
-    {
-        libc.puts("a is 1");
-    }
-
-    switch (a)
-    {
-        case 0:
-        {
-            libc.puts("a is 0");
-            break;
-        }
-        case 1:
-        {
-            libc.puts("a is 1");
-            break;
-        }
-        default:
-            libc.puts("default");
-    }
-
-    for (; a < 5; a++)
-    {
-        libc.puts("loop");
-    }
-
-    libc.printf("a = %d \n", a);*/
-
-    //var b int = 9;
-    //libc.printf("b = %d \n", b);
-    //var c counter = new counter();
+    //var c counter;// = new counter();
+    //var d derive; // TO-DO fix error
     //new counter();
     //new base();
-
     new derive();
     
     return 0;

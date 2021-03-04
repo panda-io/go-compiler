@@ -83,7 +83,7 @@ func (p *Program) AddString(value string) ir.Constant {
 	}
 	s := p.IRModule.NewGlobalDef("string."+hash, ir.NewCharArray(bytes))
 	s.Immutable = true
-	v := ir.NewExprBitCast(s, ir.NewPointerType(ir.I8))
+	v := ir.NewExprBitCast(s, pointerType)
 	p.Strings[hash] = v
 	return v
 }

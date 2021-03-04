@@ -18,9 +18,9 @@
 @string.5927c4441dce664e4b461e529f933750 = constant [12 x i8] c"retain weak\00"
 @string.5662737e1a39fc068ead71add358dfd3 = constant [13 x i8] c"release weak\00"
 @string.b6feae5df5d6172ffcb2a6bcd4d5c478 = constant [17 x i8] c"weak count: %d \0A\00"
-@string.319f93d592b03bf2f832e7b2592ace2e = constant [17 x i8] c"base contruction\00"
+@string.726bd3560bd4c136648f7760895d8d62 = constant [18 x i8] c"base construction\00"
 @string.362aeeddb3d01da539cb6755bde46953 = constant [17 x i8] c"base destruction\00"
-@string.e6ea2246bb845d56df0a16f42f78e88f = constant [19 x i8] c"derive contruction\00"
+@string.33b7808bf372c3d58730520160cb2c15 = constant [20 x i8] c"derive construction\00"
 @string.ef25b0542457581e67c27a0dddb7bda5 = constant [19 x i8] c"derive destruction\00"
 
 declare i32 @puts(i8* %text)
@@ -70,6 +70,9 @@ entry:
 
 body:
 	%1 = call i32 @puts(i8* bitcast ([16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f to i8*))
+	%2 = bitcast %global.counter* %0 to i8*
+	%3 = bitcast %global.counter* %0 to i8*
+	call void @free(i8* %3)
 	br label %exit
 
 
@@ -250,26 +253,30 @@ exit:
 define i32 @main() {
 entry:
 	%0 = alloca i32
+	%1 = alloca i8*
 	br label %body
 
 
 body:
-	%1 = call i8* @global.derive.create()
-	%2 = call i8* @global.counter.create()
-	%3 = bitcast i8* %2 to %global.counter*
-	call void @global.counter.retain_shared(i8* %2)
-	%4 = getelementptr %global.counter, %global.counter* %3, i32 0, i32 3
-	store i8* %1, i8** %4
-	%5 = getelementptr %global.counter, %global.counter* %3, i32 0, i32 4
-	store void (i8*)* @global.derive.destroy, void (i8*)** %5
+	store i8* zeroinitializer, i8** %1
+	%2 = call i8* @global.derive.create()
+	%3 = call i8* @global.counter.create()
+	%4 = bitcast i8* %3 to %global.counter*
+	call void @global.counter.retain_shared(i8* %3)
+	%5 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 3
+	store i8* %2, i8** %5
+	%6 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 4
+	store void (i8*)* @global.derive.destroy, void (i8*)** %6
 	store i32 0, i32* %0
 	br label %exit
 
 
 exit:
-	call void @global.counter.release_shared(i8* %2)
-	%6 = load i32, i32* %0
-	ret i32 %6
+	%7 = load i8*, i8** %1
+	call void @global.counter.destroy(i8* %7)
+	call void @global.counter.release_shared(i8* %3)
+	%8 = load i32, i32* %0
+	ret i32 %8
 
 }
 
@@ -288,7 +295,7 @@ entry:
 
 
 body:
-	%6 = call i32 @puts(i8* bitcast ([17 x i8]* @string.319f93d592b03bf2f832e7b2592ace2e to i8*))
+	%6 = call i32 @puts(i8* bitcast ([18 x i8]* @string.726bd3560bd4c136648f7760895d8d62 to i8*))
 	br label %exit
 
 
@@ -329,7 +336,7 @@ entry:
 
 
 body:
-	%6 = call i32 @puts(i8* bitcast ([19 x i8]* @string.e6ea2246bb845d56df0a16f42f78e88f to i8*))
+	%6 = call i32 @puts(i8* bitcast ([20 x i8]* @string.33b7808bf372c3d58730520160cb2c15 to i8*))
 	br label %exit
 
 

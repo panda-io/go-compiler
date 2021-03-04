@@ -16,21 +16,22 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 		alloca = ir.NewAlloca(d.Type.Type(c.Program))
 
 	case *TypeName:
-		// TO-DO interface
 		qualified, declaration := c.Program.FindDeclaration(t)
 		switch declaration.(type) {
 		case *Class:
-			if IsBuiltinType(qualified) {
-				alloca = ir.NewAlloca(CreateStructPointer(qualified))
-			} else {
-				alloca = ir.NewAlloca(counterType)
-			}
+			alloca = ir.NewAlloca(pointerType)
 			alloca.UserData = qualified
+			if IsBuiltinClass(qualified) {
+				c.Function.BuiltinReleasePool = append(c.Function.BuiltinReleasePool, alloca)
+			} else {
+				c.Function.AutoReleasePool = append(c.Function.AutoReleasePool, alloca)
+			}
 
 		case *Enum:
 			alloca = ir.NewAlloca(ir.I32)
 
 		case *Interface:
+			// TO-DO interface
 			//TO-DO need to be some convert
 			alloca.UserData = qualified
 		}
@@ -45,13 +46,18 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 		c.Function.IREntry.InsertAlloca(alloca)
 		var store *ir.InstStore
 		if d.Value == nil {
-			store = ir.NewStore(ir.NewZeroInitializer(d.Type.Type(c.Program)), alloca)
+			switch d.Type.(type) {
+			case *BuitinType:
+				store = ir.NewStore(ir.NewZeroInitializer(d.Type.Type(c.Program)), alloca)
+			case *TypeName:
+				store = ir.NewStore(ir.NewZeroInitializer(pointerType), alloca)
+			}
 		} else {
-			//TO-DO check counter or instance
 			if n, ok := d.Value.(*New); ok {
 				n.HasOwner = true
 			}
-			store = ir.NewStore(d.Value.GenerateIR(c, d.Type.Type(c.Program)), alloca)
+			instance := d.Value.GenerateIR(c, d.Type.Type(c.Program))
+			store = ir.NewStore(instance, alloca)
 		}
 		c.Block.AddInstruction(store)
 		err := c.AddObject(d.Name.Name, alloca)

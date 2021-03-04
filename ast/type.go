@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	builtinTypes = []string{"global.counter", "golbal.allocator", "global.string"}
+	builtinClasses = []string{"global.counter", "golbal.allocator", "global.string"}
 )
 
 type Type interface {
@@ -29,8 +29,8 @@ func CreateStructPointer(qualified string) *ir.PointerType {
 	return ir.NewPointerType(t)
 }
 
-func IsBuiltinType(qualified string) bool {
-	for _, str := range builtinTypes {
+func IsBuiltinClass(qualified string) bool {
+	for _, str := range builtinClasses {
 		if str == qualified {
 			return true
 		}

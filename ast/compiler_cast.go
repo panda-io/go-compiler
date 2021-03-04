@@ -17,7 +17,7 @@ func CompilerCastToPointer(c *Context, invocation *Invocation) ir.Value {
 	if args != nil && len(args.Arguments) == 1 {
 		arg := args.Arguments[0]
 		if ir.IsStruct(arg.Type(c, nil)) {
-			cast := ir.NewBitCast(arg.GenerateIR(c, nil), ir.NewPointerType(ir.I8))
+			cast := ir.NewBitCast(arg.GenerateIR(c, nil), pointerType)
 			c.Block.AddInstruction(cast)
 			return cast
 		}

@@ -41,7 +41,7 @@ func PromoteNumberType(t1 ir.Type, t2 ir.Type) (ir.Type, error) {
 
 func CastToPointer(b *ir.Block, value ir.Value) ir.Value {
 	if ir.IsPointer(value.Type()) {
-		cast := ir.NewBitCast(value, ir.NewPointerType(ir.I8))
+		cast := ir.NewBitCast(value, pointerType)
 		b.AddInstruction(cast)
 		return cast
 	}
