@@ -17,37 +17,39 @@ func (i *If) GenerateIR(c *Context) {
 		i.Initialization.GenerateIR(ctx)
 	}
 
-	leaveBlock := c.Function.IRFunction.NewBlock("")
+	nextBlock := c.Function.IRFunction.NewBlock("")
+	bodyBlock := c.Function.IRFunction.NewBlock("")
+	elseBlock := nextBlock
 
 	bodyContext := ctx.NewContext()
-	bodyContext.Block = c.Function.IRFunction.NewBlock("")
+	bodyContext.Block = bodyBlock
 	i.Body.GenerateIR(bodyContext)
 	if bodyContext.Returned {
 		ctx.Returned = true
 	} else if !bodyContext.Block.Terminated {
-		bodyContext.Block.AddInstruction(ir.NewBr(leaveBlock))
+		bodyContext.Block.AddInstruction(ir.NewBr(nextBlock))
 	}
 
 	elseContext := ctx.NewContext()
-	elseContext.Block = leaveBlock
 	if i.Else == nil {
 		ctx.Returned = false
 	} else {
-		elseContext.Block = c.Function.IRFunction.NewBlock("")
+		elseBlock = c.Function.IRFunction.NewBlock("")
+		elseContext.Block = elseBlock
 		i.Else.GenerateIR(elseContext)
 		ctx.Returned = elseContext.Returned
 		if !elseContext.Block.Terminated {
-			elseContext.Block.AddInstruction(ir.NewBr(leaveBlock))
+			elseContext.Block.AddInstruction(ir.NewBr(nextBlock))
 		}
 	}
 
 	var condition ir.Value
 	if i.Condition.IsConstant(c.Program) {
-		condition = i.Condition.GenerateConstIR(c.Program, ir.I1)
+		condition = i.Condition.GenerateConstIR(ctx.Program, ir.I1)
 	} else {
-		condition = i.Condition.GenerateIR(c, nil)
+		condition = i.Condition.GenerateIR(ctx, nil)
 	}
-	c.Block.AddInstruction(ir.NewCondBr(condition, bodyContext.Block, elseContext.Block))
-	c.Block = leaveBlock
+	ctx.Block.AddInstruction(ir.NewCondBr(condition, bodyBlock, elseBlock))
+	c.Block = nextBlock
 	c.Returned = ctx.Returned
 }
