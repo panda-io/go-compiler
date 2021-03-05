@@ -178,7 +178,6 @@ entry:
   %13 = getelementptr i8, i8* %3, i64 24
   %14 = bitcast i8* %13 to void (i8*)**
   store void (i8*)* @global.derive.destroy, void (i8*)** %14, align 8
-  %15 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([16 x i8], [16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f, i64 0, i64 0)) #1
   tail call void @global.counter.release_shared(i8* %3)
   ret i32 0
 }

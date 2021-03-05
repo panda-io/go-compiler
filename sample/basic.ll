@@ -253,30 +253,26 @@ exit:
 define i32 @main() {
 entry:
 	%0 = alloca i32
-	%1 = alloca i8*
 	br label %body
 
 
 body:
-	store i8* zeroinitializer, i8** %1
-	%2 = call i8* @global.derive.create()
-	%3 = call i8* @global.counter.create()
-	%4 = bitcast i8* %3 to %global.counter*
-	call void @global.counter.retain_shared(i8* %3)
-	%5 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 3
-	store i8* %2, i8** %5
-	%6 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 4
-	store void (i8*)* @global.derive.destroy, void (i8*)** %6
+	%1 = call i8* @global.derive.create()
+	%2 = call i8* @global.counter.create()
+	%3 = bitcast i8* %2 to %global.counter*
+	call void @global.counter.retain_shared(i8* %2)
+	%4 = getelementptr %global.counter, %global.counter* %3, i32 0, i32 3
+	store i8* %1, i8** %4
+	%5 = getelementptr %global.counter, %global.counter* %3, i32 0, i32 4
+	store void (i8*)* @global.derive.destroy, void (i8*)** %5
 	store i32 0, i32* %0
 	br label %exit
 
 
 exit:
-	%7 = load i8*, i8** %1
-	call void @global.counter.destroy(i8* %7)
-	call void @global.counter.release_shared(i8* %3)
-	%8 = load i32, i32* %0
-	ret i32 %8
+	call void @global.counter.release_shared(i8* %2)
+	%6 = load i32, i32* %0
+	ret i32 %6
 
 }
 

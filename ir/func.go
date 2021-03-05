@@ -185,8 +185,6 @@ type Param struct {
 	LocalIdent
 	// Parameter type.
 	Typ Type
-	// Save reference type for autopointer
-	UserData string
 }
 
 // NewParam returns a new function parameter based on the given name and type.

@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"fmt"
+
 	"github.com/panda-foundation/go-compiler/ir"
 	"github.com/panda-foundation/go-compiler/token"
 )
@@ -41,8 +43,8 @@ type Binary struct {
 	Right    Expression
 }
 
-//TO-DO operator override
 func (b *Binary) Type(c *Context, expected ir.Type) ir.Type {
+	//TO-DO operator override
 	t1 := b.Left.Type(c, expected)
 	t2 := b.Right.Type(c, expected)
 
@@ -83,8 +85,8 @@ func (b *Binary) Type(c *Context, expected ir.Type) ir.Type {
 	return nil
 }
 
-//TO-DO operator overload
 func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
+	//TO-DO operator overload
 	t1 := b.Left.Type(c, expected)
 	t2 := b.Right.Type(c, expected)
 	c1 := b.Left.IsConstant(c.Program)
@@ -117,16 +119,112 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	var inst ir.Instruction
 	switch b.Operator {
 	case token.Assign:
-		//TO-DO counter
-		//Left cannot be const
 		if c1 {
 			c.Program.Error(b.Position, "left value cannot be const expression")
+		}
+		t, e := PromoteNumberType(t1, t2)
+		if e == nil {
+			if !t1.Equal(t) {
+				c.Program.Error(b.Position, fmt.Sprintf("cannot implicit convert %s to %s [down grade]", t.String(), t1.String()))
+			}
+			if !t2.Equal(t) {
+				v2 = CastNumber(c, v2, t)
+			}
+			inst = ir.NewStore(v2, v1)
+		} else {
+			// TO-DO pointer: builtin or counter
+			fmt.Println("pointer here, compare type and userdata")
+			// TO-DO interface convert
 		}
 
 	case token.MulAssign, token.DivAssign, token.RemAssign, token.PlusAssign, token.MinusAssign,
 		token.LeftShiftAssign, token.RightShiftAssign, token.AndAssign, token.OrAssign, token.XorAssign:
-		//TO-DO
-		//Left cannot be const
+		if c1 {
+			c.Program.Error(b.Position, "left value cannot be const expression")
+		}
+		t, e := PromoteNumberType(t1, t2)
+		if e == nil {
+			if !t1.Equal(t) {
+				v1 = CastNumber(c, v1, t)
+			}
+			if !t2.Equal(t) {
+				v2 = CastNumber(c, v2, t)
+			}
+			switch b.Operator {
+			case token.PlusAssign:
+				if ir.IsInt(t) {
+					inst = ir.NewAdd(v1, v2)
+				} else if ir.IsFloat(t) {
+					inst = ir.NewFAdd(v1, v2)
+				}
+
+			case token.MinusAssign:
+				if ir.IsInt(t) {
+					inst = ir.NewSub(v1, v2)
+				} else if ir.IsFloat(t) {
+					inst = ir.NewFSub(v1, v2)
+				}
+			case token.MulAssign:
+				if ir.IsInt(t) {
+					inst = ir.NewMul(v1, v2)
+				} else if ir.IsFloat(t) {
+					inst = ir.NewFMul(v1, v2)
+				}
+
+			case token.DivAssign:
+				if ir.IsInt(t) {
+					if t.(*ir.IntType).Unsigned {
+						inst = ir.NewUDiv(v1, v2)
+					} else {
+						inst = ir.NewSDiv(v1, v2)
+					}
+				} else if ir.IsFloat(t) {
+					inst = ir.NewFDiv(v1, v2)
+				}
+
+			case token.RemAssign:
+				if ir.IsInt(t) {
+					if t.(*ir.IntType).Unsigned {
+						inst = ir.NewURem(v1, v2)
+					} else {
+						inst = ir.NewSRem(v1, v2)
+					}
+				}
+
+			case token.LeftShiftAssign:
+				if ir.IsInt(t) {
+					inst = ir.NewShl(v1, v2)
+				}
+
+			case token.RightShiftAssign:
+				if ir.IsInt(t) {
+					if t.(*ir.IntType).Unsigned {
+						inst = ir.NewLShr(v1, v2)
+					} else {
+						inst = ir.NewAShr(v1, v2)
+					}
+				}
+
+			case token.OrAssign:
+				if ir.IsInt(t) {
+					inst = ir.NewOr(v1, v2)
+				}
+
+			case token.XorAssign:
+				if ir.IsInt(t) {
+					inst = ir.NewXor(v1, v2)
+				}
+
+			case token.AndAssign:
+				if ir.IsInt(t) {
+					inst = ir.NewAnd(v1, v2)
+				}
+			}
+
+			if inst != nil {
+				inst = ir.NewStore(inst.(ir.Value), v1)
+			}
+		}
 
 	case token.Or, token.And:
 		if ir.IsBool(t1) && ir.IsBool(t2) {
@@ -231,12 +329,10 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 					}
 				}
 			}
-		} else {
-			if ir.IsPointer(v1.Type()) && ir.IsPointer(v2.Type()) {
-				if b.Operator == token.Equal || b.Operator == token.NotEqual {
-					icmp := ICMP[b.Operator]
-					inst = ir.NewICmp(icmp, v1, v2)
-				}
+		} else if ir.IsPointer(v1.Type()) && ir.IsPointer(v2.Type()) && v1.Type().Equal(v2.Type()) {
+			if b.Operator == token.Equal || b.Operator == token.NotEqual {
+				icmp := ICMP[b.Operator]
+				inst = ir.NewICmp(icmp, v1, v2)
 			}
 		}
 	}

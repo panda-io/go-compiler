@@ -24,6 +24,7 @@ func (r *Return) GenerateIR(c *Context) {
 		if value.Type().Equal(t) {
 			c.Block.AddInstruction(ir.NewStore(value, c.Function.IRReturn))
 		} else if p, ok := value.Type().(*ir.PointerType); ok && p.ElemType.Equal(t) {
+			// TO-DO Check user data of pointer type
 			load := ir.NewLoad(p.ElemType, value)
 			c.Block.AddInstruction(load)
 			c.Block.AddInstruction(ir.NewStore(load, c.Function.IRReturn))

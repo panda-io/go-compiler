@@ -319,8 +319,6 @@ type InstCall struct {
 	Args []Value
 	// Type of result produced by the instruction.
 	Typ Type
-	// Save reference type for return type
-	UserData string
 }
 
 // NewCall returns a new call instruction based on the given callee and function

@@ -18,8 +18,6 @@ type InstAlloca struct {
 	// Type of result produced by the instruction, including an optional address
 	// space.
 	Typ *PointerType
-	// Save reference type for alloca type
-	UserData string
 }
 
 // NewAlloca returns a new alloca instruction based on the given element type.
