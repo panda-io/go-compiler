@@ -40,7 +40,8 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 			param := ir.NewParam(parameter.Type.Type(p))
 			param.LocalName = parameter.Name
 			if t, ok := parameter.Type.(*TypeName); ok {
-				param.UserData, _ = p.FindDeclaration(t)
+				userData, _ := p.FindDeclaration(t)
+				SetUserData(param, userData)
 			}
 			f.IRParams = append(f.IRParams, param)
 		}
@@ -81,7 +82,7 @@ func (f *Function) GenerateIR(p *Program) {
 			} else {
 				//TO-DO add shared ref
 				alloc := ir.NewAlloca(param.Typ)
-				alloc.UserData = param.UserData
+				CopyUserData(param, alloc)
 				f.IREntry.AddInstruction(alloc)
 				store := ir.NewStore(param, alloc)
 				f.IREntry.AddInstruction(store)
@@ -168,10 +169,10 @@ func (f *Function) GenerateIR(p *Program) {
 			qualified := ""
 			switch t := obj.(type) {
 			case *ir.InstCall:
-				qualified = t.UserData
+				qualified = GetUserData(t)
 
 			case *ir.InstAlloca:
-				qualified = t.UserData
+				qualified = GetUserData(t)
 				load := ir.NewLoad(t.ElemType, t)
 				f.IRExit.AddInstruction(load)
 				obj = load

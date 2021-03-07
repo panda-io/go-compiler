@@ -389,6 +389,8 @@ type PointerType struct {
 	TypeName string
 	// Element type.
 	ElemType Type
+	// Store original type or other custom data
+	UserData string
 }
 
 // NewPointerType returns a new pointer type based on the given element type.

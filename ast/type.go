@@ -37,3 +37,26 @@ func IsBuiltinClass(qualified string) bool {
 	}
 	return false
 }
+
+func CopyUserData(source, dest ir.Value) {
+	t1 := source.Type()
+	t2 := dest.Type()
+	if ir.IsPointer(t1) && ir.IsPointer((t2)) {
+		t2.(*ir.PointerType).UserData = t1.(*ir.PointerType).UserData
+	}
+}
+
+func GetUserData(value ir.Value) string {
+	t := value.Type()
+	if ir.IsPointer(t) {
+		return t.(*ir.PointerType).UserData
+	}
+	return ""
+}
+
+func SetUserData(value ir.Value, userData string) {
+	t := value.Type()
+	if ir.IsPointer(t) {
+		t.(*ir.PointerType).UserData = userData
+	}
+}

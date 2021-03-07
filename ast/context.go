@@ -76,7 +76,7 @@ func (c *Context) AutoLoad(value ir.Value) ir.Value {
 	// global define
 	case *ir.Global:
 		load := ir.NewLoad(t.ContentType, t)
-		load.UserData = t.UserData
+		CopyUserData(t, load)
 		c.Block.AddInstruction(load)
 		return load
 
@@ -87,7 +87,7 @@ func (c *Context) AutoLoad(value ir.Value) ir.Value {
 	// alloca in function
 	case *ir.InstAlloca:
 		load := ir.NewLoad(t.ElemType, t)
-		load.UserData = t.UserData
+		CopyUserData(t, load)
 		c.Block.AddInstruction(load)
 		return load
 
@@ -95,7 +95,7 @@ func (c *Context) AutoLoad(value ir.Value) ir.Value {
 	case *ir.InstGetElementPtr:
 		typ := t.Type().(*ir.PointerType)
 		load := ir.NewLoad(typ.ElemType, t)
-		load.UserData = t.UserData
+		CopyUserData(t, load)
 		c.Block.AddInstruction(load)
 		return load
 	}

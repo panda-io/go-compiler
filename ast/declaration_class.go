@@ -248,7 +248,7 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string) ir.Value {
 func (c *Class) CreateInstance(ctx *Context, args *Arguments) ir.Value {
 	f := c.IRFunctions[0]
 	call := ir.NewCall(f)
-	call.UserData = c.Qualified(ctx.Program.Module.Namespace)
+	SetUserData(call, c.Qualified(ctx.Program.Module.Namespace))
 	if args != nil {
 		args.GenerateIR(ctx, call)
 	}

@@ -20,7 +20,7 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 		switch declaration.(type) {
 		case *Class:
 			alloca = ir.NewAlloca(pointerType)
-			alloca.UserData = qualified
+			SetUserData(alloca, qualified)
 			if IsBuiltinClass(qualified) {
 				c.Function.BuiltinReleasePool = append(c.Function.BuiltinReleasePool, alloca)
 			} else {
@@ -33,7 +33,7 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 		case *Interface:
 			// TO-DO interface
 			//TO-DO need to be some convert
-			alloca.UserData = qualified
+			SetUserData(alloca, qualified)
 		}
 
 	case *TypeFunction:

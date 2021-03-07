@@ -9,7 +9,6 @@ import (
 type GlobalIdent struct {
 	GlobalName string
 	GlobalID   int64
-	UserData   string
 }
 
 // Ident returns the identifier associated with the global identifier.
@@ -60,7 +59,6 @@ func (i GlobalIdent) IsUnnamed() bool {
 type LocalIdent struct {
 	LocalName string
 	LocalID   int64
-	UserData  string
 }
 
 // NewLocalIdent returns a new local identifier based on the given string. An
