@@ -395,9 +395,13 @@ type PointerType struct {
 
 // NewPointerType returns a new pointer type based on the given element type.
 func NewPointerType(elemType Type) *PointerType {
-	return &PointerType{
+	p := &PointerType{
 		ElemType: elemType,
 	}
+	if s, ok := elemType.(*StructType); ok {
+		p.UserData = s.TypeName
+	}
+	return p
 }
 
 // Equal reports whether t and u are of equal type.

@@ -94,8 +94,12 @@ func (l *Literal) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		return ir.False
 
 	case token.NULL:
-		if expected != nil && ir.IsPointer(expected) {
-			return ir.NewNull(expected.(*ir.PointerType))
+		if expected != nil {
+			if expected.Equal(pointerType) {
+				return ir.NewNull(pointerType)
+			} else if ir.IsStruct(expected) {
+				return ir.NewNull(ir.NewPointerType(expected))
+			}
 		}
 		c.Program.Error(l.Position, "missing type for null")
 		return ir.NewNull(nil)
@@ -153,11 +157,15 @@ func (l *Literal) GenerateConstIR(p *Program, expected ir.Type) ir.Constant {
 		return ir.False
 
 	case token.NULL:
-		if expected == nil {
-			p.Error(l.Position, "missing type or invalid for null")
-			return nil
+		if expected != nil {
+			if expected.Equal(pointerType) {
+				return ir.NewNull(pointerType)
+			} else if ir.IsStruct(expected) {
+				return ir.NewNull(ir.NewPointerType(expected))
+			}
 		}
-		return ir.NewNull(ir.NewPointerType(expected))
+		p.Error(l.Position, "missing type for null")
+		return ir.NewNull(nil)
 
 	default:
 		return nil

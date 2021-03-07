@@ -99,7 +99,7 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	var v2 ir.Value
 	if c1 {
 		if expected == nil {
-			v1 = b.Left.GenerateConstIR(c.Program, b.Right.Type(c, nil))
+			v1 = b.Left.GenerateConstIR(c.Program, t2)
 		} else {
 			v1 = b.Left.GenerateConstIR(c.Program, expected)
 		}
@@ -108,7 +108,7 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	}
 	if c2 {
 		if expected == nil {
-			v2 = b.Right.GenerateConstIR(c.Program, b.Left.Type(c, nil))
+			v2 = b.Right.GenerateConstIR(c.Program, t1)
 		} else {
 			v2 = b.Right.GenerateConstIR(c.Program, expected)
 		}
@@ -122,6 +122,7 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		if c1 {
 			c.Program.Error(b.Position, "left value cannot be const expression")
 		}
+		v1 = b.Left.GenerateIR(c, expected)
 		t, e := PromoteNumberType(t1, t2)
 		if e == nil {
 			if !t1.Equal(t) {
@@ -130,11 +131,26 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 			if !t2.Equal(t) {
 				v2 = CastNumber(c, v2, t)
 			}
-			inst = ir.NewStore(v2, v1)
+			c.Block.AddInstruction(ir.NewStore(v2, v1))
+			return v1
 		} else {
-			// TO-DO pointer: builtin or counter
-			fmt.Println("pointer here, compare type and userdata")
-			// TO-DO interface convert
+			if t2 == nil {
+				t2 = v2.Type()
+			}
+			if ir.IsPointer(t1) && ir.IsPointer(t2) {
+				userData1 := t1.(*ir.PointerType).UserData
+				userData2 := t2.(*ir.PointerType).UserData
+				if userData1 == userData2 {
+					c.Block.AddInstruction(ir.NewStore(v2, v1))
+					return v1
+				} else if userData1 == Counter && userData2 != "" {
+					// TO-DO counter
+					// compare if context types are same or convertalbe
+					// call assign function
+					// TO-DO interface convert
+					fmt.Println("assign to counter")
+				}
+			}
 		}
 
 	case token.MulAssign, token.DivAssign, token.RemAssign, token.PlusAssign, token.MinusAssign,
@@ -222,7 +238,9 @@ func (b *Binary) GenerateIR(c *Context, expected ir.Type) ir.Value {
 			}
 
 			if inst != nil {
-				inst = ir.NewStore(inst.(ir.Value), v1)
+				v1 = b.Left.GenerateIR(c, expected)
+				c.Block.AddInstruction(ir.NewStore(inst.(ir.Value), v1))
+				return v1
 			}
 		}
 
