@@ -30,7 +30,7 @@ public class base_class
     }
 }
 
-public class derive : base_class
+public class derive_class : base_class
 {
     public function create()
     {
@@ -45,7 +45,13 @@ public class derive : base_class
     public function do()
     {
         //base.do(); //TO-DO bug fix
+        this.echo();
         libc.puts("do something in derive");
+    }
+
+    public function echo()
+    {
+        libc.puts("echo in derive");
     }
 }
 
@@ -56,7 +62,7 @@ public function main() int
 
     //new base();
 
-    var d derive = new derive();
+    var d derive_class = new derive_class();
     d.do();
     
     return 0;
