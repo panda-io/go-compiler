@@ -113,7 +113,7 @@ func (f *Function) GenerateIR(p *Program) {
 			f.IREntry.AddInstruction(ir.NewCall(memset, address, ir.NewInt(ir.I32, 0), size))
 
 			// set vtable
-			instance := CastFromPointer(f.IREntry, address, ir.NewPointerType(f.Class.IRStruct))
+			instance := CastToClass(f.IREntry, address, ir.NewPointerType(f.Class.IRStruct))
 			vtable := ir.NewGetElementPtr(f.Class.IRStruct, instance, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
 			f.IREntry.AddInstruction(vtable)
 			f.IREntry.AddInstruction(ir.NewStore(f.Class.IRVTableData, vtable))
@@ -238,7 +238,7 @@ func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall) {
 		if v == nil {
 			c.Program.Error(arg.GetPosition(), "invalid expression")
 		} else {
-			call.Args = append(call.Args, c.AutoLoad(arg.GenerateIR(c, nil)))
+			call.Args = append(call.Args, c.AutoLoad(v))
 		}
 	}
 }

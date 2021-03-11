@@ -1,13 +1,13 @@
 ; ModuleID = './sample/basic.ll'
 source_filename = "./sample/basic.ll"
 
-%global.base.vtable.type = type { i8* ()*, void (i8*)* }
-%global.derive.vtable.type = type { i8* ()*, void (i8*)* }
 %global.counter.vtable.type = type { i8* ()*, void (i8*)*, void (i8*)*, void (i8*)*, void (i8*)*, void (i8*)* }
+%global.base.vtable.type = type { i8* ()*, void (i8*)*, void (i8*)* }
+%global.derive.vtable.type = type { i8* ()*, void (i8*)*, void (i8*)* }
 
-@global.base.vtable.data = global %global.base.vtable.type { i8* ()* @global.base.create, void (i8*)* @global.base.destroy }
-@global.derive.vtable.data = global %global.derive.vtable.type { i8* ()* @global.derive.create, void (i8*)* @global.derive.destroy }
 @global.counter.vtable.data = global %global.counter.vtable.type { i8* ()* @global.counter.create, void (i8*)* @global.counter.destroy, void (i8*)* @global.counter.retain_shared, void (i8*)* @global.counter.release_shared, void (i8*)* @global.counter.retain_weak, void (i8*)* @global.counter.release_weak }
+@global.base.vtable.data = global %global.base.vtable.type { i8* ()* @global.base.create, void (i8*)* @global.base.destroy, void (i8*)* @global.base.do }
+@global.derive.vtable.data = global %global.derive.vtable.type { i8* ()* @global.derive.create, void (i8*)* @global.derive.destroy, void (i8*)* @global.derive.do }
 @string.5bdaebb122965539cdd6ce77f212b65e = constant [15 x i8] c"create counter\00"
 @string.f8f86b3941cca26e8c147322b9a8309f = constant [16 x i8] c"destroy counter\00"
 @string.cf85dc053c0475520502efb2ba3c77a9 = constant [14 x i8] c"retain shared\00"
@@ -20,8 +20,10 @@ source_filename = "./sample/basic.ll"
 @string.b6feae5df5d6172ffcb2a6bcd4d5c478 = constant [17 x i8] c"weak count: %d \0A\00"
 @string.726bd3560bd4c136648f7760895d8d62 = constant [18 x i8] c"base construction\00"
 @string.362aeeddb3d01da539cb6755bde46953 = constant [17 x i8] c"base destruction\00"
+@string.b58017d6f5ff15cba2431d7ec3967243 = constant [21 x i8] c"do something in base\00"
 @string.33b7808bf372c3d58730520160cb2c15 = constant [20 x i8] c"derive construction\00"
 @string.ef25b0542457581e67c27a0dddb7bda5 = constant [19 x i8] c"derive destruction\00"
+@string.7cf7144b5f7d7f8893615fa04d42f3f7 = constant [23 x i8] c"do something in derive\00"
 
 ; Function Attrs: nofree nounwind
 declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #0
@@ -200,6 +202,13 @@ entry:
   ret void
 }
 
+; Function Attrs: nofree nounwind
+define void @global.base.do(i8* nocapture readnone %this) #0 {
+entry:
+  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([21 x i8], [21 x i8]* @string.b58017d6f5ff15cba2431d7ec3967243, i64 0, i64 0))
+  ret void
+}
+
 define i8* @global.derive.create() {
 entry:
   %0 = tail call dereferenceable_or_null(8) i8* @malloc(i32 8)
@@ -215,6 +224,13 @@ define void @global.derive.destroy(i8* nocapture readnone %this) #0 {
 entry:
   %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([17 x i8], [17 x i8]* @string.362aeeddb3d01da539cb6755bde46953, i64 0, i64 0)) #1
   %1 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([19 x i8], [19 x i8]* @string.ef25b0542457581e67c27a0dddb7bda5, i64 0, i64 0))
+  ret void
+}
+
+; Function Attrs: nofree nounwind
+define void @global.derive.do(i8* nocapture readnone %this) #0 {
+entry:
+  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([23 x i8], [23 x i8]* @string.7cf7144b5f7d7f8893615fa04d42f3f7, i64 0, i64 0))
   ret void
 }
 

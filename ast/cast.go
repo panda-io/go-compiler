@@ -48,7 +48,7 @@ func CastToPointer(b *ir.Block, value ir.Value) ir.Value {
 	return nil
 }
 
-func CastFromPointer(b *ir.Block, value ir.Value, typ ir.Type) ir.Value {
+func CastToClass(b *ir.Block, value ir.Value, typ ir.Type) ir.Value {
 	t := value.Type()
 	if ir.IsPointer(t) && t.(*ir.PointerType).ElemType.Equal(ir.I8) {
 		cast := ir.NewBitCast(value, typ)
