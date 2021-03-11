@@ -58,7 +58,6 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		p, v = c.FindSelector(ident.Name, m.Member.Name)
 		if p != nil {
 			if pt, ok := p.Type().(*ir.PointerType); ok {
-				// find declaration
 				if d, ok := c.Program.Declarations[pt.UserData]; ok {
 					if class, ok := d.(*Class); ok {
 						memberFunction = class.IsMemberFunction(m.Member.Name)
@@ -78,10 +77,14 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		memberFunction = c.Function.Class.IsMemberFunction(m.Member.Name)
 
 	} else if n, ok := m.Parent.(*New); ok {
-		_, d := c.Program.FindDeclaration(n.Typ)
+		qualified, d := c.Program.FindDeclaration(n.Typ)
 		if class, ok := d.(*Class); ok {
 			p = m.Parent.GenerateIR(c, nil)
-			v = class.GetMember(c, p, m.Member.Name)
+			if IsBuiltinClass(qualified) {
+				v = class.GetMember(c, p, m.Member.Name)
+			} else {
+				p, v = class.GetMemberFromCounter(c, p, m.Member.Name)
+			}
 			memberFunction = c.Function.Class.IsMemberFunction(m.Member.Name)
 		}
 
@@ -91,7 +94,11 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 			if d, ok := c.Program.Declarations[s.TypeName]; ok {
 				if class, ok := d.(*Class); ok {
 					p = m.Parent.GenerateIR(c, nil)
-					v = class.GetMember(c, p, m.Member.Name)
+					if IsBuiltinClass(s.TypeName) {
+						v = class.GetMember(c, p, m.Member.Name)
+					} else {
+						p, v = class.GetMemberFromCounter(c, p, m.Member.Name)
+					}
 					memberFunction = c.Function.Class.IsMemberFunction(m.Member.Name)
 				} else if enum, ok := d.(*Enum); ok {
 					v = enum.GetMember(m.Member.Name)

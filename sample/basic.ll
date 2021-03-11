@@ -273,6 +273,7 @@ body:
 	%6 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 4
 	store void (i8*)* @global.derive.destroy, void (i8*)** %6
 	store i8* %3, i8** %1
+	
 	%7 = getelementptr %global.derive, i8** %1, i32 0, i32 0
 	%8 = getelementptr %global.derive.vtable.type, %global.derive.vtable.type** %7, i32 0, i32 2
 	%9 = load void (i8*)*, void (i8*)** %8

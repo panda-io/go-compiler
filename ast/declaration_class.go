@@ -231,18 +231,26 @@ func (c *Class) MemberType(member string) ir.Type {
 }
 
 func (c *Class) GetMember(ctx *Context, this ir.Value, member string) ir.Value {
+	classPointer := CastFromPointer(ctx.Block, this, c.IRStruct)
 	if index, ok := c.VariableIndexes[member]; ok {
-		v := ir.NewGetElementPtr(c.IRStruct, this, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
+		v := ir.NewGetElementPtr(c.IRStruct, classPointer, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
 		ctx.Block.AddInstruction(v)
 		return v
 	} else if index, ok := c.FunctionIndexes[member]; ok {
-		vtable := ir.NewGetElementPtr(c.IRStruct, this, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
+		vtable := ir.NewGetElementPtr(c.IRStruct, classPointer, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
 		ctx.Block.AddInstruction(vtable)
 		f := ir.NewGetElementPtr(c.IRVTable, vtable, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
 		ctx.Block.AddInstruction(f)
 		return f
 	}
 	return nil
+}
+
+func (c *Class) GetMemberFromCounter(ctx *Context, counter ir.Value, member string) (ir.Value, ir.Value) {
+	counterPointer := CastFromPointer(ctx.Block, counter, counterType)
+	counterClass := ctx.Program.FindQualified(Counter).(*Class)
+	this := counterClass.GetMember(ctx, counterPointer, "object")
+	return this, c.GetMember(ctx, this, member)
 }
 
 func (c *Class) CreateInstance(ctx *Context, args *Arguments) ir.Value {

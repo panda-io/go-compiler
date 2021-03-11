@@ -122,7 +122,11 @@ func (c *Context) FindSelector(selector string, member string) (parent ir.Value,
 		// find declaration
 		if d, ok := c.Program.Declarations[p.UserData]; ok {
 			if class, ok := d.(*Class); ok {
-				value = class.GetMember(c, parent, member)
+				if IsBuiltinClass(p.UserData) {
+					value = class.GetMember(c, parent, member)
+				} else {
+					parent, value = class.GetMemberFromCounter(c, parent, member)
+				}
 			}
 		}
 	}

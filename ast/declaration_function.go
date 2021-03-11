@@ -75,12 +75,12 @@ func (f *Function) GenerateIR(p *Program) {
 		c.Block = f.IREntry
 
 		// prepare params
-		for i, param := range f.IRParams {
+		for _, param := range f.IRParams {
 			var v ir.Value
-			if i == 0 && f.ObjectName != "" && f.Name.Name != Constructor {
-				v = CastFromPointer(f.IREntry, param, CreateStructPointer(p.Module.Namespace+"."+f.ObjectName))
+			if param.Type().Equal(pointerType) {
+				//TO-DO add shared ref //TO-DO string
+				v = param
 			} else {
-				//TO-DO add shared ref
 				alloc := ir.NewAlloca(param.Typ)
 				CopyUserData(param, alloc)
 				f.IREntry.AddInstruction(alloc)

@@ -26,13 +26,12 @@ func (n *New) GenerateIR(ctx *Context, expected ir.Type) ir.Value {
 			return instance
 		} else {
 			counterClass := ctx.Program.FindQualified(Counter).(*Class)
-			counterPointer := counterClass.CreateInstance(ctx, nil)
-			counter := CastFromPointer(ctx.Block, counterPointer, counterType)
+			counter := counterClass.CreateInstance(ctx, nil)
 			if !n.HasOwner {
-				ctx.Function.AutoReleasePool = append(ctx.Function.AutoReleasePool, counterPointer)
+				ctx.Function.AutoReleasePool = append(ctx.Function.AutoReleasePool, counter)
 			}
 			// retain shared
-			call := ir.NewCall(retainShared, counterPointer)
+			call := ir.NewCall(retainShared, counter)
 			ctx.Block.AddInstruction(call)
 			// set object
 			object := counterClass.GetMember(ctx, counter, "object")
@@ -40,7 +39,7 @@ func (n *New) GenerateIR(ctx *Context, expected ir.Type) ir.Value {
 			// set destructor
 			destructor := counterClass.GetMember(ctx, counter, "destructor")
 			ctx.Block.AddInstruction(ir.NewStore(c.IRFunctions[1], destructor))
-			return counterPointer
+			return counter
 		}
 	}
 	ctx.Program.Error(n.Position, "invalid type for new operator")
