@@ -8,10 +8,6 @@
 @global.base.vtable.data = global %global.base.vtable.type { i8* ()* @global.base.create, void (i8*)* @global.base.destroy }
 @global.derive.vtable.data = global %global.derive.vtable.type { i8* ()* @global.derive.create, void (i8*)* @global.derive.destroy }
 @global.counter.vtable.data = global %global.counter.vtable.type { i8* ()* @global.counter.create, void (i8*)* @global.counter.destroy, void (i8*)* @global.counter.retain_shared, void (i8*)* @global.counter.release_shared, void (i8*)* @global.counter.retain_weak, void (i8*)* @global.counter.release_weak }
-@string.726bd3560bd4c136648f7760895d8d62 = constant [18 x i8] c"base construction\00"
-@string.362aeeddb3d01da539cb6755bde46953 = constant [17 x i8] c"base destruction\00"
-@string.33b7808bf372c3d58730520160cb2c15 = constant [20 x i8] c"derive construction\00"
-@string.ef25b0542457581e67c27a0dddb7bda5 = constant [19 x i8] c"derive destruction\00"
 @string.5bdaebb122965539cdd6ce77f212b65e = constant [15 x i8] c"create counter\00"
 @string.f8f86b3941cca26e8c147322b9a8309f = constant [16 x i8] c"destroy counter\00"
 @string.cf85dc053c0475520502efb2ba3c77a9 = constant [14 x i8] c"retain shared\00"
@@ -22,115 +18,10 @@
 @string.5927c4441dce664e4b461e529f933750 = constant [12 x i8] c"retain weak\00"
 @string.5662737e1a39fc068ead71add358dfd3 = constant [13 x i8] c"release weak\00"
 @string.b6feae5df5d6172ffcb2a6bcd4d5c478 = constant [17 x i8] c"weak count: %d \0A\00"
-
-define i32 @main() {
-entry:
-	%0 = alloca i32
-	br label %body
-
-
-body:
-	%1 = call i8* @global.derive.create()
-	%2 = call i8* @global.counter.create()
-	%3 = bitcast i8* %2 to %global.counter*
-	call void @global.counter.retain_shared(i8* %2)
-	%4 = getelementptr %global.counter, %global.counter* %3, i32 0, i32 3
-	store i8* %1, i8** %4
-	%5 = getelementptr %global.counter, %global.counter* %3, i32 0, i32 4
-	store void (i8*)* @global.derive.destroy, void (i8*)** %5
-	store i32 0, i32* %0
-	br label %exit
-
-
-exit:
-	call void @global.counter.release_shared(i8* %2)
-	%6 = load i32, i32* %0
-	ret i32 %6
-
-}
-
-define i8* @global.base.create() {
-entry:
-	%0 = alloca i8*
-	%1 = getelementptr %global.base, %global.base* null, i32 1
-	%2 = ptrtoint %global.base* %1 to i32
-	%3 = call i8* @malloc(i32 %2)
-	call void @memset(i8* %3, i32 0, i32 %2)
-	%4 = bitcast i8* %3 to %global.base*
-	%5 = getelementptr %global.base, %global.base* %4, i32 0, i32 0
-	store %global.base.vtable.type* @global.base.vtable.data, %global.base.vtable.type** %5
-	store i8* %3, i8** %0
-	br label %body
-
-
-body:
-	%6 = call i32 @puts(i8* bitcast ([18 x i8]* @string.726bd3560bd4c136648f7760895d8d62 to i8*))
-	br label %exit
-
-
-exit:
-	%7 = load i8*, i8** %0
-	ret i8* %7
-
-}
-
-define void @global.base.destroy(i8* %this) {
-entry:
-	%0 = bitcast i8* %this to %global.base*
-	br label %body
-
-
-body:
-	%1 = call i32 @puts(i8* bitcast ([17 x i8]* @string.362aeeddb3d01da539cb6755bde46953 to i8*))
-	br label %exit
-
-
-exit:
-	ret void
-
-}
-
-define i8* @global.derive.create() {
-entry:
-	%0 = alloca i8*
-	%1 = getelementptr %global.derive, %global.derive* null, i32 1
-	%2 = ptrtoint %global.derive* %1 to i32
-	%3 = call i8* @malloc(i32 %2)
-	call void @memset(i8* %3, i32 0, i32 %2)
-	%4 = bitcast i8* %3 to %global.derive*
-	%5 = getelementptr %global.derive, %global.derive* %4, i32 0, i32 0
-	store %global.derive.vtable.type* @global.derive.vtable.data, %global.derive.vtable.type** %5
-	store i8* %3, i8** %0
-	br label %body
-
-
-body:
-	%6 = call i32 @puts(i8* bitcast ([20 x i8]* @string.33b7808bf372c3d58730520160cb2c15 to i8*))
-	br label %exit
-
-
-exit:
-	%7 = load i8*, i8** %0
-	ret i8* %7
-
-}
-
-define void @global.derive.destroy(i8* %this) {
-entry:
-	%0 = bitcast i8* %this to %global.derive*
-	br label %body
-
-
-body:
-	call void @global.base.destroy(i8* %this)
-	%1 = call i32 @puts(i8* bitcast ([19 x i8]* @string.ef25b0542457581e67c27a0dddb7bda5 to i8*))
-	br label %exit
-
-
-exit:
-	ret void
-
-}
+@string.726bd3560bd4c136648f7760895d8d62 = constant [18 x i8] c"base construction\00"
+@string.362aeeddb3d01da539cb6755bde46953 = constant [17 x i8] c"base destruction\00"
+@string.33b7808bf372c3d58730520160cb2c15 = constant [20 x i8] c"derive construction\00"
+@string.ef25b0542457581e67c27a0dddb7bda5 = constant [19 x i8] c"derive destruction\00"
 
 declare i32 @puts(i8* %text)
 
@@ -360,5 +251,117 @@ exit:
 	%25 = bitcast %global.counter* %0 to i8*
 	call void @free(i8* %25)
 	br label %19
+
+}
+
+define i32 @main() {
+entry:
+	%0 = alloca i32
+	%1 = alloca i8*
+	br label %body
+
+
+body:
+	%2 = call i8* @global.derive.create()
+	%3 = call i8* @global.counter.create()
+	%4 = bitcast i8* %3 to %global.counter*
+	call void @global.counter.retain_shared(i8* %3)
+	%5 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 3
+	store i8* %2, i8** %5
+	%6 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 4
+	store void (i8*)* @global.derive.destroy, void (i8*)** %6
+	store i8* %3, i8** %1
+	store i32 0, i32* %0
+	br label %exit
+
+
+exit:
+	%7 = load i8*, i8** %1
+	call void @global.counter.release_shared(i8* %7)
+	%8 = load i32, i32* %0
+	ret i32 %8
+
+}
+
+define i8* @global.base.create() {
+entry:
+	%0 = alloca i8*
+	%1 = getelementptr %global.base, %global.base* null, i32 1
+	%2 = ptrtoint %global.base* %1 to i32
+	%3 = call i8* @malloc(i32 %2)
+	call void @memset(i8* %3, i32 0, i32 %2)
+	%4 = bitcast i8* %3 to %global.base*
+	%5 = getelementptr %global.base, %global.base* %4, i32 0, i32 0
+	store %global.base.vtable.type* @global.base.vtable.data, %global.base.vtable.type** %5
+	store i8* %3, i8** %0
+	br label %body
+
+
+body:
+	%6 = call i32 @puts(i8* bitcast ([18 x i8]* @string.726bd3560bd4c136648f7760895d8d62 to i8*))
+	br label %exit
+
+
+exit:
+	%7 = load i8*, i8** %0
+	ret i8* %7
+
+}
+
+define void @global.base.destroy(i8* %this) {
+entry:
+	%0 = bitcast i8* %this to %global.base*
+	br label %body
+
+
+body:
+	%1 = call i32 @puts(i8* bitcast ([17 x i8]* @string.362aeeddb3d01da539cb6755bde46953 to i8*))
+	br label %exit
+
+
+exit:
+	ret void
+
+}
+
+define i8* @global.derive.create() {
+entry:
+	%0 = alloca i8*
+	%1 = getelementptr %global.derive, %global.derive* null, i32 1
+	%2 = ptrtoint %global.derive* %1 to i32
+	%3 = call i8* @malloc(i32 %2)
+	call void @memset(i8* %3, i32 0, i32 %2)
+	%4 = bitcast i8* %3 to %global.derive*
+	%5 = getelementptr %global.derive, %global.derive* %4, i32 0, i32 0
+	store %global.derive.vtable.type* @global.derive.vtable.data, %global.derive.vtable.type** %5
+	store i8* %3, i8** %0
+	br label %body
+
+
+body:
+	%6 = call i32 @puts(i8* bitcast ([20 x i8]* @string.33b7808bf372c3d58730520160cb2c15 to i8*))
+	br label %exit
+
+
+exit:
+	%7 = load i8*, i8** %0
+	ret i8* %7
+
+}
+
+define void @global.derive.destroy(i8* %this) {
+entry:
+	%0 = bitcast i8* %this to %global.derive*
+	br label %body
+
+
+body:
+	call void @global.base.destroy(i8* %this)
+	%1 = call i32 @puts(i8* bitcast ([19 x i8]* @string.ef25b0542457581e67c27a0dddb7bda5 to i8*))
+	br label %exit
+
+
+exit:
+	ret void
 
 }

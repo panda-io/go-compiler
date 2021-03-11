@@ -41,10 +41,10 @@ public class derive : base
 public function main() int
 {
     //var c counter;// = new counter();
-    //var d derive; // TO-DO fix error
+    var d derive = new derive();
     //new counter();
     //new base();
-    new derive();
+    //new derive();
     
     return 0;
 }

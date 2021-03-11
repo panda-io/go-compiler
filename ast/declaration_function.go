@@ -181,6 +181,7 @@ func (f *Function) GenerateIR(p *Program) {
 			class.DestroyInstance(f.IRExit, obj)
 		}
 		for _, obj := range f.AutoReleasePool {
+			obj = AutoLoad(obj, f.IRExit)
 			call := ir.NewCall(releaseShared, obj)
 			f.IRExit.AddInstruction(call)
 		}

@@ -72,35 +72,7 @@ func (c *Context) ContentType(value ir.Value) ir.Type {
 }
 
 func (c *Context) AutoLoad(value ir.Value) ir.Value {
-	switch t := value.(type) {
-	// global define
-	case *ir.Global:
-		load := ir.NewLoad(t.ContentType, t)
-		CopyUserData(t, load)
-		c.Block.AddInstruction(load)
-		return load
-
-	// global define
-	case *ir.Func:
-		return t
-
-	// alloca in function
-	case *ir.InstAlloca:
-		load := ir.NewLoad(t.ElemType, t)
-		CopyUserData(t, load)
-		c.Block.AddInstruction(load)
-		return load
-
-	// class member
-	case *ir.InstGetElementPtr:
-		typ := t.Type().(*ir.PointerType)
-		load := ir.NewLoad(typ.ElemType, t)
-		CopyUserData(t, load)
-		c.Block.AddInstruction(load)
-		return load
-	}
-
-	return value
+	return AutoLoad(value, c.Block)
 }
 
 func (c *Context) AddObject(name string, value ir.Value) error {
@@ -158,4 +130,36 @@ func (c *Context) FindSelector(selector string, member string) (parent ir.Value,
 		}
 	}
 	return
+}
+
+func AutoLoad(value ir.Value, b *ir.Block) ir.Value {
+	switch t := value.(type) {
+	// global define
+	case *ir.Global:
+		load := ir.NewLoad(t.ContentType, t)
+		CopyUserData(t, load)
+		b.AddInstruction(load)
+		return load
+
+	// global define
+	case *ir.Func:
+		return t
+
+	// alloca in function
+	case *ir.InstAlloca:
+		load := ir.NewLoad(t.ElemType, t)
+		CopyUserData(t, load)
+		b.AddInstruction(load)
+		return load
+
+	// class member
+	case *ir.InstGetElementPtr:
+		typ := t.Type().(*ir.PointerType)
+		load := ir.NewLoad(typ.ElemType, t)
+		CopyUserData(t, load)
+		b.AddInstruction(load)
+		return load
+	}
+
+	return value
 }
