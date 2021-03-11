@@ -9,10 +9,7 @@ type This struct {
 }
 
 func (t *This) Type(c *Context, expected ir.Type) ir.Type {
-	if c.Function.Class != nil {
-		return c.Function.Class.IRStruct
-	}
-	return nil
+	return pointerType
 }
 
 func (t *This) GenerateIR(c *Context, expected ir.Type) ir.Value {

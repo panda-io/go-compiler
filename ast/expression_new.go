@@ -12,7 +12,7 @@ type New struct {
 }
 
 func (n *New) Type(c *Context, expected ir.Type) ir.Type {
-	return n.Typ.Type(c.Program)
+	return pointerType
 }
 
 func (n *New) GenerateIR(ctx *Context, expected ir.Type) ir.Value {
