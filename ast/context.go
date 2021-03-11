@@ -119,13 +119,10 @@ func (c *Context) FindSelector(selector string, member string) (parent ir.Value,
 		}
 
 	} else if p, ok := parent.Type().(*ir.PointerType); ok {
-		element := p.ElemType
-		if t, ok := element.(*ir.StructType); ok {
-			// find declaration
-			if d, ok := c.Program.Declarations[t.TypeName]; ok {
-				if class, ok := d.(*Class); ok {
-					value = class.GetMember(c, parent, member)
-				}
+		// find declaration
+		if d, ok := c.Program.Declarations[p.UserData]; ok {
+			if class, ok := d.(*Class); ok {
+				value = class.GetMember(c, parent, member)
 			}
 		}
 	}

@@ -56,6 +56,16 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	var memberFunction bool
 	if ident, ok := m.Parent.(*Identifier); ok {
 		p, v = c.FindSelector(ident.Name, m.Member.Name)
+		if p != nil {
+			if pt, ok := p.Type().(*ir.PointerType); ok {
+				// find declaration
+				if d, ok := c.Program.Declarations[pt.UserData]; ok {
+					if class, ok := d.(*Class); ok {
+						memberFunction = class.IsMemberFunction(m.Member.Name)
+					}
+				}
+			}
+		}
 
 	} else if _, ok := m.Parent.(*This); ok {
 		p = c.FindObject(ClassThis)

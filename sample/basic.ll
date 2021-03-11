@@ -1,13 +1,13 @@
-%global.base = type { %global.base.vtable.type* }
-%global.base.vtable.type = type { i8* ()*, void (i8*)* }
-%global.derive = type { %global.derive.vtable.type* }
-%global.derive.vtable.type = type { i8* ()*, void (i8*)* }
 %global.counter = type { %global.counter.vtable.type*, i32, i32, i8*, void (i8*)* }
 %global.counter.vtable.type = type { i8* ()*, void (i8*)*, void (i8*)*, void (i8*)*, void (i8*)*, void (i8*)* }
+%global.base = type { %global.base.vtable.type* }
+%global.base.vtable.type = type { i8* ()*, void (i8*)*, void (i8*)* }
+%global.derive = type { %global.derive.vtable.type* }
+%global.derive.vtable.type = type { i8* ()*, void (i8*)*, void (i8*)* }
 
-@global.base.vtable.data = global %global.base.vtable.type { i8* ()* @global.base.create, void (i8*)* @global.base.destroy }
-@global.derive.vtable.data = global %global.derive.vtable.type { i8* ()* @global.derive.create, void (i8*)* @global.derive.destroy }
 @global.counter.vtable.data = global %global.counter.vtable.type { i8* ()* @global.counter.create, void (i8*)* @global.counter.destroy, void (i8*)* @global.counter.retain_shared, void (i8*)* @global.counter.release_shared, void (i8*)* @global.counter.retain_weak, void (i8*)* @global.counter.release_weak }
+@global.base.vtable.data = global %global.base.vtable.type { i8* ()* @global.base.create, void (i8*)* @global.base.destroy, void (i8*)* @global.base.do }
+@global.derive.vtable.data = global %global.derive.vtable.type { i8* ()* @global.derive.create, void (i8*)* @global.derive.destroy, void (i8*)* @global.derive.do }
 @string.5bdaebb122965539cdd6ce77f212b65e = constant [15 x i8] c"create counter\00"
 @string.f8f86b3941cca26e8c147322b9a8309f = constant [16 x i8] c"destroy counter\00"
 @string.cf85dc053c0475520502efb2ba3c77a9 = constant [14 x i8] c"retain shared\00"
@@ -20,8 +20,10 @@
 @string.b6feae5df5d6172ffcb2a6bcd4d5c478 = constant [17 x i8] c"weak count: %d \0A\00"
 @string.726bd3560bd4c136648f7760895d8d62 = constant [18 x i8] c"base construction\00"
 @string.362aeeddb3d01da539cb6755bde46953 = constant [17 x i8] c"base destruction\00"
+@string.b58017d6f5ff15cba2431d7ec3967243 = constant [21 x i8] c"do something in base\00"
 @string.33b7808bf372c3d58730520160cb2c15 = constant [20 x i8] c"derive construction\00"
 @string.ef25b0542457581e67c27a0dddb7bda5 = constant [19 x i8] c"derive destruction\00"
+@string.7cf7144b5f7d7f8893615fa04d42f3f7 = constant [23 x i8] c"do something in derive\00"
 
 declare i32 @puts(i8* %text)
 
@@ -271,15 +273,19 @@ body:
 	%6 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 4
 	store void (i8*)* @global.derive.destroy, void (i8*)** %6
 	store i8* %3, i8** %1
+	%7 = getelementptr %global.derive, i8** %1, i32 0, i32 0
+	%8 = getelementptr %global.derive.vtable.type, %global.derive.vtable.type** %7, i32 0, i32 2
+	%9 = load void (i8*)*, void (i8*)** %8
+	call void %9(i8** %1)
 	store i32 0, i32* %0
 	br label %exit
 
 
 exit:
-	%7 = load i8*, i8** %1
-	call void @global.counter.release_shared(i8* %7)
-	%8 = load i32, i32* %0
-	ret i32 %8
+	%10 = load i8*, i8** %1
+	call void @global.counter.release_shared(i8* %10)
+	%11 = load i32, i32* %0
+	ret i32 %11
 
 }
 
@@ -324,6 +330,22 @@ exit:
 
 }
 
+define void @global.base.do(i8* %this) {
+entry:
+	%0 = bitcast i8* %this to %global.base*
+	br label %body
+
+
+body:
+	%1 = call i32 @puts(i8* bitcast ([21 x i8]* @string.b58017d6f5ff15cba2431d7ec3967243 to i8*))
+	br label %exit
+
+
+exit:
+	ret void
+
+}
+
 define i8* @global.derive.create() {
 entry:
 	%0 = alloca i8*
@@ -358,6 +380,22 @@ entry:
 body:
 	call void @global.base.destroy(i8* %this)
 	%1 = call i32 @puts(i8* bitcast ([19 x i8]* @string.ef25b0542457581e67c27a0dddb7bda5 to i8*))
+	br label %exit
+
+
+exit:
+	ret void
+
+}
+
+define void @global.derive.do(i8* %this) {
+entry:
+	%0 = bitcast i8* %this to %global.derive*
+	br label %body
+
+
+body:
+	%1 = call i32 @puts(i8* bitcast ([23 x i8]* @string.7cf7144b5f7d7f8893615fa04d42f3f7 to i8*))
 	br label %exit
 
 

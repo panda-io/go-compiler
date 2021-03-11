@@ -23,6 +23,11 @@ public class base
     {
         libc.puts("base destruction");
     }
+
+    public function do()
+    {
+        libc.puts("do something in base");
+    }
 }
 
 public class derive : base
@@ -36,15 +41,22 @@ public class derive : base
     {
         libc.puts("derive destruction");
     }
+
+    public function do()
+    {
+        libc.puts("do something in derive");
+    }
 }
 
 public function main() int
 {
     //var c counter;// = new counter();
-    var d derive = new derive();
     //new counter();
+
     //new base();
-    //new derive();
+
+    var d derive = new derive();
+    d.do();
     
     return 0;
 }
