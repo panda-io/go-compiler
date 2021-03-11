@@ -93,7 +93,7 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 			}
 		}
 	}
-	if m.IsFunction(v) {
+	if v != nil && m.IsFunction(v) {
 		v = c.AutoLoad(v)
 		v = ir.NewCall(v)
 		if p != nil && isMemberFunction {

@@ -142,6 +142,7 @@ var (
 		STRING: "string_literal",
 		NULL:   "null",
 
+		Base:      "base",
 		Break:     "break",
 		Case:      "case",
 		Catch:     "catch",

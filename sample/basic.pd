@@ -12,7 +12,7 @@ enum color
     blue
 }*/
 
-public class base
+public class base_class
 {
     public function create()
     {
@@ -30,7 +30,7 @@ public class base
     }
 }
 
-public class derive : base
+public class derive : base_class
 {
     public function create()
     {
@@ -44,6 +44,7 @@ public class derive : base
 
     public function do()
     {
+        //base.do(); //TO-DO bug fix
         libc.puts("do something in derive");
     }
 }
