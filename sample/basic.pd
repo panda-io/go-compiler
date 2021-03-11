@@ -56,7 +56,7 @@ public function main() int
     //new base();
 
     var d derive = new derive();
-    //d.do();
+    d.do();
     
     return 0;
 }

@@ -239,7 +239,8 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string) (parent ir
 	} else if index, ok := c.FunctionIndexes[member]; ok {
 		vtable := ir.NewGetElementPtr(c.IRStruct, classPointer, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
 		ctx.Block.AddInstruction(vtable)
-		f := ir.NewGetElementPtr(c.IRVTable, vtable, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
+		value := ctx.AutoLoad(vtable)
+		f := ir.NewGetElementPtr(c.IRVTable, value, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
 		ctx.Block.AddInstruction(f)
 		return f, true
 	}
@@ -250,7 +251,8 @@ func (c *Class) GetMemberFromCounter(ctx *Context, counter ir.Value, member stri
 	counter = ctx.AutoLoad(counter)
 	counterClass := ctx.Program.FindQualified(Counter).(*Class)
 	parent, _ = counterClass.GetMember(ctx, counter, "object")
-	value, isMemberFunction = c.GetMember(ctx, ctx.AutoLoad(parent), member)
+	parent = ctx.AutoLoad(parent)
+	value, isMemberFunction = c.GetMember(ctx, parent, member)
 	return parent, value, isMemberFunction
 }
 

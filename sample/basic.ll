@@ -270,15 +270,25 @@ body:
 	%7 = getelementptr %global.counter, %global.counter* %6, i32 0, i32 4
 	store void (i8*)* @global.derive.destroy, void (i8*)** %7
 	store i8* %3, i8** %1
+	%8 = load i8*, i8** %1
+	%9 = bitcast i8* %8 to %global.counter*
+	%10 = getelementptr %global.counter, %global.counter* %9, i32 0, i32 3
+	%11 = load i8*, i8** %10
+	%12 = bitcast i8* %11 to %global.derive*
+	%13 = getelementptr %global.derive, %global.derive* %12, i32 0, i32 0
+	%14 = load %global.derive.vtable.type*, %global.derive.vtable.type** %13
+	%15 = getelementptr %global.derive.vtable.type, %global.derive.vtable.type* %14, i32 0, i32 2
+	%16 = load void (i8*)*, void (i8*)** %15
+	call void %16(i8* %11)
 	store i32 0, i32* %0
 	br label %exit
 
 
 exit:
-	%8 = load i8*, i8** %1
-	call void @global.counter.release_shared(i8* %8)
-	%9 = load i32, i32* %0
-	ret i32 %9
+	%17 = load i8*, i8** %1
+	call void @global.counter.release_shared(i8* %17)
+	%18 = load i32, i32* %0
+	ret i32 %18
 
 }
 

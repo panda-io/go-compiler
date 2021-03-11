@@ -181,6 +181,10 @@ entry:
   %13 = getelementptr i8, i8* %3, i64 24
   %14 = bitcast i8* %13 to void (i8*)**
   store void (i8*)* @global.derive.destroy, void (i8*)** %14, align 8
+  %15 = load %global.derive.vtable.type*, %global.derive.vtable.type** %1, align 8
+  %16 = getelementptr %global.derive.vtable.type, %global.derive.vtable.type* %15, i64 0, i32 2
+  %17 = load void (i8*)*, void (i8*)** %16, align 8
+  tail call void %17(i8* %0)
   tail call void @global.counter.release_shared(i8* %3)
   ret i32 0
 }
