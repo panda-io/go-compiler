@@ -24,9 +24,9 @@ public class base_class
         libc.puts("base destruction");
     }
 
-    public function do()
+    public function echo()
     {
-        libc.puts("do something in base");
+        libc.puts("echo in base");
     }
 }
 
@@ -42,10 +42,10 @@ public class derive_class : base_class
         libc.puts("derive destruction");
     }
 
-    public function do()
+    public function echo()
     {
-        base.do();
-        libc.puts("do something in derive");
+        base.echo();
+        libc.puts("echo in derive");
     }
 }
 
@@ -56,8 +56,14 @@ public function main() int
 
     //new base();
 
-    var d derive_class = new derive_class();
-    d.do();
+    var dc derive_class = new derive_class();
+    dc.echo();
+    //echo(dc);
     
     return 0;
 }
+/*
+public function echo(dc derive_class)
+{
+    dc.echo();
+}*/
