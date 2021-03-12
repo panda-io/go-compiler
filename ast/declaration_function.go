@@ -37,12 +37,33 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 	}
 	if f.Parameters != nil {
 		for _, parameter := range f.Parameters.Parameters {
-			param := ir.NewParam(parameter.Type.Type(p))
-			param.LocalName = parameter.Name
-			if t, ok := parameter.Type.(*TypeName); ok {
-				userData, _ := p.FindDeclaration(t)
+			var param *ir.Param
+			switch t := parameter.Type.(type) {
+			case *BuitinType:
+				param = ir.NewParam(parameter.Type.Type(p))
+
+			case *TypeName:
+				userData, d := p.FindDeclaration(t)
+				switch d.(type) {
+				case *Class:
+					param = ir.NewParam(pointerType)
+
+				case *Enum:
+					param = ir.NewParam(ir.I32)
+
+				case *Interface:
+					// TO-DO interface
+					//TO-DO need to be some convert
+					param = ir.NewParam(pointerType)
+				}
 				SetUserData(param, userData)
+
+			case *TypeFunction:
+				// TO-DO testing~
+				param = ir.NewParam(t.Type(p))
 			}
+
+			param.LocalName = parameter.Name
 			f.IRParams = append(f.IRParams, param)
 		}
 	}

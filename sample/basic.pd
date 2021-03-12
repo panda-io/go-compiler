@@ -57,13 +57,12 @@ public function main() int
     //new base();
 
     var dc derive_class = new derive_class();
-    dc.echo();
-    //echo(dc);
+    echo(dc);
     
     return 0;
 }
-/*
+
 public function echo(dc derive_class)
 {
     dc.echo();
-}*/
+}

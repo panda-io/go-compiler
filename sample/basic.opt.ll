@@ -10,14 +10,12 @@ source_filename = "./sample/basic.ll"
 @global.derive_class.vtable.data = global %global.derive_class.vtable.type { i8* ()* @global.derive_class.create, void (i8*)* @global.derive_class.destroy, void (i8*)* @global.derive_class.echo }
 @string.5bdaebb122965539cdd6ce77f212b65e = constant [15 x i8] c"create counter\00"
 @string.f8f86b3941cca26e8c147322b9a8309f = constant [16 x i8] c"destroy counter\00"
-@string.cf85dc053c0475520502efb2ba3c77a9 = constant [14 x i8] c"retain shared\00"
-@string.3b2e33db0bf2dc0aef4015e91829dab5 = constant [15 x i8] c"release shared\00"
-@string.c52993c907c8f30bf3854dc0e21a7eca = constant [19 x i8] c"shared count: %d \0A\00"
+@string.c1432ab71496ebb8b3e30bbcf37605e7 = constant [20 x i8] c"retain shared: %d \0A\00"
+@string.ce99a7174da84f1767b9d5235ea3c24f = constant [21 x i8] c"release shared: %d \0A\00"
 @string.21c67ac9191c65481dbab306227b4840 = constant [17 x i8] c"free object %p \0A\00"
 @string.4fc1bf1a9ddd2be568f08ffc8ed6b9f0 = constant [18 x i8] c"free counter %p \0A\00"
-@string.5927c4441dce664e4b461e529f933750 = constant [12 x i8] c"retain weak\00"
-@string.5662737e1a39fc068ead71add358dfd3 = constant [13 x i8] c"release weak\00"
-@string.b6feae5df5d6172ffcb2a6bcd4d5c478 = constant [17 x i8] c"weak count: %d \0A\00"
+@string.8d9c52192bdfa908703a004b070ff63e = constant [18 x i8] c"retain weak: %d \0A\00"
+@string.ad2ae91c8542c824c6842efed6523f49 = constant [19 x i8] c"release weak: %d \0A\00"
 @string.726bd3560bd4c136648f7760895d8d62 = constant [18 x i8] c"base construction\00"
 @string.362aeeddb3d01da539cb6755bde46953 = constant [17 x i8] c"base destruction\00"
 @string.9bcbb503bda6c8ad83f772846b706f08 = constant [13 x i8] c"echo in base\00"
@@ -60,56 +58,55 @@ entry:
 ; Function Attrs: nofree nounwind
 define void @global.counter.retain_shared(i8* nocapture %this) #0 {
 entry:
-  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([14 x i8], [14 x i8]* @string.cf85dc053c0475520502efb2ba3c77a9, i64 0, i64 0))
-  %1 = getelementptr i8, i8* %this, i64 8
-  %2 = bitcast i8* %1 to i32*
-  %3 = load i32, i32* %2, align 4
-  %4 = add i32 %3, 1
-  store i32 %4, i32* %2, align 4
+  %0 = getelementptr i8, i8* %this, i64 8
+  %1 = bitcast i8* %0 to i32*
+  %2 = load i32, i32* %1, align 4
+  %3 = add i32 %2, 1
+  store i32 %3, i32* %1, align 4
+  %4 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([20 x i8], [20 x i8]* @string.c1432ab71496ebb8b3e30bbcf37605e7, i64 0, i64 0), i32 %3)
   ret void
 }
 
 define void @global.counter.release_shared(i8* %this) {
 entry:
-  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.3b2e33db0bf2dc0aef4015e91829dab5, i64 0, i64 0))
-  %1 = icmp eq i8* %this, null
-  br i1 %1, label %exit, label %2
+  %0 = icmp eq i8* %this, null
+  br i1 %0, label %exit, label %1
 
-exit:                                             ; preds = %10, %24, %2, %entry
+exit:                                             ; preds = %9, %23, %1, %entry
   ret void
 
-2:                                                ; preds = %entry
-  %3 = getelementptr i8, i8* %this, i64 8
-  %4 = bitcast i8* %3 to i32*
-  %5 = load i32, i32* %4, align 4
-  %6 = add i32 %5, -1
-  store i32 %6, i32* %4, align 4
-  %7 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([19 x i8], [19 x i8]* @string.c52993c907c8f30bf3854dc0e21a7eca, i64 0, i64 0), i32 %6)
-  %8 = load i32, i32* %4, align 4
-  %9 = icmp eq i32 %8, 0
-  br i1 %9, label %10, label %exit
+1:                                                ; preds = %entry
+  %2 = getelementptr i8, i8* %this, i64 8
+  %3 = bitcast i8* %2 to i32*
+  %4 = load i32, i32* %3, align 4
+  %5 = add i32 %4, -1
+  store i32 %5, i32* %3, align 4
+  %6 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([21 x i8], [21 x i8]* @string.ce99a7174da84f1767b9d5235ea3c24f, i64 0, i64 0), i32 %5)
+  %7 = load i32, i32* %3, align 4
+  %8 = icmp eq i32 %7, 0
+  br i1 %8, label %9, label %exit
 
-10:                                               ; preds = %2
-  %11 = getelementptr i8, i8* %this, i64 24
-  %12 = bitcast i8* %11 to void (i8*)**
-  %13 = load void (i8*)*, void (i8*)** %12, align 8
-  %14 = getelementptr i8, i8* %this, i64 16
-  %15 = bitcast i8* %14 to i8**
-  %16 = load i8*, i8** %15, align 8
-  tail call void %13(i8* %16)
-  %17 = load i8*, i8** %15, align 8
-  %18 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([17 x i8], [17 x i8]* @string.21c67ac9191c65481dbab306227b4840, i64 0, i64 0), i8* %17)
-  %19 = load i8*, i8** %15, align 8
-  tail call void @free(i8* %19)
-  store i8* null, i8** %15, align 8
-  %20 = getelementptr i8, i8* %this, i64 12
-  %21 = bitcast i8* %20 to i32*
-  %22 = load i32, i32* %21, align 4
-  %23 = icmp eq i32 %22, 0
-  br i1 %23, label %24, label %exit
+9:                                                ; preds = %1
+  %10 = getelementptr i8, i8* %this, i64 24
+  %11 = bitcast i8* %10 to void (i8*)**
+  %12 = load void (i8*)*, void (i8*)** %11, align 8
+  %13 = getelementptr i8, i8* %this, i64 16
+  %14 = bitcast i8* %13 to i8**
+  %15 = load i8*, i8** %14, align 8
+  tail call void %12(i8* %15)
+  %16 = load i8*, i8** %14, align 8
+  %17 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([17 x i8], [17 x i8]* @string.21c67ac9191c65481dbab306227b4840, i64 0, i64 0), i8* %16)
+  %18 = load i8*, i8** %14, align 8
+  tail call void @free(i8* %18)
+  store i8* null, i8** %14, align 8
+  %19 = getelementptr i8, i8* %this, i64 12
+  %20 = bitcast i8* %19 to i32*
+  %21 = load i32, i32* %20, align 4
+  %22 = icmp eq i32 %21, 0
+  br i1 %22, label %23, label %exit
 
-24:                                               ; preds = %10
-  %25 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([18 x i8], [18 x i8]* @string.4fc1bf1a9ddd2be568f08ffc8ed6b9f0, i64 0, i64 0), i8* nonnull %this)
+23:                                               ; preds = %9
+  %24 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([18 x i8], [18 x i8]* @string.4fc1bf1a9ddd2be568f08ffc8ed6b9f0, i64 0, i64 0), i8* nonnull %this)
   tail call void @free(i8* nonnull %this)
   br label %exit
 }
@@ -117,42 +114,41 @@ exit:                                             ; preds = %10, %24, %2, %entry
 ; Function Attrs: nofree nounwind
 define void @global.counter.retain_weak(i8* nocapture %this) #0 {
 entry:
-  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([12 x i8], [12 x i8]* @string.5927c4441dce664e4b461e529f933750, i64 0, i64 0))
-  %1 = getelementptr i8, i8* %this, i64 12
-  %2 = bitcast i8* %1 to i32*
-  %3 = load i32, i32* %2, align 4
-  %4 = add i32 %3, 1
-  store i32 %4, i32* %2, align 4
+  %0 = getelementptr i8, i8* %this, i64 12
+  %1 = bitcast i8* %0 to i32*
+  %2 = load i32, i32* %1, align 4
+  %3 = add i32 %2, 1
+  store i32 %3, i32* %1, align 4
+  %4 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([18 x i8], [18 x i8]* @string.8d9c52192bdfa908703a004b070ff63e, i64 0, i64 0), i32 %3)
   ret void
 }
 
 ; Function Attrs: nounwind
 define void @global.counter.release_weak(i8* %this) #1 {
 entry:
-  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([13 x i8], [13 x i8]* @string.5662737e1a39fc068ead71add358dfd3, i64 0, i64 0))
-  %1 = icmp eq i8* %this, null
-  br i1 %1, label %exit, label %2
+  %0 = icmp eq i8* %this, null
+  br i1 %0, label %exit, label %1
 
-exit:                                             ; preds = %2, %14, %entry
+exit:                                             ; preds = %1, %13, %entry
   ret void
 
-2:                                                ; preds = %entry
-  %3 = getelementptr i8, i8* %this, i64 12
-  %4 = bitcast i8* %3 to i32*
-  %5 = load i32, i32* %4, align 4
-  %6 = add i32 %5, -1
-  store i32 %6, i32* %4, align 4
-  %7 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([17 x i8], [17 x i8]* @string.b6feae5df5d6172ffcb2a6bcd4d5c478, i64 0, i64 0), i32 %6)
-  %8 = getelementptr i8, i8* %this, i64 8
-  %9 = bitcast i8* %8 to i32*
-  %10 = load i32, i32* %9, align 4
-  %11 = load i32, i32* %4, align 4
-  %12 = or i32 %11, %10
-  %13 = icmp eq i32 %12, 0
-  br i1 %13, label %14, label %exit
+1:                                                ; preds = %entry
+  %2 = getelementptr i8, i8* %this, i64 12
+  %3 = bitcast i8* %2 to i32*
+  %4 = load i32, i32* %3, align 4
+  %5 = add i32 %4, -1
+  store i32 %5, i32* %3, align 4
+  %6 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([19 x i8], [19 x i8]* @string.ad2ae91c8542c824c6842efed6523f49, i64 0, i64 0), i32 %5)
+  %7 = getelementptr i8, i8* %this, i64 8
+  %8 = bitcast i8* %7 to i32*
+  %9 = load i32, i32* %8, align 4
+  %10 = load i32, i32* %3, align 4
+  %11 = or i32 %10, %9
+  %12 = icmp eq i32 %11, 0
+  br i1 %12, label %13, label %exit
 
-14:                                               ; preds = %2
-  %15 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([18 x i8], [18 x i8]* @string.4fc1bf1a9ddd2be568f08ffc8ed6b9f0, i64 0, i64 0), i8* nonnull %this)
+13:                                               ; preds = %1
+  %14 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([18 x i8], [18 x i8]* @string.4fc1bf1a9ddd2be568f08ffc8ed6b9f0, i64 0, i64 0), i8* nonnull %this)
   tail call void @free(i8* nonnull %this)
   br label %exit
 }
@@ -169,12 +165,12 @@ entry:
   %4 = bitcast i8* %3 to %global.counter.vtable.type**
   store %global.counter.vtable.type* @global.counter.vtable.data, %global.counter.vtable.type** %4, align 8
   %5 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.5bdaebb122965539cdd6ce77f212b65e, i64 0, i64 0))
-  %6 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([14 x i8], [14 x i8]* @string.cf85dc053c0475520502efb2ba3c77a9, i64 0, i64 0)) #1
-  %7 = getelementptr i8, i8* %3, i64 8
-  %8 = bitcast i8* %7 to i32*
-  %9 = load i32, i32* %8, align 4
-  %10 = add i32 %9, 1
-  store i32 %10, i32* %8, align 4
+  %6 = getelementptr i8, i8* %3, i64 8
+  %7 = bitcast i8* %6 to i32*
+  %8 = load i32, i32* %7, align 4
+  %9 = add i32 %8, 1
+  store i32 %9, i32* %7, align 4
+  %10 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([20 x i8], [20 x i8]* @string.c1432ab71496ebb8b3e30bbcf37605e7, i64 0, i64 0), i32 %9) #1
   %11 = getelementptr i8, i8* %3, i64 16
   %12 = bitcast i8* %11 to i8**
   store i8* %0, i8** %12, align 8
@@ -187,6 +183,19 @@ entry:
   tail call void %17(i8* %0)
   tail call void @global.counter.release_shared(i8* %3)
   ret i32 0
+}
+
+define void @global.echo(i8* nocapture readonly %dc) local_unnamed_addr {
+entry:
+  %0 = getelementptr i8, i8* %dc, i64 16
+  %1 = bitcast i8* %0 to i8**
+  %2 = load i8*, i8** %1, align 8
+  %3 = bitcast i8* %2 to %global.derive_class.vtable.type**
+  %4 = load %global.derive_class.vtable.type*, %global.derive_class.vtable.type** %3, align 8
+  %5 = getelementptr %global.derive_class.vtable.type, %global.derive_class.vtable.type* %4, i64 0, i32 2
+  %6 = load void (i8*)*, void (i8*)** %5, align 8
+  tail call void %6(i8* %2)
+  ret void
 }
 
 define i8* @global.base_class.create() {
