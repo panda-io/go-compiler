@@ -34,10 +34,10 @@ func (n *New) GenerateIR(ctx *Context, expected ir.Type) ir.Value {
 			call := ir.NewCall(retainShared, counter)
 			ctx.Block.AddInstruction(call)
 			// set object
-			object, _ := counterClass.GetMember(ctx, counter, "object")
+			object, _ := counterClass.GetMember(ctx, counter, "object", false)
 			ctx.Block.AddInstruction(ir.NewStore(instance, object))
 			// set destructor
-			destructor, _ := counterClass.GetMember(ctx, counter, "destructor")
+			destructor, _ := counterClass.GetMember(ctx, counter, "destructor", false)
 			ctx.Block.AddInstruction(ir.NewStore(c.IRFunctions[1], destructor))
 			return counter
 		}

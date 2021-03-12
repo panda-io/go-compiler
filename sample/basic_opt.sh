@@ -1,0 +1,1 @@
+opt-10 -verify -o basic.opt.ll -S --O2 basic.ll

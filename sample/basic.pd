@@ -44,14 +44,8 @@ public class derive_class : base_class
 
     public function do()
     {
-        //base.do(); //TO-DO bug fix
-        this.echo();
+        base.do();
         libc.puts("do something in derive");
-    }
-
-    public function echo()
-    {
-        libc.puts("echo in derive");
     }
 }
 

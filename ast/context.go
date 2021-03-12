@@ -88,7 +88,7 @@ func (c *Context) FindObject(name string) ir.Value {
 		return v
 	} else if c.Function.Class != nil && c.Function.Class.HasMember(name) {
 		this := c.FindObject(ClassThis)
-		v, _ := c.Function.Class.GetMember(c, this, name)
+		v, _ := c.Function.Class.GetMember(c, this, name, true)
 		return v
 	} else if c.parent != nil {
 		return c.parent.FindObject(name)
@@ -125,7 +125,7 @@ func (c *Context) FindSelector(selector string, member string) (parent ir.Value,
 		if d, ok := c.Program.Declarations[p.UserData]; ok {
 			if class, ok := d.(*Class); ok {
 				if IsBuiltinClass(p.UserData) {
-					value, isMemberFunction = class.GetMember(c, parent, member)
+					value, isMemberFunction = class.GetMember(c, parent, member, false)
 				} else {
 					parent, value, isMemberFunction = class.GetMemberFromCounter(c, parent, member)
 				}

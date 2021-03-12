@@ -59,18 +59,18 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 
 	} else if _, ok := m.Parent.(*This); ok {
 		p = c.FindObject(ClassThis)
-		v, isMemberFunction = c.Function.Class.GetMember(c, p, m.Member.Name)
+		v, isMemberFunction = c.Function.Class.GetMember(c, p, m.Member.Name, true)
 
 	} else if _, ok := m.Parent.(*Base); ok {
 		p = c.FindObject(ClassThis)
-		v, isMemberFunction = c.Function.Class.Parent.GetMember(c, p, m.Member.Name)
+		v, isMemberFunction = c.Function.Class.Parent.GetMember(c, p, m.Member.Name, true)
 
 	} else if n, ok := m.Parent.(*New); ok {
 		qualified, d := c.Program.FindDeclaration(n.Typ)
 		if class, ok := d.(*Class); ok {
 			p = m.Parent.GenerateIR(c, nil)
 			if IsBuiltinClass(qualified) {
-				v, isMemberFunction = class.GetMember(c, p, m.Member.Name)
+				v, isMemberFunction = class.GetMember(c, p, m.Member.Name, false)
 			} else {
 				p, v, isMemberFunction = class.GetMemberFromCounter(c, p, m.Member.Name)
 			}
@@ -83,7 +83,7 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 				if class, ok := d.(*Class); ok {
 					p = m.Parent.GenerateIR(c, nil)
 					if IsBuiltinClass(s.TypeName) {
-						v, isMemberFunction = class.GetMember(c, p, m.Member.Name)
+						v, isMemberFunction = class.GetMember(c, p, m.Member.Name, false)
 					} else {
 						p, v, isMemberFunction = class.GetMemberFromCounter(c, p, m.Member.Name)
 					}

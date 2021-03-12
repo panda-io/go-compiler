@@ -230,19 +230,24 @@ func (c *Class) MemberType(member string) ir.Type {
 	return nil
 }
 
-func (c *Class) GetMember(ctx *Context, this ir.Value, member string) (parent ir.Value, isMemberFunction bool) {
-	classPointer := CastToClass(ctx.Block, this, ir.NewPointerType(c.IRStruct))
+func (c *Class) GetMember(ctx *Context, this ir.Value, member string, direct bool) (parent ir.Value, isMemberFunction bool) {
 	if index, ok := c.VariableIndexes[member]; ok {
+		classPointer := CastToClass(ctx.Block, this, ir.NewPointerType(c.IRStruct))
 		v := ir.NewGetElementPtr(c.IRStruct, classPointer, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
 		ctx.Block.AddInstruction(v)
 		return v, false
 	} else if index, ok := c.FunctionIndexes[member]; ok {
-		vtable := ir.NewGetElementPtr(c.IRStruct, classPointer, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
-		ctx.Block.AddInstruction(vtable)
-		value := ctx.AutoLoad(vtable)
-		f := ir.NewGetElementPtr(c.IRVTable, value, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
-		ctx.Block.AddInstruction(f)
-		return f, true
+		if direct {
+			return c.IRFunctions[c.FunctionIndexes[member]], true
+		} else {
+			classPointer := CastToClass(ctx.Block, this, ir.NewPointerType(c.IRStruct))
+			vtable := ir.NewGetElementPtr(c.IRStruct, classPointer, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, 0))
+			ctx.Block.AddInstruction(vtable)
+			value := ctx.AutoLoad(vtable)
+			f := ir.NewGetElementPtr(c.IRVTable, value, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
+			ctx.Block.AddInstruction(f)
+			return f, true
+		}
 	}
 	return nil, false
 }
@@ -250,9 +255,9 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string) (parent ir
 func (c *Class) GetMemberFromCounter(ctx *Context, counter ir.Value, member string) (parent ir.Value, value ir.Value, isMemberFunction bool) {
 	counter = ctx.AutoLoad(counter)
 	counterClass := ctx.Program.FindQualified(Counter).(*Class)
-	parent, _ = counterClass.GetMember(ctx, counter, "object")
+	parent, _ = counterClass.GetMember(ctx, counter, "object", false)
 	parent = ctx.AutoLoad(parent)
-	value, isMemberFunction = c.GetMember(ctx, parent, member)
+	value, isMemberFunction = c.GetMember(ctx, parent, member, false)
 	return parent, value, isMemberFunction
 }
 
