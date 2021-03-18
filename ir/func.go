@@ -185,6 +185,8 @@ type Param struct {
 	LocalIdent
 	// Parameter type.
 	Typ Type
+	// Pass by reference
+	Ref bool
 }
 
 // NewParam returns a new function parameter based on the given name and type.

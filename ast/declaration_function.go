@@ -31,8 +31,11 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 		return nil
 	}
 	if f.ObjectName != "" && f.Name.Name != Constructor {
-		param := ir.NewParam(pointerType)
+		this := ir.NewPointerType(ir.I8)
+		this.UserData = f.Class.Qualified(p.Module.Namespace)
+		param := ir.NewParam(this)
 		param.LocalName = ClassThis
+		param.Ref = true
 		f.IRParams = append(f.IRParams, param)
 	}
 	if f.Parameters != nil {
@@ -40,9 +43,17 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 			var param *ir.Param
 			switch t := parameter.Type.(type) {
 			case *BuitinType:
-				param = ir.NewParam(parameter.Type.Type(p))
+				if parameter.Ref {
+					param = ir.NewParam(ir.NewPointerType(parameter.Type.Type(p)))
+					param.Ref = true
+				} else {
+					param = ir.NewParam(parameter.Type.Type(p))
+				}
 
 			case *TypeName:
+				if parameter.Ref {
+					p.Error(parameter.Position, "class is always passed by reference")
+				}
 				userData, d := p.FindDeclaration(t)
 				switch d.(type) {
 				case *Class:
@@ -56,11 +67,16 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 					//TO-DO need to be some convert
 					param = ir.NewParam(pointerType)
 				}
+				param.Ref = true
 				SetUserData(param, userData)
 
 			case *TypeFunction:
+				if parameter.Ref {
+					p.Error(parameter.Position, "function cannot be passed as reference")
+				}
 				// TO-DO testing~
 				param = ir.NewParam(t.Type(p))
+				param.Ref = true
 			}
 
 			param.LocalName = parameter.Name
@@ -98,7 +114,7 @@ func (f *Function) GenerateIR(p *Program) {
 		// prepare params
 		for _, param := range f.IRParams {
 			var v ir.Value
-			if param.Type().Equal(pointerType) {
+			if param.Ref {
 				//TO-DO add shared ref //TO-DO string
 				v = param
 			} else {

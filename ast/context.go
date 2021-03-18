@@ -162,6 +162,17 @@ func AutoLoad(value ir.Value, b *ir.Block) ir.Value {
 		CopyUserData(t, load)
 		b.AddInstruction(load)
 		return load
+
+	// ref param
+	case *ir.Param:
+		if t.Ref {
+			if ir.IsPointer(t.Typ) && t.Typ.(*ir.PointerType).UserData == "" {
+				typ := t.Type().(*ir.PointerType)
+				load := ir.NewLoad(typ.ElemType, t)
+				b.AddInstruction(load)
+				return load
+			}
+		}
 	}
 
 	return value

@@ -280,18 +280,16 @@ body:
 	call void @global.echo(i8* %9)
 	store i32 1, i32* %2
 	%10 = load i32, i32* %2
-	call void @global.print_number(i32 %10)
-	%11 = load i32, i32* %2
-	%12 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.e4b993b5f16d57ebba5166037b305638 to i8*), i32 %11)
+	%11 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.e4b993b5f16d57ebba5166037b305638 to i8*), i32 %10)
 	store i32 0, i32* %0
 	br label %exit
 
 
 exit:
-	%13 = load i8*, i8** %1
-	call void @global.counter.release_shared(i8* %13)
-	%14 = load i32, i32* %0
-	ret i32 %14
+	%12 = load i8*, i8** %1
+	call void @global.counter.release_shared(i8* %12)
+	%13 = load i32, i32* %0
+	ret i32 %13
 
 }
 
@@ -318,20 +316,16 @@ exit:
 
 }
 
-define void @global.print_number(i32 %value) {
+define void @global.print_number(i32* %value) {
 entry:
-	%0 = alloca i32
-	store i32 %value, i32* %0
 	br label %body
 
 
 body:
-	%1 = load i32, i32* %0
-	%2 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.5bddf146c13b387514280200e83cf08b to i8*), i32 %1)
-	%3 = load i32, i32* %0
-	store i32 2, i32* %0
-	%4 = load i32, i32* %0
-	%5 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219 to i8*), i32 %4)
+	%0 = load i32, i32* %value
+	%1 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.5bddf146c13b387514280200e83cf08b to i8*), i32 %0)
+	%2 = load i32, i32* %value
+	%3 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219 to i8*), i32 %2)
 	br label %exit
 
 
