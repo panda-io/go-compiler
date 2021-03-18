@@ -26,20 +26,6 @@ source_filename = "./sample/basic.ll"
 @string.ef25b0542457581e67c27a0dddb7bda5 = constant [19 x i8] c"derive destruction\00"
 @string.895758554639f423e017c6610cbf460b = constant [15 x i8] c"echo in derive\00"
 
-; Function Attrs: nofree nounwind
-declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #0
-
-; Function Attrs: nofree nounwind
-declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr #0
-
-; Function Attrs: nofree nounwind
-declare noalias i8* @malloc(i32) local_unnamed_addr #0
-
-; Function Attrs: nounwind
-declare void @free(i8* nocapture) local_unnamed_addr #1
-
-declare void @memset(i8*, i32, i32) local_unnamed_addr
-
 define i8* @global.counter.create() {
 entry:
   %0 = tail call dereferenceable_or_null(32) i8* @malloc(i32 32)
@@ -51,7 +37,7 @@ entry:
 }
 
 ; Function Attrs: nounwind
-define void @global.counter.destroy(i8* nocapture %this) #1 {
+define void @global.counter.destroy(i8* nocapture %this) #0 {
 entry:
   tail call void @free(i8* %this)
   %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([16 x i8], [16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f, i64 0, i64 0))
@@ -59,7 +45,7 @@ entry:
 }
 
 ; Function Attrs: nofree nounwind
-define void @global.counter.retain_shared(i8* nocapture %this) #0 {
+define void @global.counter.retain_shared(i8* nocapture %this) #1 {
 entry:
   %0 = getelementptr i8, i8* %this, i64 8
   %1 = bitcast i8* %0 to i32*
@@ -115,7 +101,7 @@ exit:                                             ; preds = %9, %23, %1, %entry
 }
 
 ; Function Attrs: nofree nounwind
-define void @global.counter.retain_weak(i8* nocapture %this) #0 {
+define void @global.counter.retain_weak(i8* nocapture %this) #1 {
 entry:
   %0 = getelementptr i8, i8* %this, i64 12
   %1 = bitcast i8* %0 to i32*
@@ -127,7 +113,7 @@ entry:
 }
 
 ; Function Attrs: nounwind
-define void @global.counter.release_weak(i8* %this) #1 {
+define void @global.counter.release_weak(i8* %this) #0 {
 entry:
   %0 = icmp eq i8* %this, null
   br i1 %0, label %exit, label %1
@@ -156,6 +142,20 @@ exit:                                             ; preds = %1, %13, %entry
   br label %exit
 }
 
+; Function Attrs: nofree nounwind
+declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #1
+
+; Function Attrs: nofree nounwind
+declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr #1
+
+; Function Attrs: nofree nounwind
+declare noalias i8* @malloc(i32) local_unnamed_addr #1
+
+; Function Attrs: nounwind
+declare void @free(i8* nocapture) local_unnamed_addr #0
+
+declare void @memset(i8*, i32, i32) local_unnamed_addr
+
 define i32 @main() local_unnamed_addr {
 entry:
   %0 = tail call dereferenceable_or_null(8) i8* @malloc(i32 8)
@@ -173,7 +173,7 @@ entry:
   %8 = load i32, i32* %7, align 4
   %9 = add i32 %8, 1
   store i32 %9, i32* %7, align 4
-  %10 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([20 x i8], [20 x i8]* @string.c1432ab71496ebb8b3e30bbcf37605e7, i64 0, i64 0), i32 %9) #1
+  %10 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([20 x i8], [20 x i8]* @string.c1432ab71496ebb8b3e30bbcf37605e7, i64 0, i64 0), i32 %9) #0
   %11 = getelementptr i8, i8* %3, i64 16
   %12 = bitcast i8* %11 to i8**
   store i8* %0, i8** %12, align 8
@@ -184,8 +184,8 @@ entry:
   %16 = getelementptr %global.derive_class.vtable.type, %global.derive_class.vtable.type* %15, i64 0, i32 2
   %17 = load void (i8*)*, void (i8*)** %16, align 8
   tail call void %17(i8* %0)
-  %18 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.5bddf146c13b387514280200e83cf08b, i64 0, i64 0), i32 1) #1
-  %19 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219, i64 0, i64 0), i32 2) #1
+  %18 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.5bddf146c13b387514280200e83cf08b, i64 0, i64 0), i32 1) #0
+  %19 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219, i64 0, i64 0), i32 2) #0
   %20 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.e4b993b5f16d57ebba5166037b305638, i64 0, i64 0), i32 1)
   tail call void @global.counter.release_shared(i8* %3)
   ret i32 0
@@ -205,7 +205,7 @@ entry:
 }
 
 ; Function Attrs: nofree nounwind
-define void @global.print_number(i32 %value) local_unnamed_addr #0 {
+define void @global.print_number(i32 %value) local_unnamed_addr #1 {
 entry:
   %0 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.5bddf146c13b387514280200e83cf08b, i64 0, i64 0), i32 %value)
   %1 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219, i64 0, i64 0), i32 2)
@@ -223,14 +223,14 @@ entry:
 }
 
 ; Function Attrs: nofree nounwind
-define void @global.base_class.destroy(i8* nocapture readnone %this) #0 {
+define void @global.base_class.destroy(i8* nocapture readnone %this) #1 {
 entry:
   %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([17 x i8], [17 x i8]* @string.362aeeddb3d01da539cb6755bde46953, i64 0, i64 0))
   ret void
 }
 
 ; Function Attrs: nofree nounwind
-define void @global.base_class.echo(i8* nocapture readnone %this) #0 {
+define void @global.base_class.echo(i8* nocapture readnone %this) #1 {
 entry:
   %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([13 x i8], [13 x i8]* @string.9bcbb503bda6c8ad83f772846b706f08, i64 0, i64 0))
   ret void
@@ -247,20 +247,20 @@ entry:
 }
 
 ; Function Attrs: nofree nounwind
-define void @global.derive_class.destroy(i8* nocapture readnone %this) #0 {
+define void @global.derive_class.destroy(i8* nocapture readnone %this) #1 {
 entry:
-  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([17 x i8], [17 x i8]* @string.362aeeddb3d01da539cb6755bde46953, i64 0, i64 0)) #1
+  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([17 x i8], [17 x i8]* @string.362aeeddb3d01da539cb6755bde46953, i64 0, i64 0)) #0
   %1 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([19 x i8], [19 x i8]* @string.ef25b0542457581e67c27a0dddb7bda5, i64 0, i64 0))
   ret void
 }
 
 ; Function Attrs: nofree nounwind
-define void @global.derive_class.echo(i8* nocapture readnone %this) #0 {
+define void @global.derive_class.echo(i8* nocapture readnone %this) #1 {
 entry:
-  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([13 x i8], [13 x i8]* @string.9bcbb503bda6c8ad83f772846b706f08, i64 0, i64 0)) #1
+  %0 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([13 x i8], [13 x i8]* @string.9bcbb503bda6c8ad83f772846b706f08, i64 0, i64 0)) #0
   %1 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.895758554639f423e017c6610cbf460b, i64 0, i64 0))
   ret void
 }
 
-attributes #0 = { nofree nounwind }
-attributes #1 = { nounwind }
+attributes #0 = { nounwind }
+attributes #1 = { nofree nounwind }

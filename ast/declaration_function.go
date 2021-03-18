@@ -227,6 +227,7 @@ type Parameters struct {
 type Parameter struct {
 	NodeBase
 	Name string
+	Ref  bool
 	Type Type
 }
 

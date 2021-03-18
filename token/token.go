@@ -76,6 +76,7 @@ const (
 	Double
 	Void
 	Pointer
+	String
 	scalarEnd
 
 	// operators
@@ -196,6 +197,7 @@ var (
 		Double:  "double",
 		Void:    "void",
 		Pointer: "pointer",
+		String:  "string",
 
 		LeftParen:        "(",
 		RightParen:       ")",

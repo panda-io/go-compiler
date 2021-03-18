@@ -71,7 +71,7 @@ public function echo(dc derive_class)
     dc.echo();
 }
 
-public function print_number(value int)
+public function print_number(ref value int)
 {
     libc.printf("value #1: %d \n", value);
     value = 2;

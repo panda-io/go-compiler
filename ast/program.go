@@ -3,6 +3,7 @@ package ast
 import (
 	"crypto/md5"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/panda-foundation/go-compiler/ir"
@@ -96,8 +97,19 @@ func (p *Program) Error(offset int, message string) {
 }
 
 func (p *Program) GenerateIR() string {
+	var keys Keys
+	for key := range p.Modules {
+		keys = append(keys, key)
+	}
+	sort.Sort(keys)
+
+	var modules []*Module
+	for _, key := range keys {
+		modules = append(modules, p.Modules[key])
+	}
+
 	// zero pass (generate declarations)
-	for _, m := range p.Modules {
+	for _, m := range modules {
 		// TO-DO check if import is valid // must be valid, cannot import self, cannot duplicated
 		p.Module = m
 
@@ -122,7 +134,7 @@ func (p *Program) GenerateIR() string {
 	}
 
 	// first pass (resolve oop)
-	for _, m := range p.Modules {
+	for _, m := range modules {
 		p.Module = m
 
 		for _, c := range m.Classes {
@@ -132,7 +144,7 @@ func (p *Program) GenerateIR() string {
 	}
 
 	// second pass (generate functions)
-	for _, m := range p.Modules {
+	for _, m := range modules {
 		p.Module = m
 
 		for _, v := range m.Variables {
@@ -154,4 +166,12 @@ func (p *Program) GenerateIR() string {
 		panic(err)
 	}
 	return buf.String()
+}
+
+type Keys []string
+
+func (list Keys) Len() int      { return len(list) }
+func (list Keys) Swap(i, j int) { list[i], list[j] = list[j], list[i] }
+func (list Keys) Less(i, j int) bool {
+	return list[i] < list[j]
 }

@@ -26,20 +26,6 @@
 @string.ef25b0542457581e67c27a0dddb7bda5 = constant [19 x i8] c"derive destruction\00"
 @string.895758554639f423e017c6610cbf460b = constant [15 x i8] c"echo in derive\00"
 
-declare i32 @puts(i8* %text)
-
-declare i32 @printf(i8* %format, ...)
-
-declare i8* @malloc(i32 %size)
-
-declare void @free(i8* %address)
-
-declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
-
-declare void @memcpy(i8* %dest, i8* %source, i32 %size)
-
-declare void @memset(i8* %source, i32 %value, i32 %size)
-
 define i8* @global.counter.create() {
 entry:
 	%0 = alloca i8*
@@ -256,6 +242,20 @@ exit:
 	br label %20
 
 }
+
+declare i32 @puts(i8* %text)
+
+declare i32 @printf(i8* %format, ...)
+
+declare i8* @malloc(i32 %size)
+
+declare void @free(i8* %address)
+
+declare i32 @memcmp(i8* %dest, i8* %source, i32 %size)
+
+declare void @memcpy(i8* %dest, i8* %source, i32 %size)
+
+declare void @memset(i8* %source, i32 %value, i32 %size)
 
 define i32 @main() {
 entry:

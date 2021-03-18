@@ -106,6 +106,10 @@ func (p *Parser) parseParameters() *ast.Parameters {
 func (p *Parser) parseParameter() *ast.Parameter {
 	t := &ast.Parameter{}
 	t.Position = p.position
+	if p.token == token.Ref {
+		t.Ref = true
+		p.next()
+	}
 	t.Name = p.parseIdentifier().Name
 	t.Type = p.parseType()
 	return t
