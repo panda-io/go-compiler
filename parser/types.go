@@ -112,6 +112,9 @@ func (p *Parser) parseParameter() *ast.Parameter {
 	}
 	t.Name = p.parseIdentifier().Name
 	t.Type = p.parseType()
+	if _, ok := t.Type.(*ast.BuitinType); !ok && t.Ref {
+		p.error(t.Position, "only buitin type can be passed as reference")
+	}
 	return t
 }
 

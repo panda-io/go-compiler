@@ -51,9 +51,6 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 				}
 
 			case *TypeName:
-				if parameter.Ref {
-					p.Error(parameter.Position, "class is always passed by reference")
-				}
 				userData, d := p.FindDeclaration(t)
 				switch d.(type) {
 				case *Class:
@@ -71,9 +68,6 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 				SetUserData(param, userData)
 
 			case *TypeFunction:
-				if parameter.Ref {
-					p.Error(parameter.Position, "function cannot be passed as reference")
-				}
 				// TO-DO testing~
 				param = ir.NewParam(t.Type(p))
 				param.Ref = true

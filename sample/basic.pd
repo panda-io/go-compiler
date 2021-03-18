@@ -60,7 +60,7 @@ public function main() int
     echo(dc);
 
     var number int = 1;
-    //print_number(number);
+    print_number(number);
     libc.printf("value #3: %d \n", number);
 
     return 0;
