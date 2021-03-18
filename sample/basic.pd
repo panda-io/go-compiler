@@ -58,11 +58,22 @@ public function main() int
 
     var dc derive_class = new derive_class();
     echo(dc);
-    
+
+    var number int = 1;
+    print_number(number);
+    libc.printf("value #3: %d \n", number);
+
     return 0;
 }
 
 public function echo(dc derive_class)
 {
     dc.echo();
+}
+
+public function print_number(value int)
+{
+    libc.printf("value #1: %d \n", value);
+    value = 2;
+    libc.printf("value #2: %d \n", value);
 }

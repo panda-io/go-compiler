@@ -28,7 +28,7 @@ func (e *Enum) AddVariable(m *Variable) error {
 }
 
 func (e *Enum) GenerateIR(p *Program) {
-	var index int64 = 0
+	var index int64
 	var types []ir.Type
 	var values []ir.Constant
 	for _, v := range e.Members {

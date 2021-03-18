@@ -16,6 +16,9 @@
 @string.4fc1bf1a9ddd2be568f08ffc8ed6b9f0 = constant [18 x i8] c"free counter %p \0A\00"
 @string.8d9c52192bdfa908703a004b070ff63e = constant [18 x i8] c"retain weak: %d \0A\00"
 @string.ad2ae91c8542c824c6842efed6523f49 = constant [19 x i8] c"release weak: %d \0A\00"
+@string.e4b993b5f16d57ebba5166037b305638 = constant [15 x i8] c"value #3: %d \0A\00"
+@string.5bddf146c13b387514280200e83cf08b = constant [15 x i8] c"value #1: %d \0A\00"
+@string.aee0f3d368512408f6bd5274bf51a219 = constant [15 x i8] c"value #2: %d \0A\00"
 @string.726bd3560bd4c136648f7760895d8d62 = constant [18 x i8] c"base construction\00"
 @string.362aeeddb3d01da539cb6755bde46953 = constant [17 x i8] c"base destruction\00"
 @string.9bcbb503bda6c8ad83f772846b706f08 = constant [13 x i8] c"echo in base\00"
@@ -68,8 +71,8 @@ entry:
 
 
 body:
-	%0 = call i32 @puts(i8* bitcast ([16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f to i8*))
 	call void @free(i8* %this)
+	%0 = call i32 @puts(i8* bitcast ([16 x i8]* @string.f8f86b3941cca26e8c147322b9a8309f to i8*))
 	br label %exit
 
 
@@ -258,31 +261,37 @@ define i32 @main() {
 entry:
 	%0 = alloca i32
 	%1 = alloca i8*
+	%2 = alloca i32
 	br label %body
 
 
 body:
-	%2 = call i8* @global.derive_class.create()
-	%3 = call i8* @global.counter.create()
-	call void @global.counter.retain_shared(i8* %3)
-	%4 = bitcast i8* %3 to %global.counter*
-	%5 = getelementptr %global.counter, %global.counter* %4, i32 0, i32 3
-	store i8* %2, i8** %5
-	%6 = bitcast i8* %3 to %global.counter*
-	%7 = getelementptr %global.counter, %global.counter* %6, i32 0, i32 4
-	store void (i8*)* @global.derive_class.destroy, void (i8*)** %7
-	store i8* %3, i8** %1
-	%8 = load i8*, i8** %1
-	call void @global.echo(i8* %8)
+	%3 = call i8* @global.derive_class.create()
+	%4 = call i8* @global.counter.create()
+	call void @global.counter.retain_shared(i8* %4)
+	%5 = bitcast i8* %4 to %global.counter*
+	%6 = getelementptr %global.counter, %global.counter* %5, i32 0, i32 3
+	store i8* %3, i8** %6
+	%7 = bitcast i8* %4 to %global.counter*
+	%8 = getelementptr %global.counter, %global.counter* %7, i32 0, i32 4
+	store void (i8*)* @global.derive_class.destroy, void (i8*)** %8
+	store i8* %4, i8** %1
+	%9 = load i8*, i8** %1
+	call void @global.echo(i8* %9)
+	store i32 1, i32* %2
+	%10 = load i32, i32* %2
+	call void @global.print_number(i32 %10)
+	%11 = load i32, i32* %2
+	%12 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.e4b993b5f16d57ebba5166037b305638 to i8*), i32 %11)
 	store i32 0, i32* %0
 	br label %exit
 
 
 exit:
-	%9 = load i8*, i8** %1
-	call void @global.counter.release_shared(i8* %9)
-	%10 = load i32, i32* %0
-	ret i32 %10
+	%13 = load i8*, i8** %1
+	call void @global.counter.release_shared(i8* %13)
+	%14 = load i32, i32* %0
+	ret i32 %14
 
 }
 
@@ -301,6 +310,28 @@ body:
 	%6 = getelementptr %global.derive_class.vtable.type, %global.derive_class.vtable.type* %5, i32 0, i32 2
 	%7 = load void (i8*)*, void (i8*)** %6
 	call void %7(i8* %2)
+	br label %exit
+
+
+exit:
+	ret void
+
+}
+
+define void @global.print_number(i32 %value) {
+entry:
+	%0 = alloca i32
+	store i32 %value, i32* %0
+	br label %body
+
+
+body:
+	%1 = load i32, i32* %0
+	%2 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.5bddf146c13b387514280200e83cf08b to i8*), i32 %1)
+	%3 = load i32, i32* %0
+	store i32 2, i32* %0
+	%4 = load i32, i32* %0
+	%5 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219 to i8*), i32 %4)
 	br label %exit
 
 

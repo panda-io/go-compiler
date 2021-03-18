@@ -39,6 +39,7 @@ const (
 	New
 	Namespace
 	Public
+	Ref
 	Return
 	Switch
 	This
@@ -161,6 +162,7 @@ var (
 		New:       "new",
 		Namespace: "namespace",
 		Public:    "public",
+		Ref:       "ref",
 		Return:    "return",
 		Switch:    "switch",
 		This:      "this",
