@@ -35,7 +35,6 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 		this.UserData = f.Class.Qualified(p.Module.Namespace)
 		param := ir.NewParam(this)
 		param.LocalName = ClassThis
-		param.Ref = true
 		f.IRParams = append(f.IRParams, param)
 	}
 	if f.Parameters != nil {
@@ -49,6 +48,7 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 				} else {
 					param = ir.NewParam(parameter.Type.Type(p))
 				}
+				param.Builtin = true
 
 			case *TypeName:
 				userData, d := p.FindDeclaration(t)
@@ -64,13 +64,11 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 					//TO-DO need to be some convert
 					param = ir.NewParam(pointerType)
 				}
-				param.Ref = true
 				SetUserData(param, userData)
 
 			case *TypeFunction:
 				// TO-DO testing~
 				param = ir.NewParam(t.Type(p))
-				param.Ref = true
 			}
 
 			param.LocalName = parameter.Name
@@ -108,10 +106,14 @@ func (f *Function) GenerateIR(p *Program) {
 		// prepare params
 		for _, param := range f.IRParams {
 			var v ir.Value
-			if param.Ref {
-				//TO-DO add shared ref //TO-DO string
+			if param.Ref || !param.Builtin {
 				v = param
+				if !param.Builtin {
+					//TO-DO add shared count
+				}
 			} else {
+				// builtin type
+				//TO-DO string
 				alloc := ir.NewAlloca(param.Typ)
 				CopyUserData(param, alloc)
 				f.IREntry.AddInstruction(alloc)

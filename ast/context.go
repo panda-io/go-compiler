@@ -26,6 +26,13 @@ type Context struct {
 	objects map[string]ir.Value
 }
 
+type ObjectInfo struct {
+	Parent           ir.Value
+	Object           ir.Value
+	IsMemberFunction bool
+	FunctionDefine   *ir.Func
+}
+
 func (c *Context) NewContext() *Context {
 	return &Context{
 		Program:  c.Program,
@@ -88,51 +95,57 @@ func (c *Context) FindObject(name string) ir.Value {
 		return v
 	} else if c.Function.Class != nil && c.Function.Class.HasMember(name) {
 		this := c.FindObject(ClassThis)
-		v, _ := c.Function.Class.GetMember(c, this, name, true)
-		return v
+		v := c.Function.Class.GetMember(c, this, name, false)
+		return v.Object
 	} else if c.parent != nil {
 		return c.parent.FindObject(name)
 	}
 	return nil
 }
 
-func (c *Context) FindSelector(selector string, member string) (parent ir.Value, value ir.Value, isMemberFunction bool) {
-	parent = c.FindObject(selector)
-	if parent == nil {
+func (c *Context) FindSelector(selector string, member string) *ObjectInfo {
+	object := &ObjectInfo{
+		Parent: c.FindObject(selector),
+	}
+
+	if object.Parent == nil {
 		_, d := c.Program.FindSelector(selector, member)
 		if d == nil {
 			// could be an enum
 			_, e := c.Program.FindSelector("", selector)
 			if enum, ok := e.(*Enum); ok {
-				value = enum.GetMember(member)
+				object.Object = enum.GetMember(member)
 			} else {
-				return
+				return nil
 			}
 		}
 		switch t := d.(type) {
 		case *Enum:
-			value = t.IRStructData
+			object.Object = t.GetMember(member)
 
 		case *Variable:
-			value = t.IRVariable
+			object.Object = t.IRVariable
 
 		case *Function:
-			value = t.IRFunction
+			object.Object = t.IRFunction
+			object.FunctionDefine = t.IRFunction
 		}
 
-	} else if p, ok := parent.Type().(*ir.PointerType); ok {
+	} else if p, ok := object.Parent.Type().(*ir.PointerType); ok {
 		// find declaration
 		if d, ok := c.Program.Declarations[p.UserData]; ok {
 			if class, ok := d.(*Class); ok {
 				if IsBuiltinClass(p.UserData) {
-					value, isMemberFunction = class.GetMember(c, parent, member, false)
+					return class.GetMember(c, object.Parent, member, true)
 				} else {
-					parent, value, isMemberFunction = class.GetMemberFromCounter(c, parent, member)
+					this := class.GetClass(c, object.Parent)
+					return class.GetMember(c, this, member, true)
 				}
 			}
 		}
 	}
-	return
+
+	return nil
 }
 
 func AutoLoad(value ir.Value, b *ir.Block) ir.Value {
@@ -166,12 +179,10 @@ func AutoLoad(value ir.Value, b *ir.Block) ir.Value {
 	// ref param
 	case *ir.Param:
 		if t.Ref {
-			if ir.IsPointer(t.Typ) && t.Typ.(*ir.PointerType).UserData == "" {
-				typ := t.Type().(*ir.PointerType)
-				load := ir.NewLoad(typ.ElemType, t)
-				b.AddInstruction(load)
-				return load
-			}
+			typ := t.Type().(*ir.PointerType)
+			load := ir.NewLoad(typ.ElemType, t)
+			b.AddInstruction(load)
+			return load
 		}
 	}
 

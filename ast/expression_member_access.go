@@ -17,9 +17,9 @@ type MemberAccess struct {
 func (m *MemberAccess) Type(c *Context, expected ir.Type) ir.Type {
 	// parent could be: identifier, member_access, new, subscripting, this, base
 	if ident, ok := m.Parent.(*Identifier); ok {
-		_, obj, _ := c.FindSelector(ident.Name, m.Member.Name)
+		obj := c.FindSelector(ident.Name, m.Member.Name)
 		if obj != nil {
-			return obj.Type()
+			return obj.Object.Type()
 		}
 
 	} else if _, ok := m.Parent.(*This); ok {
@@ -51,28 +51,27 @@ func (m *MemberAccess) Type(c *Context, expected ir.Type) ir.Type {
 }
 
 func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
-	var v ir.Value
-	var p ir.Value
-	var isMemberFunction bool
+	var object *ObjectInfo
 	if ident, ok := m.Parent.(*Identifier); ok {
-		p, v, isMemberFunction = c.FindSelector(ident.Name, m.Member.Name)
+		object = c.FindSelector(ident.Name, m.Member.Name)
 
 	} else if _, ok := m.Parent.(*This); ok {
-		p = c.FindObject(ClassThis)
-		v, isMemberFunction = c.Function.Class.GetMember(c, p, m.Member.Name, true)
+		this := c.FindObject(ClassThis)
+		object = c.Function.Class.GetMember(c, this, m.Member.Name, false)
 
 	} else if _, ok := m.Parent.(*Base); ok {
-		p = c.FindObject(ClassThis)
-		v, isMemberFunction = c.Function.Class.Parent.GetMember(c, p, m.Member.Name, true)
+		this := c.FindObject(ClassThis)
+		object = c.Function.Class.Parent.GetMember(c, this, m.Member.Name, false)
 
 	} else if n, ok := m.Parent.(*New); ok {
 		qualified, d := c.Program.FindDeclaration(n.Typ)
 		if class, ok := d.(*Class); ok {
-			p = m.Parent.GenerateIR(c, nil)
+			parent := m.Parent.GenerateIR(c, nil)
 			if IsBuiltinClass(qualified) {
-				v, isMemberFunction = class.GetMember(c, p, m.Member.Name, false)
+				object = class.GetMember(c, parent, m.Member.Name, false)
 			} else {
-				p, v, isMemberFunction = class.GetMemberFromCounter(c, p, m.Member.Name)
+				this := class.GetClass(c, parent)
+				object = class.GetMember(c, this, m.Member.Name, false)
 			}
 		}
 
@@ -81,30 +80,33 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 		if s, ok := parentType.(*ir.StructType); ok {
 			if d, ok := c.Program.Declarations[s.TypeName]; ok {
 				if class, ok := d.(*Class); ok {
-					p = m.Parent.GenerateIR(c, nil)
+					parent := m.Parent.GenerateIR(c, nil)
 					if IsBuiltinClass(s.TypeName) {
-						v, isMemberFunction = class.GetMember(c, p, m.Member.Name, false)
+						object = class.GetMember(c, parent, m.Member.Name, false)
 					} else {
-						p, v, isMemberFunction = class.GetMemberFromCounter(c, p, m.Member.Name)
+						this := class.GetClass(c, parent)
+						object = class.GetMember(c, this, m.Member.Name, true)
 					}
 				} else if enum, ok := d.(*Enum); ok {
-					v = enum.GetMember(m.Member.Name)
+					object.Object = enum.GetMember(m.Member.Name)
 				}
 			}
 		}
 	}
-	if v != nil && m.IsFunction(v) {
-		v = c.AutoLoad(v)
-		v = ir.NewCall(v)
-		if p != nil && isMemberFunction {
-			call := v.(*ir.InstCall)
-			call.Args = append(call.Args, p)
+
+	if object != nil && object.FunctionDefine != nil {
+		object.Object = ir.NewCall(object.Object)
+		if object.Parent != nil && object.IsMemberFunction {
+			// add this pointer to the call
+			call := object.Object.(*ir.InstCall)
+			call.Args = append(call.Args, object.Parent)
 		}
 	}
-	if v == nil {
+	if object == nil || object.Object == nil {
 		c.Program.Error(m.Position, fmt.Sprintf("%s undefined", m.Member.Name))
+		return nil
 	}
-	return v
+	return object.Object
 }
 
 func (m *MemberAccess) IsFunction(v ir.Value) bool {

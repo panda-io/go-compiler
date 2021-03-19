@@ -187,6 +187,8 @@ type Param struct {
 	Typ Type
 	// Pass by reference
 	Ref bool
+	// Builtin type
+	Builtin bool
 }
 
 // NewParam returns a new function parameter based on the given name and type.
