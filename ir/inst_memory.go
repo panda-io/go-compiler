@@ -309,8 +309,6 @@ type InstGetElementPtr struct {
 	// Element indicies.
 	Indices []Value
 
-	// extra.
-
 	// Type of result produced by the instruction.
 	Typ Type // *PointerType or *VectorType (with elements of pointer type)
 }
