@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"fmt"
+
 	"github.com/panda-foundation/go-compiler/ir"
 )
 
@@ -48,6 +50,9 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 
 			case *TypeName:
 				userData, d := p.FindDeclaration(t)
+				if d == nil {
+					p.Error(t.Position, fmt.Sprintf("%s undefined", t.Name))
+				}
 				switch d.(type) {
 				case *Class:
 					param = ir.NewParam(pointerType)

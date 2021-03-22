@@ -2,15 +2,8 @@ namespace;
 
 import libc;
 
-//var a int;
+//TO-DO refactor builtin-class after implement string
 
-/*
-enum color
-{
-    red,
-    green,
-    blue
-}*/
 /*
 public class base_class
 {
@@ -49,12 +42,15 @@ public class derive_class : base_class
     }
 }
 
+public function echo(dc derive_class)
+{
+    dc.echo();
+}*/
+
 public function main() int
 {
     //var c counter;// = new counter();
     //new counter();
-
-    //new base();
 
     //var dc derive_class = new derive_class();
     //echo(dc);
@@ -64,12 +60,8 @@ public function main() int
     libc.printf("value #3: %d \n", number);
 
     return 0;
-}*/
-/*
-public function echo(dc derive_class)
-{
-    dc.echo();
-}*/
+}
+
 
 public function print_number(ref value int)
 {
