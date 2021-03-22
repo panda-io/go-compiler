@@ -262,8 +262,10 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string, useVTable 
 		ctx.Block.AddInstruction(v)
 		result.Object = v
 		value := c.AccumulatedVariables[c.VariableIndexes[member]]
-		if _, ok := value.(*ir.FuncType); ok {
-			result.FunctionDefine = c.FindVariableFuncType(member)
+		if ir.IsPointer(value) {
+			if _, ok := value.(*ir.PointerType).ElemType.(*ir.FuncType); ok {
+				result.FunctionDefine = c.FindVariableFuncType(member)
+			}
 		}
 		return result
 
