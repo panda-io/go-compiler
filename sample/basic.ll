@@ -276,7 +276,9 @@ body:
 	%0 = load i32, i32* %value
 	%1 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.5bddf146c13b387514280200e83cf08b to i8*), i32 %0)
 	%2 = load i32, i32* %value
-	%3 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219 to i8*), i32 %2)
+	store i32 2, i32* %value
+	%3 = load i32, i32* %value
+	%4 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219 to i8*), i32 %3)
 	br label %exit
 
 

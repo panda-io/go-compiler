@@ -74,6 +74,13 @@ func (c *Context) ContentType(value ir.Value) ir.Type {
 	// class member
 	case *ir.InstGetElementPtr:
 		return t.Type().(*ir.PointerType).ElemType
+
+	// param
+	case *ir.Param:
+		if t.Ref {
+			return t.Type().(*ir.PointerType).ElemType
+		}
+		return t.Type()
 	}
 	return nil
 }

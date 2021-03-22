@@ -150,18 +150,18 @@ declare void @memset(i8*, i32, i32) local_unnamed_addr
 define i32 @main() local_unnamed_addr #1 {
 entry:
   %0 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.5bddf146c13b387514280200e83cf08b, i64 0, i64 0), i32 1) #0
-  %1 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219, i64 0, i64 0), i32 1) #0
-  %2 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.e4b993b5f16d57ebba5166037b305638, i64 0, i64 0), i32 1)
+  %1 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219, i64 0, i64 0), i32 2) #0
+  %2 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.e4b993b5f16d57ebba5166037b305638, i64 0, i64 0), i32 2)
   ret i32 0
 }
 
 ; Function Attrs: nofree nounwind
-define void @global.print_number(i32* nocapture readonly %value) local_unnamed_addr #1 {
+define void @global.print_number(i32* nocapture %value) local_unnamed_addr #1 {
 entry:
   %0 = load i32, i32* %value, align 4
   %1 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.5bddf146c13b387514280200e83cf08b, i64 0, i64 0), i32 %0)
-  %2 = load i32, i32* %value, align 4
-  %3 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219, i64 0, i64 0), i32 %2)
+  store i32 2, i32* %value, align 4
+  %2 = tail call i32 (i8*, ...) @printf(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @string.aee0f3d368512408f6bd5274bf51a219, i64 0, i64 0), i32 2)
   ret void
 }
 

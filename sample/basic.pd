@@ -66,6 +66,6 @@ public function main() int
 public function print_number(ref value int)
 {
     libc.printf("value #1: %d \n", value);
-    //value = 2;
+    value = 2;
     libc.printf("value #2: %d \n", value);
 }
