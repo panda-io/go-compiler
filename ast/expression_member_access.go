@@ -112,19 +112,6 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	return object.Object
 }
 
-func (m *MemberAccess) IsFunction(v ir.Value) bool {
-	if t, ok := v.Type().(*ir.PointerType); ok {
-		if _, ok = t.ElemType.(*ir.FuncType); ok {
-			return true
-		} else if e, ok := t.ElemType.(*ir.PointerType); ok {
-			// gep instruction
-			_, ok = e.ElemType.(*ir.FuncType)
-			return ok
-		}
-	}
-	return false
-}
-
 func (m *MemberAccess) IsConstant(p *Program) bool {
 	if ident, ok := m.Parent.(*Identifier); ok {
 		_, d := p.FindSelector(ident.Name, m.Member.Name)

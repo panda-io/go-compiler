@@ -11,7 +11,7 @@ enum color
     green,
     blue
 }*/
-
+/*
 public class base_class
 {
     public function create()
@@ -56,20 +56,20 @@ public function main() int
 
     //new base();
 
-    var dc derive_class = new derive_class();
-    echo(dc);
+    //var dc derive_class = new derive_class();
+    //echo(dc);
 
     var number int = 1;
-    print_number(number);
+    //print_number(number);
     libc.printf("value #3: %d \n", number);
 
     return 0;
-}
-
+}*/
+/*
 public function echo(dc derive_class)
 {
     dc.echo();
-}
+}*/
 
 public function print_number(ref value int)
 {
