@@ -254,6 +254,7 @@ entry:
 
 body:
 	store i32 1, i32* %1
+	call void @global.print_number(i32* %1)
 	%2 = load i32, i32* %1
 	%3 = call i32 (i8*, ...) @printf(i8* bitcast ([15 x i8]* @string.e4b993b5f16d57ebba5166037b305638 to i8*), i32 %2)
 	store i32 0, i32* %0
