@@ -27,7 +27,7 @@ func (i *Invocation) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	value := i.Function.GenerateIR(c, nil)
 	if value != nil {
 		if call, ok := value.(*ir.InstCall); ok {
-			i.Arguments.GenerateIR(c, call)
+			i.Arguments.GenerateIR(c, call, call.Ref)
 			c.Block.AddInstruction(call)
 			return value
 		}

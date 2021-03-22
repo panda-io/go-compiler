@@ -319,6 +319,8 @@ type InstCall struct {
 	Args []Value
 	// Type of result produced by the instruction.
 	Typ Type
+	// reference func
+	Ref *Func
 }
 
 // NewCall returns a new call instruction based on the given callee and function

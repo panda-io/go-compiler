@@ -95,7 +95,10 @@ func (m *MemberAccess) GenerateIR(c *Context, expected ir.Type) ir.Value {
 	}
 
 	if object != nil && object.FunctionDefine != nil {
-		object.Object = ir.NewCall(object.Object)
+		object.Object = c.AutoLoad(object.Object)
+		call := ir.NewCall(object.Object)
+		call.Ref = object.FunctionDefine
+		object.Object = call
 		if object.Parent != nil && object.IsMemberFunction {
 			// add this pointer to the call
 			call := object.Object.(*ir.InstCall)

@@ -13,7 +13,7 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 	var alloca *ir.InstAlloca
 	switch t := d.Type.(type) {
 	case *BuitinType:
-		alloca = ir.NewAlloca(d.Type.Type(c.Program))
+		alloca = ir.NewAlloca(GetIRType(d.Type, c.Program, false))
 
 	case *TypeName:
 		qualified, declaration := c.Program.FindDeclaration(t)
@@ -37,7 +37,7 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 		}
 
 	case *TypeFunction:
-		alloca = ir.NewAlloca(d.Type.Type(c.Program))
+		alloca = ir.NewAlloca(GetIRType(d.Type, c.Program, false))
 	}
 
 	if alloca == nil {
@@ -48,7 +48,7 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 		if d.Value == nil {
 			switch d.Type.(type) {
 			case *BuitinType:
-				store = ir.NewStore(ir.NewZeroInitializer(d.Type.Type(c.Program)), alloca)
+				store = ir.NewStore(ir.NewZeroInitializer(GetIRType(d.Type, c.Program, false)), alloca)
 			case *TypeName:
 				store = ir.NewStore(ir.NewZeroInitializer(pointerType), alloca)
 			}
@@ -56,7 +56,7 @@ func (d *DeclarationStatement) GenerateIR(c *Context) {
 			if n, ok := d.Value.(*New); ok {
 				n.HasOwner = true
 			}
-			instance := d.Value.GenerateIR(c, d.Type.Type(c.Program))
+			instance := d.Value.GenerateIR(c, GetIRType(d.Type, c.Program, false))
 			store = ir.NewStore(instance, alloca)
 		}
 		c.Block.AddInstruction(store)

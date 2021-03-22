@@ -42,12 +42,8 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 			var param *ir.Param
 			switch t := parameter.Type.(type) {
 			case *BuitinType:
-				if parameter.Ref {
-					param = ir.NewParam(ir.NewPointerType(parameter.Type.Type(p)))
-					param.Ref = true
-				} else {
-					param = ir.NewParam(parameter.Type.Type(p))
-				}
+				//TO-DO check string
+				param = GetIRParam(parameter, p)
 				param.Builtin = true
 
 			case *TypeName:
@@ -77,7 +73,7 @@ func (f *Function) GenerateIRDeclaration(p *Program) *ir.Func {
 	}
 	var t ir.Type = ir.Void
 	if f.ReturnType != nil {
-		t = f.ReturnType.Type(p)
+		t = GetIRType(f.ReturnType, p, false)
 	}
 	f.IRFunction = p.IRModule.NewFunc(f.Qualified(p.Module.Namespace), t, f.IRParams...)
 	if f.HasAttribute(Extern) {
@@ -129,7 +125,7 @@ func (f *Function) GenerateIR(p *Program) {
 
 		// prepare return value
 		if f.ReturnType != nil {
-			alloca := ir.NewAlloca(f.ReturnType.Type(p))
+			alloca := ir.NewAlloca(GetIRType(f.ReturnType, p, false))
 			f.IREntry.AddInstruction(alloca)
 			f.IRReturn = alloca
 		}
@@ -223,7 +219,7 @@ func (f *Function) GenerateIR(p *Program) {
 		if f.ReturnType == nil {
 			f.IRExit.AddInstruction(ir.NewRet(nil))
 		} else {
-			load := ir.NewLoad(f.ReturnType.Type(p), f.IRReturn)
+			load := ir.NewLoad(GetIRType(f.ReturnType, p, false), f.IRReturn)
 			f.IRExit.AddInstruction(load)
 			f.IRExit.AddInstruction(ir.NewRet(load))
 		}
@@ -248,7 +244,7 @@ type Arguments struct {
 	Arguments []Expression
 }
 
-func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall) {
+func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall, define *ir.Func) {
 	function := call.Callee.Type().(*ir.PointerType).ElemType.(*ir.FuncType)
 	if args == nil {
 		return
@@ -272,7 +268,15 @@ func (args *Arguments) GenerateIR(c *Context, call *ir.InstCall) {
 		if v == nil {
 			c.Program.Error(arg.GetPosition(), "invalid expression")
 		} else {
-			call.Args = append(call.Args, c.AutoLoad(v))
+			if !function.Variadic && define.Params[len(call.Args)].Ref {
+				if arg.IsConstant(c.Program) {
+					c.Program.Error(args.Position, "cannot pass instant expression as reference parameter")
+				} else {
+					call.Args = append(call.Args, v)
+				}
+			} else {
+				call.Args = append(call.Args, c.AutoLoad(v))
+			}
 		}
 	}
 }

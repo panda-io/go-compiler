@@ -46,10 +46,14 @@ func (i *Identifier) GenerateIR(c *Context, expected ir.Type) ir.Value {
 			return t.IRVariable
 
 		case *Function:
+			var call *ir.InstCall
 			if t.Class == nil {
-				return ir.NewCall(t.IRFunction)
+				call = ir.NewCall(t.IRFunction)
+			} else {
+				call = ir.NewCall(t.IRFunction, c.FindObject(ClassThis))
 			}
-			return ir.NewCall(t.IRFunction, c.FindObject(ClassThis))
+			call.Ref = t.IRFunction
+			return call
 
 		default:
 			c.Program.Error(i.Position, "invalid type")

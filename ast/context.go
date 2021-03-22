@@ -130,6 +130,7 @@ func (c *Context) FindSelector(selector string, member string) *ObjectInfo {
 			object.Object = t.IRFunction
 			object.FunctionDefine = t.IRFunction
 		}
+		return object
 
 	} else if p, ok := object.Parent.Type().(*ir.PointerType); ok {
 		// find declaration

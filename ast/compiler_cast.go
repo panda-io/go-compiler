@@ -1,20 +1,18 @@
 package ast
 
-import "github.com/panda-foundation/go-compiler/ir"
-
 func init() {
 	/*
 		function read_memory<type>(source pointer, offset int) type;
 	    function write_memory<type>(source pointer, value type);*/
-	RegisterComplierFunction("type", "to_pointer", CompilerReadMemory)
-	RegisterComplierFunction("type", "from_pointer", CompilerWriteMemory)
+	//RegisterComplierFunction("type", "to_pointer", CompilerReadMemory)
+	//RegisterComplierFunction("type", "from_pointer", CompilerWriteMemory)
 }
 
 /*
 @compiler
 function is<type>(value type) bool;
 */
-
+/*
 func CompilerReadMemory(c *Context, invocation *Invocation) ir.Value {
 	args := invocation.Arguments
 	if args != nil && len(args.Arguments) == 1 {
@@ -44,3 +42,4 @@ func CompilerWriteMemory(c *Context, invocation *Invocation) ir.Value {
 	c.Program.Error(args.Position, "cannot convert pointer to target type")
 	return nil
 }
+*/

@@ -10,7 +10,7 @@ type BuitinType struct {
 	Token token.Token
 }
 
-func (b *BuitinType) Type(*Program) ir.Type {
+func (b *BuitinType) Type() ir.Type {
 	switch b.Token {
 	case token.Bool:
 		return ir.I1
@@ -55,6 +55,7 @@ func (b *BuitinType) Type(*Program) ir.Type {
 		return pointerType
 
 	case token.Any:
+		// first I8 is meta type, left is data
 		return ir.NewVectorType(9, ir.I8)
 
 	default:

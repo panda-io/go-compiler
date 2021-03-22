@@ -13,13 +13,13 @@ func (r *Return) GenerateIR(c *Context) {
 	if r.Expression != nil {
 		var value ir.Value
 		if r.Expression.IsConstant(c.Program) {
-			value = r.Expression.GenerateConstIR(c.Program, c.Function.ReturnType.Type(c.Program))
+			value = r.Expression.GenerateConstIR(c.Program, GetIRType(c.Function.ReturnType, c.Program, false))
 		} else {
 			value = r.Expression.GenerateIR(c, nil)
 		}
 		var t ir.Type = ir.Void
 		if c.Function.ReturnType != nil {
-			t = c.Function.ReturnType.Type(c.Program)
+			t = GetIRType(c.Function.ReturnType, c.Program, false)
 		}
 		if value.Type().Equal(t) {
 			c.Block.AddInstruction(ir.NewStore(value, c.Function.IRReturn))

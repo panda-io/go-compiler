@@ -143,6 +143,12 @@ func (p *Parser) parseFunctionType() *ast.TypeFunction {
 		p.next()
 		return t
 	}
+	if p.token == token.Ref {
+		t.Ref = append(t.Ref, true)
+		p.next()
+	} else {
+		t.Ref = append(t.Ref, false)
+	}
 	t.Parameters = append(t.Parameters, p.parseType())
 	for p.token == token.Comma {
 		p.next()

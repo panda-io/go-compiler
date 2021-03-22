@@ -17,15 +17,33 @@ type Class struct {
 	Parent     *Class
 	Interfaces []*Interface
 
-	IRStruct        *ir.StructType
-	IRVariables     []ir.Type
-	IRValues        []ir.Value
+	IRStruct *ir.StructType
+	// only variables in current class, same content with "Variables"
+	IRVariables          []ir.Type
+	IRValues             []ir.Value
+	AccumulatedVariables []ir.Type
+	// index to the total varaibles defined in IRStruct (also store in AccumulatedVariables)
 	VariableIndexes map[string]int
 
-	IRVTable        *ir.StructType
-	IRFunctions     []*ir.Func
-	IRVTableData    *ir.Global
+	IRVTable *ir.StructType
+	// only functions in current class, same content with "Functions"
+	IRFunctions          []*ir.Func
+	IRVTableData         *ir.Global
+	AccumulatedFunctions []*ir.Func
+	// index to the total functions defined in IRVTable (also store in AccumulatedFunctions)
 	FunctionIndexes map[string]int
+}
+
+func (c *Class) FindVariableFuncType(name string) *ir.Func {
+	for _, v := range c.Variables {
+		if v.Name.Name == name {
+			return v.FuncType
+		}
+	}
+	if c.Parent != nil {
+		return c.Parent.FindVariableFuncType(name)
+	}
+	return nil
 }
 
 func (c *Class) AddVariable(v *Variable) error {
@@ -60,11 +78,14 @@ func (c *Class) AddFunction(f *Function) error {
 
 func (c *Class) GenerateIRDeclaration(p *Program) {
 	for _, v := range c.Variables {
-		c.IRVariables = append(c.IRVariables, v.Type.Type(p))
+		if _, ok := v.Type.(*TypeFunction); ok {
+			v.FuncType = v.Type.(*TypeFunction).Define(p)
+		}
+		c.IRVariables = append(c.IRVariables, GetIRType(v.Type, p, false))
 		if v.Value == nil {
 			c.IRValues = append(c.IRValues, nil)
 		} else {
-			c.IRValues = append(c.IRValues, v.Value.GenerateConstIR(p, v.Type.Type(p)))
+			c.IRValues = append(c.IRValues, v.Value.GenerateConstIR(p, GetIRType(v.Type, p, false)))
 		}
 	}
 	for _, f := range c.Functions {
@@ -75,7 +96,7 @@ func (c *Class) GenerateIRDeclaration(p *Program) {
 func (c *Class) GenerateIRStruct(p *Program) {
 	c.VariableIndexes = make(map[string]int)
 
-	variables := []ir.Type{CreateStructPointer(p.Module.Namespace + "." + c.Name.Name + ".vtable.type")}
+	c.AccumulatedVariables = []ir.Type{CreateStructPointer(p.Module.Namespace + "." + c.Name.Name + ".vtable.type")}
 	classes := []*Class{c}
 	current := c
 	for current.Parent != nil {
@@ -86,7 +107,7 @@ func (c *Class) GenerateIRStruct(p *Program) {
 	for i := len(classes) - 1; i > -1; i-- {
 		current = classes[i]
 		for j, v := range current.Variables {
-			variables = append(variables, current.IRVariables[j])
+			c.AccumulatedVariables = append(c.AccumulatedVariables, current.IRVariables[j])
 			if _, ok := c.VariableIndexes[v.Name.Name]; ok {
 				p.Error(v.Position, fmt.Sprintf("duplicate class member: %s", v.Name.Name))
 			} else {
@@ -97,14 +118,14 @@ func (c *Class) GenerateIRStruct(p *Program) {
 	}
 
 	qualified := c.Qualified(p.Module.Namespace)
-	c.IRStruct = ir.NewStructType(variables...)
+	c.IRStruct = ir.NewStructType(c.AccumulatedVariables...)
 	p.IRModule.NewTypeDef(qualified, c.IRStruct)
 }
 
 func (c *Class) GenerateIRVTable(p *Program) {
 	c.FunctionIndexes = make(map[string]int)
 
-	functions := []*ir.Func{}
+	c.AccumulatedFunctions = []*ir.Func{}
 	classes := []*Class{c}
 	current := c
 	for current.Parent != nil {
@@ -117,16 +138,16 @@ func (c *Class) GenerateIRVTable(p *Program) {
 		for j, f := range current.Functions {
 			if existing, ok := c.FunctionIndexes[f.Name.Name]; ok {
 				// existing function
-				function := functions[existing]
+				function := c.AccumulatedFunctions[existing]
 				if !function.Sig.Equal(current.IRFunctions[j].Sig) {
 					p.Error(f.Position, fmt.Sprintf("member function %s does not match its parent class", f.Name.Name))
 					//TO-DO print more params details here
 				} else {
-					functions[existing] = current.IRFunctions[j]
+					c.AccumulatedFunctions[existing] = current.IRFunctions[j]
 				}
 			} else {
 				// new function
-				functions = append(functions, current.IRFunctions[j])
+				c.AccumulatedFunctions = append(c.AccumulatedFunctions, current.IRFunctions[j])
 				c.FunctionIndexes[f.Name.Name] = index
 				index++
 			}
@@ -135,7 +156,7 @@ func (c *Class) GenerateIRVTable(p *Program) {
 
 	var types []ir.Type
 	var constants []ir.Constant
-	for _, f := range functions {
+	for _, f := range c.AccumulatedFunctions {
 		types = append(types, ir.NewPointerType(f.Sig))
 		constants = append(constants, f)
 	}
@@ -223,9 +244,9 @@ func (c *Class) HasMember(member string) bool {
 
 func (c *Class) MemberType(member string) ir.Type {
 	if index, ok := c.VariableIndexes[member]; ok {
-		return ir.GepInstType(c.IRStruct, []ir.Value{ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index))}).(*ir.PointerType).ElemType
+		return c.AccumulatedVariables[index]
 	} else if index, ok := c.FunctionIndexes[member]; ok {
-		return ir.GepInstType(c.IRVTable, []ir.Value{ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index))}).(*ir.PointerType).ElemType
+		return c.AccumulatedFunctions[index].Type()
 	}
 	return nil
 }
@@ -240,6 +261,10 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string, useVTable 
 		v := ir.NewGetElementPtr(c.IRStruct, class, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
 		ctx.Block.AddInstruction(v)
 		result.Object = v
+		value := c.AccumulatedVariables[c.VariableIndexes[member]]
+		if _, ok := value.(*ir.FuncType); ok {
+			result.FunctionDefine = c.FindVariableFuncType(member)
+		}
 		return result
 
 	} else if index, ok := c.FunctionIndexes[member]; ok {
@@ -250,15 +275,15 @@ func (c *Class) GetMember(ctx *Context, this ir.Value, member string, useVTable 
 			value := ctx.AutoLoad(vtable)
 			f := ir.NewGetElementPtr(c.IRVTable, value, ir.NewInt(ir.I32, 0), ir.NewInt(ir.I32, int64(index)))
 			ctx.Block.AddInstruction(f)
-			result.Object = ctx.AutoLoad(f)
+			result.Object = f
 			result.IsMemberFunction = true
-			result.FunctionDefine = c.IRFunctions[c.FunctionIndexes[member]]
+			result.FunctionDefine = c.AccumulatedFunctions[c.FunctionIndexes[member]]
 			return result
 
 		} else {
-			result.Object = c.IRFunctions[c.FunctionIndexes[member]]
+			result.Object = c.AccumulatedFunctions[c.FunctionIndexes[member]]
 			result.IsMemberFunction = true
-			result.FunctionDefine = c.IRFunctions[c.FunctionIndexes[member]]
+			result.FunctionDefine = c.AccumulatedFunctions[c.FunctionIndexes[member]]
 			return result
 		}
 	}
@@ -278,7 +303,7 @@ func (c *Class) CreateInstance(ctx *Context, args *Arguments) ir.Value {
 	call := ir.NewCall(f)
 	SetUserData(call, c.Qualified(ctx.Program.Module.Namespace))
 	if args != nil {
-		args.GenerateIR(ctx, call)
+		args.GenerateIR(ctx, call, c.AccumulatedFunctions[0])
 	}
 	ctx.Block.AddInstruction(call)
 	return call

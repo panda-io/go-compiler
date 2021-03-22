@@ -13,11 +13,12 @@ type Variable struct {
 	Const bool
 
 	IRVariable *ir.Global
+	FuncType   *ir.Func
 }
 
 func (v *Variable) GenerateIR(p *Program) {
 	if v.Value != nil {
-		value := v.Value.GenerateConstIR(p, v.Type.Type(p))
+		value := v.Value.GenerateConstIR(p, GetIRType(v.Type, p, false))
 		if value == nil {
 			p.Error(v.Name.Position, "only constant expression is allowed to initialize value")
 		} else {

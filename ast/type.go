@@ -10,11 +10,59 @@ var (
 
 type Type interface {
 	Node
-	Type(*Program) ir.Type
 }
 
 type TypeBase struct {
 	NodeBase
+}
+
+func GetIRType(typ Type, p *Program, ref bool) ir.Type {
+	switch t := typ.(type) {
+	case *BuitinType:
+		if ref {
+			return ir.NewPointerType(t.Type())
+		}
+		return t.Type()
+
+	case *TypeName:
+		_, d := p.FindDeclaration(t)
+		switch d.(type) {
+		case *Class:
+			return pointerType
+
+		case *Enum:
+			return ir.I32
+
+		case *Interface:
+			return pointerType
+		}
+
+	case *TypeFunction:
+		return t.Type(p)
+	}
+
+	return nil
+}
+
+func GetIRParam(parameter *Parameter, p *Program) *ir.Param {
+	var param *ir.Param
+	switch t := parameter.Type.(type) {
+	case *BuitinType:
+		param = ir.NewParam(GetIRType(t, p, parameter.Ref))
+		param.Ref = parameter.Ref
+		param.Builtin = true
+
+	case *TypeName:
+		userData, _ := p.FindDeclaration(t)
+		param = ir.NewParam(GetIRType(t, p, parameter.Ref))
+		SetUserData(param, userData)
+
+	case *TypeFunction:
+		param = ir.NewParam(GetIRType(t, p, parameter.Ref))
+	}
+	param.LocalName = parameter.Name
+
+	return param
 }
 
 func CreateStruct(qualified string) *ir.StructType {
